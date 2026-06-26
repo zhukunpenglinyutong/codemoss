@@ -318,13 +318,64 @@
   line-height: var(--code-line-height, 1.28);
 }
 
-.message .markdown :not(pre) > code {
+.message .markdown :not(pre) > code,
+.message .markdown .markdown-inline-code-copy > code {
   color: var(--text-stronger);
   background: color-mix(in srgb, var(--surface-command) 82%, transparent);
   border: 1px solid var(--border-subtle);
   padding: 1px 5px;
   border-radius: 6px;
   font-size: 0.97em;
+}
+
+.message .markdown .markdown-inline-code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  vertical-align: baseline;
+}
+
+.message .markdown .markdown-inline-code-copy-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--surface-command) 74%, transparent);
+  color: var(--text-muted);
+  cursor: pointer;
+  opacity: 0;
+  transform: translateY(1px);
+  transition: opacity 120ms ease, color 120ms ease, border-color 120ms ease, background 120ms ease;
+}
+
+.message .markdown .markdown-inline-code-copy:hover .markdown-inline-code-copy-button,
+.message .markdown .markdown-inline-code-copy:focus-within .markdown-inline-code-copy-button,
+.message .markdown .markdown-inline-code-copy.is-copied .markdown-inline-code-copy-button {
+  opacity: 1;
+}
+
+.message .markdown .markdown-inline-code-copy-button:hover,
+.message .markdown .markdown-inline-code-copy-button:focus-visible {
+  color: var(--text-stronger);
+  border-color: var(--border-strong);
+  background: var(--surface-control-hover);
+}
+
+.message .markdown .markdown-inline-code-copy-icon-check {
+  display: none;
+}
+
+.message .markdown .markdown-inline-code-copy.is-copied .markdown-inline-code-copy-icon-copy {
+  display: none;
+}
+
+.message .markdown .markdown-inline-code-copy.is-copied .markdown-inline-code-copy-icon-check {
+  display: block;
+  color: var(--status-success, #22c55e);
 }
 
 .message .markdown .katex {

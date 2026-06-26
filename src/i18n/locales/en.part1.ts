@@ -2749,6 +2749,7 @@ const enPart1 = {
     toggleDetails: "Toggle details",
     copyCodeBlock: "Copy code block",
     copyCodeBlockWithFence: "Copy fenced code block",
+    copyInlineCode: "Copy inline code",
     copy: "Copy",
     copyWithFence: "Fence copy",
     toolCallCard: {

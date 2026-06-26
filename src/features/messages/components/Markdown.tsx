@@ -1,4 +1,6 @@
 import { Fragment, lazy, memo, startTransition, Suspense, useCallback, useEffect, useMemo, useRef, useState, isValidElement, type ImgHTMLAttributes, type ReactNode, type MouseEvent } from "react";
+import Check from "lucide-react/dist/esm/icons/check";
+import Copy from "lucide-react/dist/esm/icons/copy";
 import { useTranslation } from "react-i18next";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { convertFileSrc } from "@tauri-apps/api/core";
@@ -80,6 +82,58 @@ type MarkdownProps = {
   onRenderedValueChange?: (value: string) => void;
   onOutlineReady?: (outline: MarkdownOutlineEntry[]) => void;
 };
+
+type InlineCodeProps = {
+  children: ReactNode;
+  text: string;
+};
+
+function InlineCode({ children, text }: InlineCodeProps) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+  const copyTimeoutRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  const handleCopy = async (event: MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      if (copyTimeoutRef.current) {
+        window.clearTimeout(copyTimeoutRef.current);
+      }
+      copyTimeoutRef.current = window.setTimeout(() => {
+        setCopied(false);
+      }, 1200);
+    } catch {
+      // No-op: clipboard errors can occur in restricted contexts.
+    }
+  };
+
+  return (
+    <span className={`markdown-inline-code-copy${copied ? " is-copied" : ""}`}>
+      <code>{children}</code>
+      <button
+        type="button"
+        className="markdown-inline-code-copy-button"
+        onClick={handleCopy}
+        aria-label={t("messages.copyInlineCode", "复制行内代码")}
+        title={copied ? t("messages.copied") : t("messages.copyInlineCode", "复制行内代码")}
+      >
+        <Copy className="markdown-inline-code-copy-icon markdown-inline-code-copy-icon-copy" size={11} />
+        <Check className="markdown-inline-code-copy-icon markdown-inline-code-copy-icon-check" size={11} />
+      </button>
+    </span>
+  );
+}
 
 type CodeBlockProps = {
   className?: string;
@@ -2004,9 +2058,10 @@ export const Markdown = memo(function Markdown({
         if (codeClassName) {
           return <code className={codeClassName}>{children}</code>;
         }
-        const text = String(children ?? "").trim();
+        const text = flattenNodeText(children).trim();
+        const inlineCode = <InlineCode text={text}>{children}</InlineCode>;
         if (!text || !isLinkableFilePath(text)) {
-          return <code>{children}</code>;
+          return inlineCode;
         }
         const href = toFileLink(text);
         return (
@@ -2015,7 +2070,7 @@ export const Markdown = memo(function Markdown({
             onClick={(event) => handleFileLinkClick(event, text)}
             onContextMenu={(event) => handleFileLinkContextMenu(event, text)}
           >
-            <code>{children}</code>
+            {inlineCode}
           </a>
         );
       },
