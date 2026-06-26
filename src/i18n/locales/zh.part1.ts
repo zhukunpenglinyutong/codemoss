@@ -2714,6 +2714,7 @@ const zhPart1 = {
     toggleDetails: "切换详情",
     copyCodeBlock: "复制代码块",
     copyCodeBlockWithFence: "复制带围栏代码块",
+    copyInlineCode: "复制行内代码",
     copy: "复制",
     copyWithFence: "围栏复制",
     toolCallCard: {

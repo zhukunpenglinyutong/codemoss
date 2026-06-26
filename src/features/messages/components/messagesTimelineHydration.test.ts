@@ -50,6 +50,31 @@ describe("messagesTimelineHydration", () => {
     expect(countHydratedHeavyTimelineRows(states)).toBe(3);
   });
 
+  it("retains heavy row hydration after it leaves the visible set", () => {
+    const { rows } = createHeavyHistoryFixture("heavy");
+    const heavyCandidateRows = deriveTimelineRowHydrationStates({
+      rows,
+      shouldVirtualize: false,
+      visibleRowKeys: new Set(),
+      activeRowKeys: new Set(),
+      anchorTargetRowKey: null,
+    }).filter((state) => state.heavy);
+    const retainedHeavyRowKey = heavyCandidateRows[0]?.rowKey ?? "";
+
+    const states = deriveTimelineRowHydrationStates({
+      rows,
+      shouldVirtualize: true,
+      visibleRowKeys: new Set(),
+      activeRowKeys: new Set(),
+      retainedHydratedRowKeys: new Set([retainedHeavyRowKey]),
+      anchorTargetRowKey: null,
+    });
+    const retainedState = states.find((state) => state.rowKey === retainedHeavyRowKey);
+
+    expect(retainedState?.mode).toBe("hydrated");
+    expect(retainedState?.hydrationReason).toBe("visible");
+  });
+
   it("hydrates every heavy row after explicit detail hydration is requested", () => {
     const { rows } = createHeavyHistoryFixture("heavy");
     const states = deriveTimelineRowHydrationStates({

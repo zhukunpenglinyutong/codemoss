@@ -82,6 +82,7 @@ export function deriveTimelineRowHydrationStates(input: {
   shouldVirtualize: boolean;
   visibleRowKeys: ReadonlySet<string>;
   activeRowKeys: ReadonlySet<string>;
+  retainedHydratedRowKeys?: ReadonlySet<string>;
   anchorTargetRowKey?: string | null;
   detailHydrationRequested?: boolean;
   heavyRowWeight?: number;
@@ -148,7 +149,7 @@ export function deriveTimelineRowHydrationStates(input: {
         hydrationReason: "anchor",
       };
     }
-    if (input.visibleRowKeys.has(row.key)) {
+    if (input.visibleRowKeys.has(row.key) || input.retainedHydratedRowKeys?.has(row.key)) {
       return {
         rowKey: row.key,
         contentHash: getRowContentHash(row, rendererOptionsKey),

@@ -69,6 +69,22 @@ describe("Markdown file links", () => {
     ).toBeTruthy();
   });
 
+  it("copies inline code from its copy button", async () => {
+    const writeTextMock = vi.fn(async () => undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText: writeTextMock },
+      configurable: true,
+    });
+
+    render(<Markdown value={"运行 `npm run test` 后继续。"} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "messages.copyInlineCode" }));
+
+    await waitFor(() => {
+      expect(writeTextMock).toHaveBeenCalledWith("npm run test");
+    });
+  });
+
   it("preserves fragmented inline code content during markdown normalization", () => {
     const { container } = render(
       <Markdown value={"命令是 `pnpm\nrun\nlint`，执行后继续。"} />,

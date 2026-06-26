@@ -41,14 +41,11 @@ export type TimelineRenderWeightSummary = {
 };
 
 /**
- * Escape hatch for chat-stream-render-isolation-2026-06 task 2.1.
- * When `true`, `shouldVirtualizeTimelineRows` keeps the long-row virtualizer
- * enabled during streaming even when `isThinking === true`; the legacy
- * `!isThinking` short-circuit only ran for short conversations and let
- * row counts above 200 produce unvirtualized DOM trees during long
- * parallel-streaming sessions.
+ * Keep active streaming timelines in static flow. Live rows change height while
+ * auto-follow scrolls to the tail; virtualizer offset correction can otherwise
+ * fight bottom-follow and produce rapid up/down jumps in long conversations.
  */
-export const TIMELINE_VIRTUALIZATION_DURING_STREAMING_ENABLED = true;
+export const TIMELINE_VIRTUALIZATION_DURING_STREAMING_ENABLED = false;
 
 function canReadBaselineFlag() {
   if (typeof globalThis === "undefined") {
@@ -79,7 +76,8 @@ export function shouldVirtualizeTimelineRows(input: {
   renderWeight?: number;
 }) {
   if (input.isThinking) {
-    return input.rowCount >= TIMELINE_VIRTUALIZATION_MIN_ROWS;
+    return TIMELINE_VIRTUALIZATION_DURING_STREAMING_ENABLED &&
+      input.rowCount >= TIMELINE_VIRTUALIZATION_MIN_ROWS;
   }
   const renderWeightGateEnabled = isTimelineRenderWeightGateEnabled();
   const hasHighRenderDensity = renderWeightGateEnabled &&
@@ -569,22 +567,21 @@ export function resolveVirtualizedTimelineScopeReset(input: {
       shouldMeasure: false,
     };
   }
-  if (input.previousScopeKey === input.nextScopeKey) {
-    return {
-      nextScopeKey: input.previousScopeKey,
-      shouldResetScroll: false,
-      shouldMeasure: false,
-    };
-  }
-  if (
-    input.previousScopeKey !== null &&
-    resolveVirtualizedTimelineScopeIdentity(input.previousScopeKey) ===
-      resolveVirtualizedTimelineScopeIdentity(input.nextScopeKey)
-  ) {
+  if (input.previousScopeKey === null) {
     return {
       nextScopeKey: input.nextScopeKey,
       shouldResetScroll: false,
       shouldMeasure: true,
+    };
+  }
+  if (
+    resolveVirtualizedTimelineScopeIdentity(input.previousScopeKey) ===
+    resolveVirtualizedTimelineScopeIdentity(input.nextScopeKey)
+  ) {
+    return {
+      nextScopeKey: input.nextScopeKey,
+      shouldResetScroll: false,
+      shouldMeasure: input.previousScopeKey !== input.nextScopeKey,
     };
   }
   return {
@@ -595,8 +592,8 @@ export function resolveVirtualizedTimelineScopeReset(input: {
 }
 
 function resolveVirtualizedTimelineScopeIdentity(scopeKey: string): string {
-  const [workspaceId = "", threadId = "", , , mode = ""] = scopeKey.split("\u0000");
-  return [workspaceId, threadId, mode].join("\u0000");
+  const [workspaceId = "", threadId = ""] = scopeKey.split("\u0000");
+  return [workspaceId, threadId].join("\u0000");
 }
 
 export function observeTimelineElementOffset<TScrollElement extends Element>(
