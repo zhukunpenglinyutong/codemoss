@@ -370,6 +370,7 @@ export function useLayoutNodes(input: LayoutNodesOptions): LayoutNodesResult {
     "globalRuntimeNoticeDock",
   );
   const bottomActivityVisibleTabs = {
+    realtimeStats: true,
     todo: clientUiVisibility.isControlVisible("bottomActivity.tasks"),
     subagent: clientUiVisibility.isControlVisible("bottomActivity.agents"),
     checkpoint: clientUiVisibility.isControlVisible(
@@ -1063,6 +1064,7 @@ export function useLayoutNodes(input: LayoutNodesOptions): LayoutNodesResult {
     options.isPlanMode ||
     Boolean(options.plan);
   const hasVisibleBaselineStatusTab =
+    bottomActivityVisibleTabs.realtimeStats ||
     bottomActivityVisibleTabs.latestUserMessage ||
     bottomActivityVisibleTabs.checkpoint;
   const shouldMountBottomStatusPanel =
@@ -1070,7 +1072,7 @@ export function useLayoutNodes(input: LayoutNodesOptions): LayoutNodesResult {
     isStatusPanelEngine &&
     (hasStatusPanelActivity ||
       options.bottomStatusPanelExpanded ||
-      (hasVisibleBaselineStatusTab && Boolean(options.activeThreadId)));
+      hasVisibleBaselineStatusTab);
   const showBottomStatusPanel =
     shouldMountBottomStatusPanel && options.bottomStatusPanelExpanded;
   const openBottomStatusPanel = options.onOpenPlanPanel;
@@ -2120,7 +2122,9 @@ export function useLayoutNodes(input: LayoutNodesOptions): LayoutNodesResult {
   const planPanelNode = shouldMountBottomStatusPanel ? (
     <ActiveCanvasStatusPanel
       workspaceId={options.activeWorkspace?.id ?? null}
+      workspaceName={options.activeWorkspace?.name ?? null}
       workspacePath={options.activeWorkspace?.path ?? null}
+      branchName={options.branchName}
       items={EMPTY_ACTIVE_CANVAS_ITEMS}
       isProcessing={false}
       expanded
@@ -2161,8 +2165,6 @@ export function useLayoutNodes(input: LayoutNodesOptions): LayoutNodesResult {
       preferredDockTab={preferredDockStatusTab?.tab ?? null}
       preferredDockTabRequestKey={preferredDockStatusTab?.requestKey ?? 0}
       dockCollapsed={!showBottomStatusPanel}
-      onCollapseDock={options.onClosePlanPanel}
-      onExpandDock={options.onOpenPlanPanel}
       onExpandToDock={handleExpandCheckpointToDock}
       {...codeAnnotationBridgeProps}
     />

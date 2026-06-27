@@ -111,6 +111,23 @@ pub(crate) async fn local_usage_statistics(
     workspace_path: Option<String>,
     state: State<'_, AppState>,
 ) -> Result<LocalUsageStatistics, String> {
+    local_usage_statistics_for_workspaces(
+        &state.workspaces,
+        scope,
+        provider,
+        date_range,
+        workspace_path,
+    )
+    .await
+}
+
+pub(crate) async fn local_usage_statistics_for_workspaces(
+    workspaces: &Mutex<HashMap<String, WorkspaceEntry>>,
+    scope: Option<String>,
+    provider: Option<String>,
+    date_range: Option<String>,
+    workspace_path: Option<String>,
+) -> Result<LocalUsageStatistics, String> {
     let scope = scope.unwrap_or_else(|| "current".to_string());
     let provider = provider.unwrap_or_else(|| "all".to_string());
     let date_range = date_range.unwrap_or_else(|| "7d".to_string());
@@ -156,10 +173,10 @@ pub(crate) async fn local_usage_statistics(
     };
 
     let sessions_roots = {
-        let workspaces = state.workspaces.lock().await;
+        let workspaces = workspaces.lock().await;
         resolve_sessions_roots(&workspaces, filter_workspace.as_deref())
     };
-    let statistics = tokio::task::spawn_blocking(move || {
+    tokio::task::spawn_blocking(move || {
         scan_local_usage_statistics(
             &provider,
             filter_workspace.as_deref(),
@@ -171,9 +188,7 @@ pub(crate) async fn local_usage_statistics(
         )
     })
     .await
-    .map_err(|err| err.to_string())??;
-
-    Ok(statistics)
+    .map_err(|err| err.to_string())?
 }
 
 pub(crate) async fn list_codex_session_summaries_for_workspace(

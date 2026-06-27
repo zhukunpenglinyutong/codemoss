@@ -61,7 +61,6 @@ import { AgentSettingsSection } from "./AgentSettingsSection";
 import { PlaceholderSection } from "./PlaceholderSection";
 import { CommitSection } from "./CommitSection";
 import { PromptSection } from "./PromptSection";
-import { UsageSection } from "./UsageSection";
 import { McpSection } from "./McpSection";
 import { SkillsSection } from "./SkillsSection";
 import { CuratedSection } from "../../curated-skills";
@@ -75,7 +74,6 @@ import GitCommitHorizontal from "lucide-react/dist/esm/icons/git-commit-horizont
 import BookOpen from "lucide-react/dist/esm/icons/book-open";
 import Server from "lucide-react/dist/esm/icons/server";
 import Shield from "lucide-react/dist/esm/icons/shield";
-import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
 import MoreHorizontalIcon from "lucide-react/dist/esm/icons/more-horizontal";
 import Users from "lucide-react/dist/esm/icons/users";
 import {
@@ -383,7 +381,7 @@ export function SettingsView({
     | "email"
   >("appearance");
   const [projectManagementSubTab, setProjectManagementSubTab] = useState<
-    "groups" | "sessions" | "usage"
+    "groups" | "sessions"
   >("groups");
   const [agentPromptSubTab, setAgentPromptSubTab] = useState<
     "agents" | "prompts"
@@ -2128,14 +2126,6 @@ export function SettingsView({
                   <Archive className="settings-basic-tab-icon" aria-hidden />
                   {t("settings.projectManagementSessionsTab")}
                 </button>
-                <button
-                  type="button"
-                  className={`settings-basic-tab ${projectManagementSubTab === "usage" ? "active" : ""}`}
-                  onClick={() => setProjectManagementSubTab("usage")}
-                >
-                  <BarChart3 className="settings-basic-tab-icon" aria-hidden />
-                  {t("settings.projectManagementUsageTab")}
-                </button>
               </div>
               <ProjectsSection
                 active={projectManagementSubTab === "groups"}
@@ -2174,17 +2164,6 @@ export function SettingsView({
                   onUpdateAppSettings={onUpdateAppSettings}
                   onUpdateWorkspaceSettings={onUpdateWorkspaceSettings}
                   onSessionsMutated={_onEnsureWorkspaceThreads}
-                />
-              )}
-              {projectManagementSubTab === "usage" && (
-                <UsageSection
-                  activeWorkspace={selectedSettingsWorkspace}
-                  activeEngine={activeEngine}
-                  workspaces={projects}
-                  selectedWorkspaceId={selectedSettingsWorkspace?.id ?? ""}
-                  onWorkspaceChange={(workspaceId) =>
-                    setSettingsWorkspaceId(workspaceId || null)
-                  }
                 />
               )}
             </section>

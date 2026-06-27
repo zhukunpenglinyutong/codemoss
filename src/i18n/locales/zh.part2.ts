@@ -2112,6 +2112,7 @@ const zhPart2 = {
 
   // 状态面板
   statusPanel: {
+    tabRealtimeStats: "实时统计",
     tabTodos: "任务",
     tabSubagents: "子代理",
     tabAgents: "Agent",

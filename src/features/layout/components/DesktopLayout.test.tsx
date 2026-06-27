@@ -86,6 +86,68 @@ describe("DesktopLayout", () => {
     expect(container.querySelector(".right-panel-divider")).toBeNull();
   });
 
+  it("exposes clear right panel collapse and expand handles", () => {
+    cleanup();
+    const onCollapseRightPanel = vi.fn();
+    const onExpandRightPanel = vi.fn();
+    const { container, getByLabelText, rerender } = renderDesktopLayout({
+      onCollapseRightPanel,
+      onExpandRightPanel,
+    });
+
+    expect(getByLabelText("收起实时统计侧栏")).toBeTruthy();
+    expect(container.querySelector(".right-panel-shell-toggle")).toBeTruthy();
+    expect(container.querySelector(".right-panel-collapsed-rail")).toBeNull();
+
+    rerender(
+      <DesktopLayout
+        sidebarNode={<aside>sidebar</aside>}
+        updateToastNode={<div>update-toast</div>}
+        approvalToastsNode={<div>approval-toast</div>}
+        errorToastsNode={<div>error-toast</div>}
+        globalRuntimeNoticeDockNode={<div>runtime-notice-dock</div>}
+        homeNode={<div>home</div>}
+        showHome={false}
+        showWorkspace
+        showKanban={false}
+        showGitHistory={false}
+        hideRightPanel={false}
+        rightPanelCollapsed
+        isSoloMode={false}
+        kanbanNode={<div>kanban</div>}
+        gitHistoryNode={<div>git-history</div>}
+        settingsOpen={false}
+        settingsNode={<div>settings</div>}
+        topbarLeftNode={<div>topbar-left</div>}
+        centerMode="chat"
+        editorSplitLayout="vertical"
+        editorSplitCompanion="chat"
+        isEditorFileMaximized={false}
+        messagesNode={<div>messages</div>}
+        gitDiffViewerNode={<div>git-diff-viewer</div>}
+        fileViewPanelNode={<div>file-viewer</div>}
+        rightPanelToolbarNode={<div>right-toolbar</div>}
+        gitDiffPanelNode={<div>activity-panel</div>}
+        planPanelNode={<div>plan-panel</div>}
+        composerNode={<div className="composer">composer</div>}
+        runtimeConsoleDockNode={<div>runtime-dock</div>}
+        terminalDockNode={<div>terminal-dock</div>}
+        debugPanelNode={<div>debug-panel</div>}
+        hasActivePlan
+        onSidebarResizeStart={vi.fn()}
+        onRightPanelResizeStart={vi.fn()}
+        onPlanPanelResizeStart={vi.fn()}
+        onGitHistoryPanelResizeStart={vi.fn()}
+        onCollapseRightPanel={onCollapseRightPanel}
+        onExpandRightPanel={onExpandRightPanel}
+      />,
+    );
+
+    expect(getByLabelText("展开实时统计侧栏")).toBeTruthy();
+    expect(container.querySelector(".right-panel-collapsed-rail")).toBeTruthy();
+    expect(container.querySelector(".right-panel-shell-toggle")).toBeNull();
+  });
+
   it("keeps the composer mounted when the editor file is maximized", () => {
     cleanup();
     const { container, getByText } = renderDesktopLayout({

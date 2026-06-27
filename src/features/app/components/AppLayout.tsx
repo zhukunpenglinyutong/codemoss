@@ -10,6 +10,7 @@ type AppLayoutProps = {
   showKanban: boolean;
   showGitHistory: boolean;
   hideRightPanel: boolean;
+  rightPanelCollapsed?: boolean;
   isSoloMode: boolean;
   kanbanNode: ReactNode;
   gitHistoryNode: ReactNode;
@@ -56,6 +57,8 @@ type AppLayoutProps = {
   onRightPanelResizeStart: (event: MouseEvent<HTMLDivElement>) => void;
   onPlanPanelResizeStart: (event: MouseEvent<HTMLDivElement>) => void;
   onGitHistoryPanelResizeStart: (event: PointerEvent<HTMLDivElement>) => void;
+  onCollapseRightPanel?: () => void;
+  onExpandRightPanel?: () => void;
 };
 
 export const AppLayout = memo(function AppLayout({
@@ -65,6 +68,7 @@ export const AppLayout = memo(function AppLayout({
   showKanban,
   showGitHistory,
   hideRightPanel,
+  rightPanelCollapsed = false,
   isSoloMode,
   kanbanNode,
   gitHistoryNode,
@@ -111,6 +115,8 @@ export const AppLayout = memo(function AppLayout({
   onRightPanelResizeStart,
   onPlanPanelResizeStart,
   onGitHistoryPanelResizeStart,
+  onCollapseRightPanel,
+  onExpandRightPanel,
 }: AppLayoutProps) {
   if (isPhone) {
     return (
@@ -179,10 +185,11 @@ export const AppLayout = memo(function AppLayout({
       globalRuntimeNoticeDockNode={globalRuntimeNoticeDockNode}
       homeNode={homeNode}
       showHome={showHome}
-      showWorkspace={activeWorkspace && !showHome && !showKanban}
+      showWorkspace={(activeWorkspace || showHome) && !showKanban}
       showKanban={showKanban}
       showGitHistory={showGitHistory}
       hideRightPanel={hideRightPanel}
+      rightPanelCollapsed={rightPanelCollapsed}
       isSoloMode={isSoloMode}
       kanbanNode={kanbanNode}
       gitHistoryNode={gitHistoryNode}
@@ -211,6 +218,8 @@ export const AppLayout = memo(function AppLayout({
       onRightPanelResizeStart={onRightPanelResizeStart}
       onPlanPanelResizeStart={onPlanPanelResizeStart}
       onGitHistoryPanelResizeStart={onGitHistoryPanelResizeStart}
+      onCollapseRightPanel={onCollapseRightPanel}
+      onExpandRightPanel={onExpandRightPanel}
     />
   );
 });

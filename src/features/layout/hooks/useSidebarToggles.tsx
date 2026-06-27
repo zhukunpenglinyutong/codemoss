@@ -16,7 +16,7 @@ function readStoredBool(key: string, defaultValue = false) {
 export function useSidebarToggles({ isCompact }: UseSidebarTogglesOptions) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [rightPanelCollapsed, setRightPanelCollapsed] = useState(() =>
-    readStoredBool("rightPanelCollapsed", true),
+    readStoredBool("rightPanelCollapsed", false),
   );
 
   useEffect(() => {

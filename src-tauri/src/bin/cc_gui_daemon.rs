@@ -1959,6 +1959,15 @@ async fn handle_rpc_request(
             let session_ids = parse_string_array(&params, "sessionIds")?;
             state.delete_codex_sessions(workspace_id, session_ids).await
         }
+        "local_usage_statistics" => {
+            let scope = parse_optional_string(&params, "scope");
+            let provider = parse_optional_string(&params, "provider");
+            let date_range = parse_optional_string(&params, "dateRange");
+            let workspace_path = parse_optional_string(&params, "workspacePath");
+            state
+                .local_usage_statistics(scope, provider, date_range, workspace_path)
+                .await
+        }
         "send_user_message" => {
             let workspace_id = parse_string(&params, "workspaceId")?;
             let thread_id = parse_string(&params, "threadId")?;

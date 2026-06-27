@@ -2192,6 +2192,7 @@ body.editor-horizontal-split-resizing * {
 }
 
 .right-panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0;
@@ -2259,6 +2260,18 @@ body.editor-horizontal-split-resizing * {
   min-height: 0;
   overflow: hidden;
   padding-top: 0;
+}
+
+.right-panel:has(.sp-root--dock) .right-panel-top {
+  display: none;
+}
+
+.right-panel:has(.sp-root--dock) .right-panel-toolbar {
+  display: none;
+}
+
+.right-panel:has(.sp-root--dock) .right-panel-divider {
+  display: none;
 }
 
 .right-panel-divider {
@@ -2373,12 +2386,16 @@ body.editor-horizontal-split-resizing * {
 }
 
 .right-panel-bottom {
-  flex: 0 0 auto;
-  height: var(--plan-panel-height, 220px);
-  min-height: 140px;
+  flex: 1 1 auto;
+  height: auto;
+  min-height: 0;
   max-height: 630px;
   padding: 0;
   background: var(--surface-right-panel);
+}
+
+.right-panel:has(.sp-root--dock) .right-panel-bottom {
+  max-height: none;
 }
 
 .right-panel-bottom:has(.sp-root--dock-collapsed) {

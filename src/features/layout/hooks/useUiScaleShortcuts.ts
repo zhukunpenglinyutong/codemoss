@@ -35,9 +35,13 @@ export function useUiScaleShortcuts({
     if (typeof window === "undefined") {
       return;
     }
-    getCurrentWebview()
-      .setZoom(uiScale)
-      .catch(() => undefined);
+    try {
+      getCurrentWebview()
+        .setZoom(uiScale)
+        .catch(() => undefined);
+    } catch {
+      // In non-Tauri previews, getCurrentWebview can throw before setZoom exists.
+    }
   }, [uiScale]);
 
   const scaleShortcutTitle = useMemo(() => {

@@ -18,6 +18,7 @@ import {
   inProgressPlan,
   latestUserMessageItems,
   mockEditableDiffReviewSurface,
+  mockLocalUsageStatistics,
   mockUseGovernanceEvidence,
   multiStatusEditToolItem,
   planSample,
@@ -1627,7 +1628,7 @@ describe("StatusPanel", () => {
     expect(allTabs.length).toBe(0);
   });
 
-  it("renders dock variant with plan tab selected by default", () => {
+  it("renders dock variant with realtime stats selected by default", () => {
     render(
       <StatusPanel
         items={[editToolItem]}
@@ -1640,7 +1641,12 @@ describe("StatusPanel", () => {
 
     const dockRoot = document.querySelector(".sp-root--dock");
     expect(dockRoot).toBeTruthy();
+    expect(screen.getByText("Realtime")).toBeTruthy();
+    expect(screen.getByLabelText("实时统计")).toBeTruthy();
     expect(screen.getByText("Plan")).toBeTruthy();
+    expect(screen.queryByText("step 1")).toBeNull();
+
+    fireEvent.click(screen.getByText("Plan"));
     expect(screen.getByText("plan")).toBeTruthy();
     expect(screen.getByText("step 1")).toBeTruthy();
   });
@@ -1718,10 +1724,11 @@ describe("StatusPanel", () => {
     );
 
     expect(screen.getByText("User Conversation")).toBeTruthy();
+    fireEvent.click(screen.getByText("User Conversation"));
     expect(screen.getByText("Images: 2")).toBeTruthy();
   });
 
-  it("keeps latest user message tab before edits for both codex and non-codex dock layouts", () => {
+  it("keeps realtime stats before latest user message and edits for dock layouts", () => {
     const { rerender } = render(
       <StatusPanel
         items={latestUserMessageItems}
@@ -1733,7 +1740,7 @@ describe("StatusPanel", () => {
     let labels = Array.from(
       document.querySelectorAll(".sp-tabs--dock .sp-tab-label"),
     ).map((node) => node.textContent);
-    expect(labels).toEqual(["User Conversation", "Result"]);
+    expect(labels).toEqual(["Realtime", "Result", "User Conversation"]);
 
     rerender(
       <StatusPanel
@@ -1747,10 +1754,10 @@ describe("StatusPanel", () => {
     labels = Array.from(
       document.querySelectorAll(".sp-tabs--dock .sp-tab-label"),
     ).map((node) => node.textContent);
-    expect(labels).toEqual(["User Conversation", "Result"]);
+    expect(labels).toEqual(["Realtime", "Result", "User Conversation"]);
   });
 
-  it("removes hidden dock tabs without clearing available panel data", () => {
+  it("removes hidden dock tabs while keeping realtime stats visible", () => {
     const { container } = render(
       <StatusPanel
         items={[...latestUserMessageItems, editToolItem]}
@@ -1760,6 +1767,7 @@ describe("StatusPanel", () => {
           subagent: false,
           checkpoint: false,
           latestUserMessage: false,
+          realtimeStats: true,
         }}
       />,
     );
@@ -1767,10 +1775,105 @@ describe("StatusPanel", () => {
     const labels = Array.from(
       document.querySelectorAll(".sp-tabs--dock .sp-tab-label"),
     ).map((node) => node.textContent);
-    expect(labels).toEqual([]);
-    expect(container.querySelector(".sp-root--dock")).toBeNull();
+    expect(labels).toEqual(["Realtime"]);
+    expect(container.querySelector(".sp-root--dock")).toBeTruthy();
     expect(screen.queryByText("Result")).toBeNull();
     expect(screen.queryByText("User Conversation")).toBeNull();
+  });
+
+  it("renders realtime usage by time window without trend, git, or legacy footer", async () => {
+    const now = Date.now();
+    vi.mocked(mockLocalUsageStatistics).mockResolvedValue({
+      projectPath: "all",
+      projectName: "All Projects",
+      totalSessions: 2,
+      totalUsage: {
+        inputTokens: 1500,
+        outputTokens: 650,
+        cacheWriteTokens: 120,
+        cacheReadTokens: 340,
+        totalTokens: 2610,
+      },
+      estimatedCost: 0.42,
+      sessions: [
+        {
+          sessionId: "recent",
+          timestamp: now - 60 * 60 * 1000,
+          cwd: "/Users/me/project",
+          model: "claude-sonnet-4.5",
+          usage: {
+            inputTokens: 1000,
+            outputTokens: 500,
+            cacheWriteTokens: 100,
+            cacheReadTokens: 300,
+            totalTokens: 1900,
+          },
+          cost: 0.25,
+          provider: "anthropic",
+        },
+        {
+          sessionId: "older",
+          timestamp: now - 6 * 60 * 60 * 1000,
+          model: "gpt-5.4",
+          usage: {
+            inputTokens: 500,
+            outputTokens: 150,
+            cacheWriteTokens: 20,
+            cacheReadTokens: 40,
+            totalTokens: 710,
+          },
+          cost: 0.17,
+          provider: "openai",
+        },
+      ],
+      dailyUsage: [],
+      weeklyComparison: {
+        currentWeek: { sessions: 0, cost: 0, tokens: 0 },
+        lastWeek: { sessions: 0, cost: 0, tokens: 0 },
+        trends: { sessions: 0, cost: 0, tokens: 0 },
+      },
+      byModel: [],
+      totalEngineUsageCount: 0,
+      engineUsage: [],
+      aiCodeModifiedLines: 0,
+      dailyCodeChanges: [],
+      lastUpdated: now,
+    });
+
+    render(
+      <StatusPanel
+        workspaceName="desktop-cc-gui"
+        workspacePath="/Users/me/desktop-cc-gui"
+        branchName="main"
+        items={latestUserMessageItems}
+        isProcessing={false}
+        variant="dock"
+        selectedEngine="claude"
+        selectedModelId="claude-sonnet-4.5"
+        activeThreadId="thread-1"
+        lastDurationMs={125_000}
+      />,
+    );
+
+    expect(await screen.findByText("$0.25")).toBeTruthy();
+    expect(screen.getByText("缓存写入")).toBeTruthy();
+    expect(screen.getByText("缓存读取")).toBeTruthy();
+    expect(screen.getByText("main")).toBeTruthy();
+    expect(screen.getByText("2m 05s")).toBeTruthy();
+    expect(screen.queryByText("Token 趋势")).toBeNull();
+    expect(screen.queryByText("Git 变更")).toBeNull();
+    expect(screen.queryByText(/左下角显示 5h \/ 7d/)).toBeNull();
+
+    fireEvent.click(screen.getByRole("tab", { name: "7d" }));
+
+    await waitFor(() => {
+      expect(mockLocalUsageStatistics).toHaveBeenLastCalledWith({
+        scope: "all",
+        provider: "all",
+        dateRange: "7d",
+        workspacePath: null,
+      });
+    });
   });
 
   it("renders cost budget section in checkpoint panel when token usage is available", () => {
@@ -1919,10 +2022,11 @@ describe("StatusPanel", () => {
       document.querySelectorAll(".sp-tabs--dock .sp-tab-label"),
     ).map((node) => node.textContent);
     expect(labels).toEqual([
+      "Realtime",
+      "Result",
       "User Conversation",
       "statusPanel.tabTodos",
       "statusPanel.tabAgents",
-      "Result",
     ]);
     expect(screen.getByText("1/1")).toBeTruthy();
     expect(screen.getByText("0/1")).toBeTruthy();

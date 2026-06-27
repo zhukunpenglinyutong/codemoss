@@ -1665,6 +1665,7 @@ export type LocalUsageSessionSummary = {
   sessionId: string;
   sessionIdAliases?: string[];
   timestamp: number;
+  cwd?: string | null;
   model: string;
   usage: LocalUsageUsageData;
   cost: number;

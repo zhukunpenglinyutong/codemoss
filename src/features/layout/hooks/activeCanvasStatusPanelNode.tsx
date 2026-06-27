@@ -17,20 +17,24 @@ const selectActiveCanvasStatusPanelProps = (
   | "isProcessing"
   | "plan"
   | "activeThreadId"
-  | "activeTurnId"
-  | "activeTokenUsage"
-  | "itemsByThread"
-  | "threadStatusById"
-> => ({
+	  | "activeTurnId"
+	  | "activeTokenUsage"
+	  | "processingStartedAt"
+	  | "lastDurationMs"
+	  | "itemsByThread"
+	  | "threadStatusById"
+	> => ({
   items: snapshot.items,
   isProcessing: snapshot.isThinking,
   plan: snapshot.plan,
-  activeThreadId: snapshot.threadId,
-  activeTurnId: snapshot.activeTurnId,
-  activeTokenUsage: snapshot.activeTokenUsage,
-  itemsByThread: snapshot.threadItemsByThread,
-  threadStatusById: snapshot.threadStatusById,
-});
+	  activeThreadId: snapshot.threadId,
+	  activeTurnId: snapshot.activeTurnId,
+	  activeTokenUsage: snapshot.activeTokenUsage,
+	  processingStartedAt: snapshot.processingStartedAt,
+	  lastDurationMs: snapshot.lastDurationMs,
+	  itemsByThread: snapshot.threadItemsByThread,
+	  threadStatusById: snapshot.threadStatusById,
+	});
 
 export function ActiveCanvasStatusPanel(props: StatusPanelProps) {
   const activeCanvasStatusPanelProps = useActiveCanvasSelector(

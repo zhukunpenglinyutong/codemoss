@@ -7,6 +7,8 @@ import {
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
+import PanelRightClose from "lucide-react/dist/esm/icons/panel-right-close";
+import PanelRightOpen from "lucide-react/dist/esm/icons/panel-right-open";
 import { MainTopbar } from "../../app/components/MainTopbar";
 import { MemoryPanel } from "./MemoryPanel";
 
@@ -22,6 +24,7 @@ type DesktopLayoutProps = {
   showKanban: boolean;
   showGitHistory: boolean;
   hideRightPanel: boolean;
+  rightPanelCollapsed?: boolean;
   isSoloMode: boolean;
   kanbanNode: ReactNode;
   gitHistoryNode: ReactNode;
@@ -50,6 +53,8 @@ type DesktopLayoutProps = {
   onRightPanelResizeStart: (event: MouseEvent<HTMLDivElement>) => void;
   onPlanPanelResizeStart: (event: MouseEvent<HTMLDivElement>) => void;
   onGitHistoryPanelResizeStart: (event: PointerEvent<HTMLDivElement>) => void;
+  onCollapseRightPanel?: () => void;
+  onExpandRightPanel?: () => void;
 };
 
 export function DesktopLayout({
@@ -64,6 +69,7 @@ export function DesktopLayout({
   showKanban,
   showGitHistory,
   hideRightPanel,
+  rightPanelCollapsed = false,
   isSoloMode,
   kanbanNode,
   gitHistoryNode,
@@ -91,6 +97,8 @@ export function DesktopLayout({
   onRightPanelResizeStart,
   onPlanPanelResizeStart,
   onGitHistoryPanelResizeStart,
+  onCollapseRightPanel,
+  onExpandRightPanel,
 }: DesktopLayoutProps) {
   const { t } = useTranslation();
   const diffLayerRef = useRef<HTMLDivElement | null>(null);
@@ -110,6 +118,7 @@ export function DesktopLayout({
     editorSplitCompanion === "projectMap" &&
     !isEditorFileMaximized;
   const isBrowserDockSplitVisible = centerMode === "chat" && Boolean(browserDockNode);
+  const isMemoryMode = centerMode === "memory";
   const shouldPlaceComposerInChatColumn =
     isEditorSplitChatVisible || isBrowserDockSplitVisible;
   const hasBottomPanel = Boolean(planPanelNode);
@@ -118,6 +127,63 @@ export function DesktopLayout({
     centerMode !== "intentCanvas" &&
     !shouldPlaceComposerInChatColumn &&
     !isEditorSplitProjectMapVisible;
+  const isRightPanelCollapsed = rightPanelCollapsed || hideRightPanel;
+  const shouldShowRightPanel = !isRightPanelCollapsed && !settingsOpen && !isMemoryMode;
+  const rightPanelNode = shouldShowRightPanel ? (
+    <>
+      <div
+        className="right-panel-resizer"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label={t("layout.resizeRightPanel")}
+        onMouseDown={onRightPanelResizeStart}
+      />
+      {onCollapseRightPanel ? (
+        <button
+          type="button"
+          className="right-panel-shell-toggle"
+          onClick={onCollapseRightPanel}
+          aria-label="收起实时统计侧栏"
+          title="收起实时统计侧栏"
+        >
+          <PanelRightClose size={16} aria-hidden />
+        </button>
+      ) : null}
+      <div
+        className={`right-panel ${
+          hasBottomPanel && !isSoloMode ? "" : "plan-collapsed"
+        }${isSoloMode ? " is-solo" : ""}`}
+      >
+        {rightPanelToolbarNode}
+        <div className="right-panel-top">{gitDiffPanelNode}</div>
+        {hasBottomPanel ? (
+          <>
+            <div
+              className="right-panel-divider"
+              role="separator"
+              aria-orientation="horizontal"
+              aria-label={t("layout.resizePlanPanel")}
+              onMouseDown={onPlanPanelResizeStart}
+            />
+            <div className="right-panel-bottom">{planPanelNode}</div>
+          </>
+        ) : null}
+      </div>
+    </>
+  ) : null;
+  const rightPanelCollapsedNode =
+    isRightPanelCollapsed && !settingsOpen && !isMemoryMode && onExpandRightPanel ? (
+      <button
+        type="button"
+        className="right-panel-collapsed-rail"
+        onClick={onExpandRightPanel}
+        aria-label="展开实时统计侧栏"
+        title="展开实时统计侧栏"
+      >
+        <PanelRightOpen size={16} aria-hidden />
+        <span>实时统计</span>
+      </button>
+    ) : null;
 
   useEffect(() => {
     const diffLayer = diffLayerRef.current;
@@ -317,7 +383,6 @@ export function DesktopLayout({
     );
   }
 
-  const isMemoryMode = centerMode === "memory";
   const gitHistoryDockNode = showGitHistory ? (
     <div className="git-history-dock-overlay">
       <div
@@ -368,8 +433,10 @@ export function DesktopLayout({
           <>
             {updateToastNode}
             {showHome && homeNode}
+            {showHome ? rightPanelNode : null}
+            {showHome ? rightPanelCollapsedNode : null}
 
-            {showWorkspace && (
+            {showWorkspace && !showHome && (
               <>
                 <MainTopbar leftNode={topbarLeftNode} />
                 {approvalToastsNode}
@@ -474,37 +541,8 @@ export function DesktopLayout({
                   </div>
                 </div>
 
-                {!hideRightPanel && (
-                  <>
-                    <div
-                      className="right-panel-resizer"
-                      role="separator"
-                      aria-orientation="vertical"
-                      aria-label={t("layout.resizeRightPanel")}
-                      onMouseDown={onRightPanelResizeStart}
-                    />
-                    <div
-                      className={`right-panel ${
-                        hasBottomPanel && !isSoloMode ? "" : "plan-collapsed"
-                      }${isSoloMode ? " is-solo" : ""}`}
-                    >
-                      {rightPanelToolbarNode}
-                      <div className="right-panel-top">{gitDiffPanelNode}</div>
-                      {hasBottomPanel ? (
-                        <>
-                          <div
-                            className="right-panel-divider"
-                            role="separator"
-                            aria-orientation="horizontal"
-                            aria-label={t("layout.resizePlanPanel")}
-                            onMouseDown={onPlanPanelResizeStart}
-                          />
-                          <div className="right-panel-bottom">{planPanelNode}</div>
-                        </>
-                      ) : null}
-                    </div>
-                  </>
-                )}
+                {rightPanelNode}
+                {rightPanelCollapsedNode}
                 {shouldShowComposerBelowContent ? composerNode : null}
                 {runtimeConsoleDockNode}
                 {terminalDockNode}

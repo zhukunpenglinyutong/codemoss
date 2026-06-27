@@ -43,6 +43,7 @@ export interface CommandSummary {
 }
 
 export type TabType =
+  | "realtimeStats"
   | "todo"
   | "subagent"
   | "checkpoint"

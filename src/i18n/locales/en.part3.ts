@@ -12,7 +12,6 @@ const enPart3 = {
     mcpSkillsDescription: "Inspect MCP servers and browse global Skills from one place.",
     projectManagementGroupsTab: "Groups",
     projectManagementSessionsTab: "Session Management",
-    projectManagementUsageTab: "Usage",
     agentPromptManagementDescription: "Manage reusable agents and prompt assets from one place.",
     agentPromptAgentsTab: "Agents",
     agentPromptPromptsTab: "Prompts",

@@ -102,6 +102,24 @@ pub(super) struct CodexRuntimeReloadResult {
 }
 
 impl DaemonState {
+    pub(super) async fn local_usage_statistics(
+        &self,
+        scope: Option<String>,
+        provider: Option<String>,
+        date_range: Option<String>,
+        workspace_path: Option<String>,
+    ) -> Result<Value, String> {
+        let statistics = local_usage::local_usage_statistics_for_workspaces(
+            &self.workspaces,
+            scope,
+            provider,
+            date_range,
+            workspace_path,
+        )
+        .await?;
+        serde_json::to_value(statistics).map_err(|err| err.to_string())
+    }
+
     fn allowed_external_skill_roots(
         &self,
         workspaces: &HashMap<String, WorkspaceEntry>,

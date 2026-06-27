@@ -12,7 +12,6 @@ const zhPart3 = {
     mcpSkillsDescription: "在一个入口中查看 MCP 服务器状态并浏览全局 Skills。",
     projectManagementGroupsTab: "分组",
     projectManagementSessionsTab: "会话管理",
-    projectManagementUsageTab: "使用情况",
     agentPromptManagementDescription: "在一个入口中管理可复用智能体和提示词资产。",
     agentPromptAgentsTab: "智能体",
     agentPromptPromptsTab: "提示词库",

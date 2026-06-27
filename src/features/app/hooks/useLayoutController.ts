@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { useLayoutMode } from "../../layout/hooks/useLayoutMode";
 import { useResizablePanels } from "../../layout/hooks/useResizablePanels";
 import { useSidebarToggles } from "../../layout/hooks/useSidebarToggles";
@@ -46,6 +47,26 @@ export function useLayoutController({
     collapseRightPanel,
     expandRightPanel,
   } = useSidebarToggles({ isCompact });
+  const didEnsureRealtimePanelVisibleRef = useRef(false);
+
+  useEffect(() => {
+    if (isCompact || didEnsureRealtimePanelVisibleRef.current) {
+      return;
+    }
+    didEnsureRealtimePanelVisibleRef.current = true;
+    if (rightPanelCollapsed) {
+      expandRightPanel();
+    }
+    if (rightPanelWidth < 340) {
+      setRightPanelWidth(360);
+    }
+  }, [
+    expandRightPanel,
+    isCompact,
+    rightPanelCollapsed,
+    rightPanelWidth,
+    setRightPanelWidth,
+  ]);
 
   const {
     terminalOpen,

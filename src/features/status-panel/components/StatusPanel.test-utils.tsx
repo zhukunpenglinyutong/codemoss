@@ -1,5 +1,6 @@
 import { vi } from "vitest";
 import type { ConversationItem, TurnPlan } from "../../../types";
+import { localUsageStatistics } from "../../../services/tauri";
 import type { GovernanceEvidenceState } from "../../governance/evidence/useGovernanceEvidence";
 
 export const EMPTY_GOVERNANCE_EVIDENCE_STATE: GovernanceEvidenceState = {
@@ -25,6 +26,8 @@ export const mockEditableDiffReviewSurface = vi.fn(
   ),
 );
 
+export const mockLocalUsageStatistics = localUsageStatistics;
+
 vi.mock("../../git/components/WorkspaceEditableDiffReviewSurface", () => ({
   WorkspaceEditableDiffReviewSurface: (props: Record<string, unknown>) =>
     mockEditableDiffReviewSurface(props),
@@ -35,10 +38,22 @@ vi.mock("../../governance/evidence/useGovernanceEvidence", () => ({
     mockUseGovernanceEvidence(workspaceId, enabled),
 }));
 
+vi.mock("../../../services/tauri", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("../../../services/tauri")>();
+  return {
+    ...actual,
+    localUsageStatistics: vi.fn(),
+  };
+});
+
 export function resetStatusPanelTestMocks() {
   mockEditableDiffReviewSurface.mockClear();
   mockUseGovernanceEvidence.mockClear();
   mockUseGovernanceEvidence.mockReturnValue(EMPTY_GOVERNANCE_EVIDENCE_STATE);
+  vi.mocked(localUsageStatistics).mockReset();
+  vi.mocked(localUsageStatistics).mockImplementation(
+    () => new Promise(() => {}),
+  );
 }
 
 export const editToolItem: Extract<ConversationItem, { kind: "tool" }> = {

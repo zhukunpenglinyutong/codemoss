@@ -2216,6 +2216,7 @@ const enPart2 = {
 
   // Status Panel
   statusPanel: {
+    tabRealtimeStats: "Realtime",
     tabTodos: "Tasks",
     tabSubagents: "Subagents",
     tabAgents: "Agents",

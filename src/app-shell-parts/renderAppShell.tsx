@@ -116,6 +116,7 @@ export function renderAppShell(ctx: RenderAppShellContext) {
     composerNode,
     confirmClonePrompt,
     confirmWorktreePrompt,
+    collapseRightPanel,
     createWorkspaceGroup,
     debugPanelFullNode,
     debugPanelHeight,
@@ -131,6 +132,7 @@ export function renderAppShell(ctx: RenderAppShellContext) {
     editorSplitLayout,
     engineStatuses,
     errorToastsNode,
+    expandRightPanel,
     fileViewPanelNode,
     projectMapPanelNode,
     intentCanvasPanelNode,
@@ -500,6 +502,7 @@ export function renderAppShell(ctx: RenderAppShellContext) {
         showKanban={showKanban}
         showGitHistory={showGitHistory}
         hideRightPanel={activeTab === "spec" && rightPanelCollapsed}
+        rightPanelCollapsed={!isCompact && rightPanelCollapsed}
         isSoloMode={isSoloMode}
         kanbanNode={
           showKanban ? (
@@ -652,6 +655,8 @@ export function renderAppShell(ctx: RenderAppShellContext) {
         onRightPanelResizeStart={onRightPanelResizeStart}
         onPlanPanelResizeStart={onPlanPanelResizeStart}
         onGitHistoryPanelResizeStart={onGitHistoryPanelResizeStart}
+        onCollapseRightPanel={collapseRightPanel}
+        onExpandRightPanel={expandRightPanel}
       />
       <LockScreenOverlay
         isOpen={isPanelLocked}

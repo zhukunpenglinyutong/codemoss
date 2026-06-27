@@ -13,7 +13,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type {
   AppSettings,
   DiagnosticsBundleExportResult,
-  LocalUsageStatistics,
   WorkspaceInfo,
 } from "../../../types";
 import {
@@ -26,7 +25,6 @@ import {
   getWebServerStatus,
   listWorkspaceSessionFolders,
   listWorkspaceSessions,
-  localUsageStatistics,
   unarchiveWorkspaceSessions,
 } from "../../../services/tauri";
 import { writeClientStoreValue } from "../../../services/clientStorage";
@@ -111,7 +109,6 @@ vi.mock("../../../services/tauri", async () => {
     unarchiveWorkspaceSessions: vi.fn(),
     deleteWorkspaceSessions: vi.fn(),
     exportDiagnosticsBundle: vi.fn(),
-    localUsageStatistics: vi.fn(),
     getWebServerStatus: vi.fn(),
     getDaemonStatus: vi.fn(),
     getEmailSenderSettings: vi.fn(),
@@ -172,9 +169,6 @@ beforeEach(() => {
     filePath: "/tmp/diagnostics.json",
     generatedAt: "123",
   });
-  vi.mocked(localUsageStatistics).mockResolvedValue(
-    createLocalUsageStatistics(),
-  );
   vi.mocked(getWebServerStatus).mockResolvedValue({
     running: false,
     rpcEndpoint: "127.0.0.1:4732",
@@ -364,33 +358,6 @@ const createDoctorResult = () => ({
   resolvedBinaryPath: null,
   wrapperKind: null,
   fallbackRetried: false,
-});
-
-const createLocalUsageStatistics = (): LocalUsageStatistics => ({
-  projectPath: "/tmp/ws-a",
-  projectName: "Workspace A",
-  totalSessions: 1,
-  totalUsage: {
-    inputTokens: 12,
-    outputTokens: 34,
-    cacheWriteTokens: 0,
-    cacheReadTokens: 0,
-    totalTokens: 46,
-  },
-  estimatedCost: 0.0123,
-  sessions: [],
-  dailyUsage: [],
-  weeklyComparison: {
-    currentWeek: { sessions: 1, cost: 0.0123, tokens: 46 },
-    lastWeek: { sessions: 0, cost: 0, tokens: 0 },
-    trends: { sessions: 0, cost: 0, tokens: 0 },
-  },
-  byModel: [],
-  totalEngineUsageCount: 1,
-  engineUsage: [{ engine: "codex", count: 1 }],
-  aiCodeModifiedLines: 0,
-  dailyCodeChanges: [],
-  lastUpdated: Date.now(),
 });
 
 const renderDisplaySection = (
@@ -2291,15 +2258,12 @@ describe("SettingsView Shortcuts", () => {
     expect(screen.getByRole("button", { name: "Groups" })).toBeTruthy();
     expectTabButtonHasIcon("Groups");
     expectTabButtonHasIcon("Session Management");
-    expectTabButtonHasIcon("Usage");
+    expect(screen.queryByRole("button", { name: "Usage" })).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: "Session Management" }));
     await flushSettingsViewEffects();
     expect(
       screen.getByTestId("settings-project-sessions-expand-toggle"),
     ).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Usage" }));
-    await flushSettingsViewEffects();
-    expect(screen.getAllByText("Usage").length).toBeGreaterThanOrEqual(1);
 
     fireEvent.click(screen.getByRole("button", { name: "Agents / Prompts" }));
     await flushSettingsViewEffects();

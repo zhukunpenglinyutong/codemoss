@@ -9,6 +9,7 @@ import {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
 import Bot from "lucide-react/dist/esm/icons/bot";
 import FileEdit from "lucide-react/dist/esm/icons/file-edit";
 import ListChecks from "lucide-react/dist/esm/icons/list-checks";
@@ -44,10 +45,13 @@ import { EngineTaskOutputInspector } from "../../engine-task-output/components/E
 import { useEngineTaskOutputSnapshot } from "../../engine-task-output/hooks/useEngineTaskOutputSnapshot";
 import type { EngineTaskOutputSnapshot } from "../../engine-task-output/types";
 import { buildEngineTaskOutputSnapshot } from "../../engine-task-output/utils/engineTaskOutputProjection";
+import { RealtimeStatsPanel } from "./RealtimeStatsPanel";
 
 interface StatusPanelProps extends CodeAnnotationBridgeProps {
   workspaceId?: string | null;
+  workspaceName?: string | null;
   workspacePath?: string | null;
+  branchName?: string | null;
   items: ConversationItem[];
   isProcessing: boolean;
   expanded?: boolean;
@@ -59,6 +63,8 @@ interface StatusPanelProps extends CodeAnnotationBridgeProps {
   selectedEngine?: EngineType | null;
   selectedModelId?: string | null;
   activeTokenUsage?: ThreadTokenUsage | null;
+  processingStartedAt?: number | null;
+  lastDurationMs?: number | null;
   workspaceGitFiles?: GitFileStatus[];
   workspaceGitStagedFiles?: GitFileStatus[];
   workspaceGitUnstagedFiles?: GitFileStatus[];
@@ -111,10 +117,11 @@ type StatusPanelTabDefinition = {
 };
 
 const DOCK_TAB_ORDER: readonly TabType[] = [
+  "realtimeStats",
+  "checkpoint",
   "latestUserMessage",
   "todo",
   "subagent",
-  "checkpoint",
   "plan",
 ];
 
@@ -141,11 +148,7 @@ function resolvePreferredTab(
         dockTabAvailability,
       );
 
-    if (isVisible("plan")) {
-      return "plan";
-    }
-
-    for (const tab of DOCK_TAB_ORDER.filter((entry) => entry !== "plan")) {
+    for (const tab of DOCK_TAB_ORDER) {
       if (isVisible(tab)) {
         return tab;
       }
@@ -179,7 +182,9 @@ function isDockTabVisible(
 
 export const StatusPanel = memo(function StatusPanel({
   workspaceId = null,
+  workspaceName = null,
   workspacePath = null,
+  branchName = null,
   items,
   isProcessing,
   expanded = true,
@@ -191,6 +196,8 @@ export const StatusPanel = memo(function StatusPanel({
   selectedEngine = null,
   selectedModelId = null,
   activeTokenUsage = null,
+  processingStartedAt = null,
+  lastDurationMs = null,
   workspaceGitFiles,
   workspaceGitStagedFiles = [],
   workspaceGitUnstagedFiles = [],
@@ -332,6 +339,7 @@ export const StatusPanel = memo(function StatusPanel({
   const shouldShowPlanTab = showPlanTab && hasTabData(planCompleted, planTotal);
   const dockTabAvailability = useMemo<Partial<Record<TabType, boolean>>>(
     () => ({
+      realtimeStats: true,
       latestUserMessage: true,
       todo: shouldShowTodoTab,
       subagent: shouldShowSubagentTab,
@@ -558,6 +566,21 @@ export const StatusPanel = memo(function StatusPanel({
 
   const tabDefinitions = useMemo<Record<TabType, StatusPanelTabDefinition>>(
     () => ({
+      realtimeStats: {
+        tab: "realtimeStats",
+        labelKey: "statusPanel.tabRealtimeStats",
+        icon: BarChart3,
+        visible:
+          variant === "dock" &&
+          isDockTabVisible(
+            variant,
+            "realtimeStats",
+            showPlanTab,
+            visibleDockTabs,
+            dockTabAvailability,
+          ),
+        badge: isProcessing ? <span className="sp-tab-loading" /> : null,
+      },
       latestUserMessage: {
         tab: "latestUserMessage",
         labelKey: "statusPanel.tabLatestUserMessage",
@@ -710,6 +733,22 @@ export const StatusPanel = memo(function StatusPanel({
 
   const contentNode = (
     <>
+      {activeTab === "realtimeStats" && (
+        <RealtimeStatsPanel
+          workspaceName={workspaceName}
+          workspacePath={workspacePath}
+          branchName={branchName}
+          activeThreadId={activeThreadId}
+          activeTurnId={activeTurnId}
+          selectedEngine={selectedEngine}
+          selectedModelId={selectedModelId}
+          activeTokenUsage={activeTokenUsage}
+          items={effectiveItems}
+          isProcessing={isProcessing}
+          processingStartedAt={processingStartedAt}
+          lastDurationMs={lastDurationMs}
+        />
+      )}
       {activeTab === "todo" && (
         <TodoList todos={usePlanAsTaskList ? codexTaskItems : todos} />
       )}
@@ -835,10 +874,10 @@ export const StatusPanel = memo(function StatusPanel({
           <div className="sp-tabs sp-tabs--dock">
             {onCollapseDock || onExpandDock ? (
               <button
-                type="button"
-                className="sp-dock-panel-toggle"
-                onClick={dockCollapsed ? onExpandDock : onCollapseDock}
-                aria-label={
+	                type="button"
+	                className="sp-dock-panel-toggle"
+	                onClick={dockCollapsed ? onExpandDock : onCollapseDock}
+	                aria-label={
                   dockCollapsed ? "Show status panel" : "Hide status panel"
                 }
                 title={dockCollapsed ? "Show status panel" : "Hide status panel"}

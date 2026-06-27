@@ -164,6 +164,7 @@
   flex-direction: row;
   align-items: center;
   gap: 4px;
+  min-width: 0;
 }
 
 .sidebar-settings-dropdown-wrapper {
@@ -175,7 +176,6 @@
   height: 32px;
   flex: 0 0 32px;
 }
-
 
 .sidebar-settings-dropdown {
   width: 200px;
