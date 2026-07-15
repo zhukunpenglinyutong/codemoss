@@ -1,0 +1,60 @@
+{
+  "id": "add-windows-portable-build",
+  "name": "add-windows-portable-build",
+  "title": "Add Windows portable build workflow",
+  "description": "Add an independent Windows x64 portable ZIP build and verify an unsigned local macOS arm64 DMG from the same source changes.",
+  "status": "in_progress",
+  "dev_type": "fullstack",
+  "scope": "packaging",
+  "package": null,
+  "priority": "P2",
+  "creator": "xiaduan",
+  "assignee": "xiaduan",
+  "createdAt": "2026-07-15",
+  "completedAt": null,
+  "branch": "codex/windows-portable-build",
+  "base_branch": "main",
+  "worktree_path": null,
+  "current_phase": 5,
+  "next_action": [
+    {
+      "phase": 1,
+      "action": "brainstorm"
+    },
+    {
+      "phase": 2,
+      "action": "research"
+    },
+    {
+      "phase": 3,
+      "action": "implement"
+    },
+    {
+      "phase": 4,
+      "action": "check"
+    },
+    {
+      "phase": 5,
+      "action": "update-spec"
+    },
+    {
+      "phase": 6,
+      "action": "record-session"
+    }
+  ],
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [
+    ".github/workflows/windows-portable.yml",
+    "scripts/build-windows-portable.mjs",
+    "scripts/build-windows-portable.test.mjs",
+    ".trellis/spec/backend/windows-portable-build.md",
+    "src-tauri/src/bin/cc_gui_daemon.rs",
+    "src-tauri/src/bin/cc_gui_daemon/daemon_state_tests.rs"
+  ],
+  "notes": "Local validation completed: lint, typecheck, runtime contracts, strict doctor, 12 portable packaging assertions, focused daemon compatibility test, and unsigned macOS arm64 DMG verify/mount/launch. Full npm test retains six unrelated AppShell startup timeouts reproduced on Node 20 and Node 24. Awaiting push, PR, and Windows Actions validation.",
+  "meta": {}
+}

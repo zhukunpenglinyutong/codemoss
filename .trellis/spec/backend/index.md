@@ -21,6 +21,7 @@
 | [Computer Use Bridge](./computer-use-bridge.md) | Computer Use status-only bridge 的 command / platform / status contract |
 | [Claude Context Usage Contract](./claude-context-usage-contract.md) | Claude home resolution、runtime `context_window`、post-turn `/context` probe 与 `UsageUpdate` payload contract |
 | [Codex Provider-Scoped Runtime Contract](./codex-provider-scoped-runtime.md) | Codex provider profile、provider-scoped `CODEX_HOME`、runtime key、thread binding、fork、stale retry 与 `codex-tui` launch identity contract |
+| [Windows Portable Build Contract](./windows-portable-build.md) | Windows x64 免安装 ZIP 的命令、资源布局、CI artifact 与失败契约 |
 | [Quality Guidelines](./quality-guidelines.md) | review 门禁与验证命令 |
 | [Web Assets Package Contract](./web-assets-package-contract.md) | Web Service ZIP artifact、安装事务、Tauri status 与 daemon asset resolution contract |
 
@@ -34,3 +35,4 @@
 - 涉及 Web Service frontend assets、Release ZIP、managed install 或 daemon asset candidate 时，先读 [Web Assets Package Contract](./web-assets-package-contract.md)。
 - 涉及 Claude usage/context/history 时，先读 [Claude Context Usage Contract](./claude-context-usage-contract.md)。
 - 涉及 Codex provider、`CODEX_HOME`、`start_thread` / `fork_thread` / `turn/start`、Codex history/catalog 或 app-server launch identity 时，先读 [Codex Provider-Scoped Runtime Contract](./codex-provider-scoped-runtime.md)。
+- 涉及 Windows 便携包命令、资源目录或 GitHub Actions artifact 时，先读 [Windows Portable Build Contract](./windows-portable-build.md)。

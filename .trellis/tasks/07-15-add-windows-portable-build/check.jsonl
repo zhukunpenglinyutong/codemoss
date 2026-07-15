@@ -1,0 +1,5 @@
+{"file": ".claude/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".claude/commands/trellis/check.md", "reason": "Code quality check spec"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Check lint/typecheck/test gates"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Check doctor/runtime/build gates"}
+{"file": ".trellis/spec/backend/windows-portable-build.md", "reason": "Verify portable artifact contract"}

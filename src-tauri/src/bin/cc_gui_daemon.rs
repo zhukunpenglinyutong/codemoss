@@ -183,6 +183,32 @@ mod codex {
         pub(crate) const CODEX_DISK_PROVIDER_PROFILE_ID: &str = "__disk__";
         pub(crate) const CODEX_DISK_PROVIDER_PROFILE_NAME: &str = "codex-tui/default-config";
 
+        #[derive(Debug, Clone)]
+        pub(crate) enum CodexProviderProfile {
+            Disk,
+            Managed {
+                id: String,
+                name: String,
+                config_toml: String,
+                auth_json: Option<String>,
+            },
+        }
+
+        pub(crate) fn resolve_codex_provider_profile(
+            provider_profile_id: Option<&str>,
+        ) -> Result<CodexProviderProfile, String> {
+            let provider_profile_id = provider_profile_id
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+                .unwrap_or(CODEX_DISK_PROVIDER_PROFILE_ID);
+            if provider_profile_id == CODEX_DISK_PROVIDER_PROFILE_ID {
+                return Ok(CodexProviderProfile::Disk);
+            }
+            Err(format!(
+                "Codex provider-scoped runtime is unavailable in daemon mode for provider {provider_profile_id}; use desktop runtime or select disk .codex provider."
+            ))
+        }
+
         pub(crate) fn codex_provider_binding_for_profile_id(
             provider_profile_id: &str,
         ) -> CodexProviderBinding {

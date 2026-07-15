@@ -142,9 +142,12 @@ npm run build:mac-arm64      # macOS Apple Silicon
 npm run build:mac-x64        # macOS Intel
 npm run build:mac-universal  # macOS Universal
 npm run build:win-x64        # Windows x64
+npm run build:win-portable   # Windows x64 portable ZIP (run on Windows)
 npm run build:linux-x64      # Linux x64
 npm run build:linux-arm64    # Linux arm64
 ```
+
+The Windows portable build is written to `release-local/ccgui_<version>_windows_x64_portable.zip`. It requires no installer, but relies on the system WebView2 Runtime and continues to store settings and sessions in Windows AppData. Without a Windows development machine, run the **Windows Portable** GitHub Actions workflow and download its artifact; it uses no release secrets and does not create a formal GitHub Release.
 
 ---
 

@@ -36,6 +36,7 @@
 - Provider-selected fork defaults to parent provider when `providerProfileId` is blank. Cross-provider fork MUST validate/ensure selected provider first, then native-fork in the parent provider runtime, copy the native child history into the selected provider home when homes differ, then record child binding.
 - Stale `turn/start` recovery stays inside the same `WorkspaceSession`: classify `thread not found` / `thread_not_found`, clear foreground work, send bounded `thread/resume`, then use short bounded readiness backoff before retrying the original `turn/start`; if the retry still reports missing thread, it may retry once more and MUST clear foreground work if recovery fails.
 - Daemon adapter currently supports only disk Codex runtime. It MUST parse `providerProfileId`; `None`, blank, and `__disk__` are allowed; managed provider ids return an explicit unsupported provider-scoped runtime error.
+- Daemon's `codex::provider_profile` compatibility module MUST expose the same `CodexProviderProfile` and `resolve_codex_provider_profile` surface consumed by `shared/codex_core.rs`; its resolver returns `Disk` for `None`/blank/`__disk__` and rejects managed ids without constructing a managed runtime.
 - Codex app-server launch MUST set `initialize.clientInfo.name/title` to `codex-tui`, resolve `clientInfo.version` from `codex --version`, fallback to `0.137.0`, and set terminal env hints `TERM_PROGRAM` / `TERM_PROGRAM_VERSION` while preserving existing env values when present.
 
 ### 4. Validation & Error Matrix
@@ -64,6 +65,7 @@
 ### 6. Tests Required
 
 - Rust tests for `codex_runtime_key`, disk legacy key behavior, provider id sanitization, managed materialization, auth JSON validation, owner-only permissions where platform supports it, and launch-critical override extraction.
+- Rust tests must compile the `cc_gui_daemon` target and assert its provider-profile compatibility resolver accepts disk aliases and rejects managed ids.
 - Rust tests for thread binding metadata read/write and catalog projection fields `providerProfileId/source/name/availability`.
 - Rust tests for provider binding lookup key order: canonical `codex:<workspaceId>:<threadId>`, legacy double-colon, bare id, `codex:<threadId>`, trimmed inputs, blank thread id.
 - Rust tests for fork response enrichment and cross-provider history copy failure diagnostics.

@@ -72,6 +72,22 @@ fn daemon_provider_profile_rejects_managed_ids() {
     assert!(error.contains("provider-scoped runtime is unavailable in daemon mode"));
 }
 
+#[test]
+fn daemon_provider_profile_stub_matches_shared_core_surface() {
+    assert!(matches!(
+        codex::provider_profile::resolve_codex_provider_profile(None).unwrap(),
+        codex::provider_profile::CodexProviderProfile::Disk
+    ));
+    assert!(matches!(
+        codex::provider_profile::resolve_codex_provider_profile(Some("  __disk__  ")).unwrap(),
+        codex::provider_profile::CodexProviderProfile::Disk
+    ));
+
+    let error = codex::provider_profile::resolve_codex_provider_profile(Some("managed-provider"))
+        .unwrap_err();
+    assert!(error.contains("provider-scoped runtime is unavailable in daemon mode"));
+}
+
 #[tokio::test(flavor = "current_thread")]
 async fn daemon_disk_start_confirms_ready_before_returning() {
     let events = Rc::new(RefCell::new(Vec::<String>::new()));

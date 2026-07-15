@@ -142,9 +142,12 @@ npm run build:mac-arm64      # macOS Apple Silicon
 npm run build:mac-x64        # macOS Intel
 npm run build:mac-universal  # macOS 通用包
 npm run build:win-x64        # Windows x64
+npm run build:win-portable   # Windows x64 免安装 ZIP（需在 Windows 上运行）
 npm run build:linux-x64      # Linux x64
 npm run build:linux-arm64    # Linux arm64
 ```
+
+Windows 便携包会输出到 `release-local/ccgui_<version>_windows_x64_portable.zip`。它不需安装，但依赖系统已有 WebView2 Runtime，配置和会话仍保存在 Windows AppData。没有 Windows 开发机时，可在 GitHub Actions 中运行 **Windows Portable** workflow 并下载 artifact；该流程不需发布密钥，也不会创建正式 Release。
 
 ---
 

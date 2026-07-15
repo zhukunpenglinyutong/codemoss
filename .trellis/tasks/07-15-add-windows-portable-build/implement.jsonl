@@ -1,0 +1,6 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/backend/index.md", "reason": "Backend development guide"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend development guide"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Repository quality gates and script error handling"}
+{"file": ".trellis/spec/backend/quality-guidelines.md", "reason": "Deterministic error paths and verification commands"}
+{"file": ".trellis/spec/backend/windows-portable-build.md", "reason": "Portable command, layout, CI and error contract"}

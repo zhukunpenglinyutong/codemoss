@@ -1,0 +1,119 @@
+name: Windows Portable
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-portable-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: windows portable (x64)
+    runs-on: windows-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install Rust stable
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: './src-tauri -> target'
+          cache-bin: false
+          shared-key: v1-win-x64-portable-rust
+          cache-on-failure: true
+
+      - name: Configure sccache environment
+        shell: pwsh
+        run: |
+          "RUSTC_WRAPPER=sccache" >> $env:GITHUB_ENV
+          "SCCACHE_GHA_ENABLED=true" >> $env:GITHUB_ENV
+          "SCCACHE_DIR=$env:LOCALAPPDATA\sccache" >> $env:GITHUB_ENV
+
+      - name: Setup sccache
+        uses: mozilla-actions/sccache-action@v0.0.10
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test portable packaging contract
+        run: npm run test:win-portable-packaging
+
+      - name: Run Windows doctor checks
+        run: npm run doctor:win
+
+      - name: Build portable ZIP
+        env:
+          NODE_OPTIONS: "--max-old-space-size=8192"
+        run: npm run build:win-portable
+
+      - name: Resolve artifact metadata
+        id: artifact
+        shell: pwsh
+        run: |
+          $version = (Get-Content src-tauri/tauri.conf.json | ConvertFrom-Json).version
+          "version=$version" >> $env:GITHUB_OUTPUT
+          "name=ccgui-$version-windows-x64-portable" >> $env:GITHUB_OUTPUT
+          "zip=release-local/ccgui_${version}_windows_x64_portable.zip" >> $env:GITHUB_OUTPUT
+          "root=release-local/ccgui_${version}_windows_x64_portable" >> $env:GITHUB_OUTPUT
+
+      - name: Verify portable runtime and archive
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          $portableRoot = "${{ steps.artifact.outputs.root }}"
+          $zipPath = "${{ steps.artifact.outputs.zip }}"
+
+          & (Join-Path $portableRoot "cc_gui_daemon.exe") --help
+          if ($LASTEXITCODE -ne 0) {
+            throw "cc_gui_daemon.exe --help failed with exit code $LASTEXITCODE"
+          }
+
+          $verifyRoot = Join-Path $env:RUNNER_TEMP "ccgui-portable-verify"
+          Remove-Item $verifyRoot -Recurse -Force -ErrorAction SilentlyContinue
+          Expand-Archive -LiteralPath $zipPath -DestinationPath $verifyRoot
+
+          $required = @(
+            "cc-gui.exe",
+            "cc_gui_daemon.exe",
+            "dist/index.html",
+            "dist/assets",
+            "curated-skills",
+            "skills-lock.json",
+            "PORTABLE_README.txt"
+          )
+          foreach ($relativePath in $required) {
+            $resolved = Join-Path $verifyRoot $relativePath
+            if (-not (Test-Path $resolved)) {
+              throw "Portable ZIP is missing $relativePath"
+            }
+          }
+
+          $process = Start-Process -FilePath (Join-Path $verifyRoot "cc-gui.exe") -WorkingDirectory $verifyRoot -PassThru
+          Start-Sleep -Seconds 8
+          if ($process.HasExited) {
+            throw "cc-gui.exe exited during startup smoke test with exit code $($process.ExitCode)"
+          }
+          Stop-Process -Id $process.Id -Force
+
+      - name: Upload portable artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.artifact.outputs.name }}
+          path: ${{ steps.artifact.outputs.zip }}
+          if-no-files-found: error
+          retention-days: 14
