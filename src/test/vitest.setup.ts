@@ -219,7 +219,7 @@ vi.mock("react-i18next", () => ({
           "MCP routing notice: detected `playwright-mcp`, automatically mapped this session to `chrome-devtools`.",
         "threads.claudeMcpRouteUnavailable":
           "MCP routing notice: detected `playwright-mcp`, but this session has not confirmed that tool is visible.",
-        "app.title": "ccgui",
+        "app.title": "CodePort",
         "app.subtitle": "Orchestrate agents across your local projects.",
         "home.latestAgents": "Latest agents",
         "home.agentReplied": "Agent replied.",
@@ -372,7 +372,7 @@ vi.mock("react-i18next", () => ({
         "settings.openReleaseNotes": "Open release notes",
         "settings.cliValidationTitle": "CLI Validation",
         "settings.cliValidationDescription":
-          "Validate the CLIs used by ccgui, choose the shared execution backend once, and switch diagnostics between Codex and Claude Code.",
+          "Validate the CLIs used by CodePort, choose the shared execution backend once, and switch diagnostics between Codex and Claude Code.",
         "settings.cliExecutionBackendTitle": "Execution backend",
         "settings.cliExecutionBackendDescription":
           "These transport settings are shared by Codex and Claude Code runtime requests.",
@@ -831,7 +831,7 @@ vi.mock("react-i18next", () => ({
         "settings.preloadGitDiffsDesc": "Make viewing git diff faster.",
         // Codex section
         "settings.codexTitle": "Codex",
-        "settings.codexDescription": "Configure the Codex CLI used by ccgui and validate the install.",
+        "settings.codexDescription": "Configure the Codex CLI used by CodePort and validate the install.",
         "settings.defaultCodexPath": "Default Codex path",
         "settings.codexPlaceholder": "codex",
         "settings.usePath": "Use PATH",
@@ -880,7 +880,7 @@ vi.mock("react-i18next", () => ({
         "settings.remoteBackendToken": "Token (optional)",
         "settings.remoteBackendHostAriaLabel": "Remote backend host",
         "settings.remoteBackendTokenAriaLabel": "Remote backend token",
-        "settings.remoteBackendDesc": "Start the daemon separately and point ccgui to it (host:port + token).",
+        "settings.remoteBackendDesc": "Start the daemon separately and point CodePort to it (host:port + token).",
         "settings.globalAgentsMd": "Global AGENTS.md",
         "settings.globalAgentsMdPlaceholder": "Add global instructions for Codex agents…",
         "settings.storedAt": "Stored at",

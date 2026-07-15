@@ -8,7 +8,7 @@ vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {
-        "app.title": "ccgui",
+        "app.title": "CodePort",
         "app.subtitle": "Your AI coding companion",
         "home.welcome": "Welcome",
         "home.subtitle": "What would you like to build today?",

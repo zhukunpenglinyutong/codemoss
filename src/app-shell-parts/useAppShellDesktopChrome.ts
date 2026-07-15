@@ -11,7 +11,7 @@ export function useAppShellDesktopChrome(activeWorkspace: WorkspaceInfo | null) 
   const isMacDesktop = useMemo(() => isMacPlatform(), []);
 
   useEffect(() => {
-    const title = activeWorkspace ? `ccgui - ${activeWorkspace.name}` : "ccgui";
+    const title = activeWorkspace ? `CodePort - ${activeWorkspace.name}` : "CodePort";
     try {
       void getCurrentWindow()
         .setTitle(title)

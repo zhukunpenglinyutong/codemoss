@@ -192,15 +192,15 @@ jobs:
         run: |
           set -euo pipefail
           ditto -c -k --keepParent \
-            src-tauri/target/release/bundle/macos/ccgui.app \
-            ccgui.zip
+            src-tauri/target/release/bundle/macos/CodePort.app \
+            CodePort.zip
 
-          xcrun notarytool submit ccgui.zip \
+          xcrun notarytool submit CodePort.zip \
             --keychain-profile "$NOTARY_PROFILE_NAME" \
             --wait
 
           xcrun stapler staple \
-            src-tauri/target/release/bundle/macos/ccgui.app
+            src-tauri/target/release/bundle/macos/CodePort.app
 
       - name: Package artifacts
         run: |
@@ -217,17 +217,18 @@ jobs:
           mkdir -p release-artifacts
 
           ditto -c -k --keepParent \
-            src-tauri/target/release/bundle/macos/ccgui.app \
-            release-artifacts/ccgui.zip
+            src-tauri/target/release/bundle/macos/CodePort.app \
+            release-artifacts/CodePort.zip
 
           ARCH="${{ matrix.arch }}"
           bash scripts/create-dmg.sh \
-            src-tauri/target/release/bundle/macos/ccgui.app \
-            release-artifacts/ccgui_${VERSION}_${ARCH}.dmg
+            src-tauri/target/release/bundle/macos/CodePort.app \
+            release-artifacts/CodePort_${VERSION}_${ARCH}.dmg \
+            CodePort
 
           COPYFILE_DISABLE=1 tar -czf \
-            src-tauri/target/release/bundle/macos/ccgui.app.tar.gz \
-            -C src-tauri/target/release/bundle/macos ccgui.app
+            src-tauri/target/release/bundle/macos/CodePort.app.tar.gz \
+            -C src-tauri/target/release/bundle/macos CodePort.app
 
           # Write the base64-encoded key to file (tauri signer expects this format)
           mkdir -p "$HOME/.tauri"
@@ -236,22 +237,22 @@ jobs:
           npm run tauri signer sign -- \
             -f "$HOME/.tauri/ccgui.key" \
             -p "$TAURI_SIGNING_PRIVATE_KEY_PASSWORD" \
-            src-tauri/target/release/bundle/macos/ccgui.app.tar.gz
+            src-tauri/target/release/bundle/macos/CodePort.app.tar.gz
 
-          cp src-tauri/target/release/bundle/macos/ccgui.app.tar.gz \
-            release-artifacts/ccgui_${ARCH}.app.tar.gz
-          cp src-tauri/target/release/bundle/macos/ccgui.app.tar.gz.sig \
-            release-artifacts/ccgui_${ARCH}.app.tar.gz.sig
+          cp src-tauri/target/release/bundle/macos/CodePort.app.tar.gz \
+            release-artifacts/codeport_${ARCH}.app.tar.gz
+          cp src-tauri/target/release/bundle/macos/CodePort.app.tar.gz.sig \
+            release-artifacts/codeport_${ARCH}.app.tar.gz.sig
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
           name: macos-${{ matrix.arch }}
           path: |
-            release-artifacts/ccgui.zip
-            release-artifacts/ccgui_*_${{ matrix.arch }}.dmg
-            release-artifacts/ccgui_${{ matrix.arch }}.app.tar.gz
-            release-artifacts/ccgui_${{ matrix.arch }}.app.tar.gz.sig
+            release-artifacts/CodePort.zip
+            release-artifacts/CodePort_*_${{ matrix.arch }}.dmg
+            release-artifacts/codeport_${{ matrix.arch }}.app.tar.gz
+            release-artifacts/codeport_${{ matrix.arch }}.app.tar.gz.sig
 
   build_linux:
     name: appimage (x86_64)
@@ -472,8 +473,8 @@ jobs:
           PY
           )
 
-          SIGNATURE_AARCH64=$(cat release-artifacts/ccgui_aarch64.app.tar.gz.sig)
-          SIGNATURE_X86_64=$(cat release-artifacts/ccgui_x86_64.app.tar.gz.sig)
+          SIGNATURE_AARCH64=$(cat release-artifacts/codeport_aarch64.app.tar.gz.sig)
+          SIGNATURE_X86_64=$(cat release-artifacts/codeport_x86_64.app.tar.gz.sig)
           LAST_TAG=$(git tag --sort=-version:refname \
             | grep -v "^v${VERSION}$" \
             | head -n 1 || true)
@@ -531,11 +532,11 @@ jobs:
 
           platforms = {
             "darwin-aarch64": {
-              "url": "https://github.com/zhukunpenglinyutong/desktop-cc-gui/releases/download/v${VERSION}/ccgui_aarch64.app.tar.gz",
+              "url": "https://github.com/zhukunpenglinyutong/desktop-cc-gui/releases/download/v${VERSION}/codeport_aarch64.app.tar.gz",
               "signature": "${SIGNATURE_AARCH64}",
             },
             "darwin-x86_64": {
-              "url": "https://github.com/zhukunpenglinyutong/desktop-cc-gui/releases/download/v${VERSION}/ccgui_x86_64.app.tar.gz",
+              "url": "https://github.com/zhukunpenglinyutong/desktop-cc-gui/releases/download/v${VERSION}/codeport_x86_64.app.tar.gz",
               "signature": "${SIGNATURE_X86_64}",
             }
           }
@@ -601,13 +602,13 @@ jobs:
 
           ASSETS=()
           for pattern in \
-            "release-artifacts/ccgui.zip" \
-            "release-artifacts/ccgui_*_aarch64.dmg" \
-            "release-artifacts/ccgui_*_x86_64.dmg" \
-            "release-artifacts/ccgui_aarch64.app.tar.gz" \
-            "release-artifacts/ccgui_aarch64.app.tar.gz.sig" \
-            "release-artifacts/ccgui_x86_64.app.tar.gz" \
-            "release-artifacts/ccgui_x86_64.app.tar.gz.sig" \
+            "release-artifacts/CodePort.zip" \
+            "release-artifacts/CodePort_*_aarch64.dmg" \
+            "release-artifacts/CodePort_*_x86_64.dmg" \
+            "release-artifacts/codeport_aarch64.app.tar.gz" \
+            "release-artifacts/codeport_aarch64.app.tar.gz.sig" \
+            "release-artifacts/codeport_x86_64.app.tar.gz" \
+            "release-artifacts/codeport_x86_64.app.tar.gz.sig" \
             "release-artifacts/*.AppImage*" \
             "release-artifacts/*-setup.exe" \
             "release-artifacts/*-setup.exe.sig" \

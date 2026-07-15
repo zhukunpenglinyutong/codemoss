@@ -52,6 +52,8 @@
     "scripts/build-windows-portable.mjs",
     "scripts/build-windows-portable.test.mjs",
     ".trellis/spec/backend/windows-portable-build.md",
+    ".trellis/spec/backend/desktop-branding-contract.md",
+    "src-tauri/icons/codeport-app-icon.svg",
     "src-tauri/src/bin/cc_gui_daemon.rs",
     "src-tauri/src/bin/cc_gui_daemon/daemon_state_tests.rs"
   ],

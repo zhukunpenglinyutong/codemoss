@@ -45,9 +45,9 @@ export function AboutView() {
           <img
             className="about-icon"
             src="/app-icon.png"
-            alt="ccgui icon"
+            alt="CodePort icon"
           />
-          <div className="about-title">ccgui</div>
+          <div className="about-title">CodePort</div>
         </div>
         <div className="about-version">
           {version ? `${t("about.version")} ${version}` : `${t("about.version")} —`}

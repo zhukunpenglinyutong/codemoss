@@ -73,7 +73,7 @@ const zhPart1 = {
 
   // 应用
   app: {
-    title: "ccgui",
+    title: "CodePort",
     subtitle: "下一代 VibeCoding编辑器",
   },
 
@@ -288,7 +288,7 @@ const zhPart1 = {
     announcementTag: "New",
     announcementText: "探索首页模板、流程卡片与启动提示",
     announcementAction: "查看",
-    title: "ccgui Agent，让你的工作更轻松",
+    title: "CodePort Agent，让你的工作更轻松",
     titleLineOne: "按下回车",
     titleLineTwo: "更快开始构建",
     subtitle:
@@ -879,7 +879,7 @@ const zhPart1 = {
     terminalShellPathSave: "保存终端 Shell 路径",
     terminalShellPathClear: "清除终端 Shell 路径",
     behaviorProxyTitle: "网络代理",
-    behaviorProxyDesc: "启用后，ccgui 及其启动的联网子进程将优先使用该代理。",
+    behaviorProxyDesc: "启用后，CodePort 及其启动的联网子进程将优先使用该代理。",
     behaviorProxyEnabled: "启用网络代理",
     behaviorProxyEnabledDesc: "用于 Codex、OpenCode、Git 远程操作等联网链路。",
     behaviorProxyAddress: "代理地址",
@@ -1866,7 +1866,7 @@ const zhPart1 = {
     // Codex 部分
     cliValidationTitle: "CLI 验证",
     cliValidationDescription:
-      "统一验证 ccgui 使用的 CLI，并先选择共享执行后端，再在 Codex 与 Claude Code 之间切换诊断。",
+      "统一验证 CodePort 使用的 CLI，并先选择共享执行后端，再在 Codex 与 Claude Code 之间切换诊断。",
     cliExecutionBackendTitle: "执行后端",
     cliExecutionBackendDescription:
       "这组 transport 配置会同时影响 Codex 与 Claude Code 的运行链路。",
@@ -1880,7 +1880,7 @@ const zhPart1 = {
     openCodeCliDisableDescription:
       "彻底禁用 OpenCode CLI。禁用后，启动探测、provider 检查和相关入口会立刻停止。",
     codexTitle: "Codex",
-    codexDescription: "配置 ccgui 使用的 Codex CLI 并验证安装。",
+    codexDescription: "配置 CodePort 使用的 Codex CLI 并验证安装。",
     defaultClaudePath: "默认 Claude Code 路径",
     claudePlaceholder: "claude",
     defaultCodexPath: "默认 Codex 路径",
@@ -1894,7 +1894,7 @@ const zhPart1 = {
     codexArgsDescSuffix: "之前传递的额外标志。使用引号表示带空格的值。",
     codexLaunchConfigurationTitle: "启动配置",
     codexLaunchConfigurationDescription:
-      "预览 ccgui 下次启动 Codex runtime 时实际使用的可执行文件和参数。",
+      "预览 CodePort 下次启动 Codex runtime 时实际使用的可执行文件和参数。",
     previewLaunch: "预览启动",
     previewingLaunch: "正在预览启动...",
     codexLaunchPreviewTitle: "启动预览",
@@ -1991,7 +1991,7 @@ const zhPart1 = {
     runtimeEngineObservationDescription:
       "按引擎拆分观测受管 runtime 与进程树，单独展示 Codex / Claude，便于定位后台进程来源。",
     runtimeEngineObservationScopeNote:
-      "这里统计 ccgui 托管的 runtime 实例和进程树，不等同于当前聊天 tab 选择的引擎。Claude 会话里的 /status 与 /mcp 会交给 Claude CLI 执行；Codex 计数通常代表 GUI 后台 app-server/runtime。",
+      "这里统计 CodePort 托管的 runtime 实例和进程树，不等同于当前聊天 tab 选择的引擎。Claude 会话里的 /status 与 /mcp 会交给 Claude CLI 执行；Codex 计数通常代表 GUI 后台 app-server/runtime。",
     runtimeEngineCodex: "Codex",
     runtimeEngineClaude: "Claude",
     runtimeEngineGemini: "Gemini",
@@ -2131,7 +2131,7 @@ const zhPart1 = {
     remoteBackendHostAriaLabel: "远程后端主机",
     remoteBackendTokenAriaLabel: "远程后端令牌",
     remoteBackendDesc:
-      "单独启动守护进程并将 ccgui 指向它（host:port + token）。",
+      "单独启动守护进程并将 CodePort 指向它（host:port + token）。",
     webServiceTitle: "Web 服务",
     webServiceDescription: "管理由 daemon 暴露的可浏览器访问 Web 服务。",
     webServiceAssetsTitle: "Web 前端资源",

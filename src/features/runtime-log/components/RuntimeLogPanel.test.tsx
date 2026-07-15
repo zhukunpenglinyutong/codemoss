@@ -54,12 +54,12 @@ describe("RuntimeLogPanel command goal options", () => {
     expect(await screen.findByText("tauri dev")).toBeTruthy();
   });
 
-  it("styles ccgui runtime system lines with the system tone", () => {
+  it("styles CodePort runtime system lines with the system tone", () => {
     render(
       <RuntimeLogPanel
         isVisible
         status="running"
-        log="[ccgui Run] Starting at 10:30:00"
+        log="[CodePort Run] Starting at 10:30:00"
         error={null}
         onStop={() => undefined}
         onClear={() => undefined}
@@ -67,7 +67,7 @@ describe("RuntimeLogPanel command goal options", () => {
     );
 
     const line = screen
-      .getByText("[ccgui Run] Starting at 10:30:00")
+      .getByText("[CodePort Run] Starting at 10:30:00")
       .closest(".runtime-console-line");
     expect(line?.className).toContain("is-system");
   });

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Multi-platform build script for ccgui
+ * Multi-platform build script for CodePort
  *
  * Usage:
  *   node scripts/build-platform.mjs <platform>
@@ -147,16 +147,16 @@ async function buildMacOS(arch, options = {}) {
     target = "aarch64-apple-darwin";
     bundlePath = join(
       TAURI_DIR,
-      "target/aarch64-apple-darwin/release/bundle/macos/ccgui.app",
+      "target/aarch64-apple-darwin/release/bundle/macos/CodePort.app",
     );
-    dmgName = `ccgui_${version}_aarch64.dmg`;
+    dmgName = `CodePort_${version}_aarch64.dmg`;
   } else if (arch === "x64") {
     target = "x86_64-apple-darwin";
     bundlePath = join(
       TAURI_DIR,
-      "target/x86_64-apple-darwin/release/bundle/macos/ccgui.app",
+      "target/x86_64-apple-darwin/release/bundle/macos/CodePort.app",
     );
-    dmgName = `ccgui_${version}_x86_64.dmg`;
+    dmgName = `CodePort_${version}_x86_64.dmg`;
 
     // Check x86_64 OpenSSL
     if (!existsSync(CONFIG.openssl.x64)) {
@@ -174,9 +174,9 @@ async function buildMacOS(arch, options = {}) {
     target = "universal-apple-darwin";
     bundlePath = join(
       TAURI_DIR,
-      "target/universal-apple-darwin/release/bundle/macos/ccgui.app",
+      "target/universal-apple-darwin/release/bundle/macos/CodePort.app",
     );
-    dmgName = `ccgui_${version}_universal.dmg`;
+    dmgName = `CodePort_${version}_universal.dmg`;
 
     // Check x86_64 OpenSSL for universal builds
     if (!existsSync(CONFIG.openssl.x64)) {
@@ -273,7 +273,7 @@ async function buildMacOS(arch, options = {}) {
   // Create DMG with drag-to-install panel
   ensureReleaseDir();
   const createDmgScript = join(ROOT_DIR, "scripts", "create-dmg.sh");
-  exec(`bash "${createDmgScript}" "${bundlePath}" "${RELEASE_DIR}/${dmgName}" "ccgui"`);
+  exec(`bash "${createDmgScript}" "${bundlePath}" "${RELEASE_DIR}/${dmgName}" "CodePort"`);
 
   // Notarize
   if (!skipNotarize && !skipSign) {
@@ -318,7 +318,7 @@ async function buildWindows(arch, options = {}) {
 
   const installerPath = join(
     TAURI_DIR,
-    `target/release/bundle/nsis/ccgui_${version}_x64-setup.exe`,
+    `target/release/bundle/nsis/CodePort_${version}_x64-setup.exe`,
   );
 
   console.log(`\n========================================`);
@@ -366,7 +366,7 @@ async function buildLinux(arch, options = {}) {
 
   const appImagePath = join(
     TAURI_DIR,
-    `target/release/bundle/appimage/ccgui_${version}_${arch === "arm64" ? "aarch64" : "amd64"}.AppImage`,
+    `target/release/bundle/appimage/CodePort_${version}_${arch === "arm64" ? "aarch64" : "amd64"}.AppImage`,
   );
   pruneLinuxAppImageWaylandLibraries(appImagePath);
 
@@ -417,7 +417,7 @@ const options = {
 
 if (!platform) {
   console.log(`
-ccgui Multi-Platform Build Script
+CodePort Multi-Platform Build Script
 
 Usage:
   node scripts/build-platform.mjs <platform> [options]

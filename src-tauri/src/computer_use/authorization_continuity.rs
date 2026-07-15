@@ -458,13 +458,13 @@ mod tests {
         );
         assert_eq!(
             authorization_launch_mode_for_path(Path::new(
-                "/Applications/ccgui.app/Contents/MacOS/cc_gui_daemon"
+                "/Applications/CodePort.app/Contents/MacOS/cc_gui_daemon"
             )),
             ComputerUseAuthorizationLaunchMode::Daemon
         );
         assert_eq!(
             authorization_launch_mode_for_path(Path::new(
-                "/Applications/ccgui.app/Contents/MacOS/cc-gui"
+                "/Applications/CodePort.app/Contents/MacOS/cc-gui"
             )),
             ComputerUseAuthorizationLaunchMode::PackagedApp
         );
@@ -481,7 +481,7 @@ mod tests {
         ));
         let store = ComputerUseAuthorizationContinuityStore {
             last_successful_host: Some(host_snapshot(
-                "/Applications/ccgui.app/Contents/MacOS/cc-gui",
+                "/Applications/CodePort.app/Contents/MacOS/cc-gui",
                 ComputerUseAuthorizationBackendMode::Local,
                 ComputerUseAuthorizationHostRole::ForegroundApp,
                 ComputerUseAuthorizationLaunchMode::PackagedApp,
@@ -516,7 +516,7 @@ mod tests {
                 .as_nanos()
         ));
         let expected_host = host_snapshot(
-            "/Applications/ccgui.app/Contents/MacOS/cc-gui",
+            "/Applications/CodePort.app/Contents/MacOS/cc-gui",
             ComputerUseAuthorizationBackendMode::Local,
             ComputerUseAuthorizationHostRole::ForegroundApp,
             ComputerUseAuthorizationLaunchMode::PackagedApp,
@@ -535,7 +535,7 @@ mod tests {
     #[test]
     fn authorization_host_drift_fields_are_empty_for_matching_host() {
         let host = host_snapshot(
-            "/Applications/ccgui.app/Contents/MacOS/cc-gui",
+            "/Applications/CodePort.app/Contents/MacOS/cc-gui",
             ComputerUseAuthorizationBackendMode::Local,
             ComputerUseAuthorizationHostRole::ForegroundApp,
             ComputerUseAuthorizationLaunchMode::PackagedApp,
@@ -592,7 +592,7 @@ mod tests {
     #[test]
     fn authorization_continuity_reports_unsupported_context_for_remote_mode() {
         let current_host = host_snapshot(
-            "/Applications/ccgui.app/Contents/MacOS/cc-gui",
+            "/Applications/CodePort.app/Contents/MacOS/cc-gui",
             ComputerUseAuthorizationBackendMode::Remote,
             ComputerUseAuthorizationHostRole::ForegroundApp,
             ComputerUseAuthorizationLaunchMode::PackagedApp,
@@ -610,7 +610,7 @@ mod tests {
     #[test]
     fn authorization_continuity_reports_unsupported_context_for_unsigned_packaged_app() {
         let mut current_host = host_snapshot(
-            "/Applications/ccgui.app/Contents/MacOS/cc-gui",
+            "/Applications/CodePort.app/Contents/MacOS/cc-gui",
             ComputerUseAuthorizationBackendMode::Local,
             ComputerUseAuthorizationHostRole::ForegroundApp,
             ComputerUseAuthorizationLaunchMode::PackagedApp,

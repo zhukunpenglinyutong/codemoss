@@ -12,6 +12,7 @@ const INCLUDE_PATHS = [
   "src-tauri/src",
   "scripts",
   ".github/workflows/release.yml",
+  ".github/workflows/windows-portable.yml",
   "README.md",
   "README.zh-CN.md",
   "docs/index.html",
@@ -92,6 +93,22 @@ const ALLOWED_LINE_PATTERNS = [
   },
 ];
 
+const REQUIRED_CODEPORT_BRAND_ASSERTIONS = [
+  ["src-tauri/tauri.conf.json", '"productName": "CodePort"'],
+  ["src-tauri/src/lib.rs", '.title("CodePort")'],
+  ["index.html", "<title>CodePort</title>"],
+  ["scripts/build-platform.mjs", "CodePort.app"],
+  ["scripts/build-windows-portable.mjs", "CodePort.exe"],
+];
+
+const CODEPORT_ICON_PATHS = [
+  "icon.png",
+  "src/assets/icon.png",
+  "public/app-icon.png",
+  "docs/assets/app-icon.png",
+  "src-tauri/icons/icon.png",
+];
+
 function normalizeRelativePath(relativePath) {
   return relativePath.split(/[\\/]+/).join("/");
 }
@@ -152,6 +169,22 @@ for (const includePath of INCLUDE_PATHS) {
         offenders.push(`${rel}:${index + 1}:${lines[index].trim()}`);
       }
     }
+  }
+}
+
+for (const [relativePath, requiredText] of REQUIRED_CODEPORT_BRAND_ASSERTIONS) {
+  const absolutePath = join(ROOT, relativePath);
+  const content = readFileSync(absolutePath, "utf8");
+  if (!content.includes(requiredText)) {
+    offenders.push(`${relativePath}: missing required CodePort brand token ${requiredText}`);
+  }
+}
+
+const canonicalIcon = readFileSync(join(ROOT, CODEPORT_ICON_PATHS[0]));
+for (const relativePath of CODEPORT_ICON_PATHS.slice(1)) {
+  const icon = readFileSync(join(ROOT, relativePath));
+  if (!icon.equals(canonicalIcon)) {
+    offenders.push(`${relativePath}: CodePort icon is out of sync with ${CODEPORT_ICON_PATHS[0]}`);
   }
 }
 

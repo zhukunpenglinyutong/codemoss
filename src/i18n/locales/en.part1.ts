@@ -148,7 +148,7 @@ const enPart1 = {
     announcementText:
       "Explore landing templates, workflow cards, and starter prompts",
     announcementAction: "Discover",
-    title: "ccgui Agent, make work easier",
+    title: "CodePort Agent, make work easier",
     titleLineOne: "Press Enter",
     titleLineTwo: "Build Apps Faster",
     subtitle:
@@ -760,7 +760,7 @@ const enPart1 = {
     terminalShellPathClear: "Clear terminal shell path",
     behaviorProxyTitle: "Network Proxy",
     behaviorProxyDesc:
-      "When enabled, ccgui and its networked child processes prefer this proxy.",
+      "When enabled, CodePort and its networked child processes prefer this proxy.",
     behaviorProxyEnabled: "Enable network proxy",
     behaviorProxyEnabledDesc:
       "Used by Codex, OpenCode, Git remote operations, and other network flows.",
@@ -1834,7 +1834,7 @@ const enPart1 = {
     // Codex section
     cliValidationTitle: "CLI Validation",
     cliValidationDescription:
-      "Validate the CLIs used by ccgui, choose the shared execution backend once, and switch diagnostics between Codex and Claude Code.",
+      "Validate the CLIs used by CodePort, choose the shared execution backend once, and switch diagnostics between Codex and Claude Code.",
     cliExecutionBackendTitle: "Execution backend",
     cliExecutionBackendDescription:
       "These transport settings are shared by Codex and Claude Code runtime requests.",
@@ -1849,7 +1849,7 @@ const enPart1 = {
       "Disable OpenCode CLI entirely. Once disabled, startup probing, provider checks, and engine entry points stop immediately.",
     codexTitle: "Codex",
     codexDescription:
-      "Configure the Codex CLI used by ccgui and validate the install.",
+      "Configure the Codex CLI used by CodePort and validate the install.",
     defaultClaudePath: "Default Claude Code path",
     claudePlaceholder: "claude",
     defaultCodexPath: "Default Codex path",
@@ -1863,7 +1863,7 @@ const enPart1 = {
     codexArgsDescSuffix: ". Use quotes for values with spaces.",
     codexLaunchConfigurationTitle: "Launch Configuration",
     codexLaunchConfigurationDescription:
-      "Preview the exact Codex executable and arguments ccgui will use on the next launch.",
+      "Preview the exact Codex executable and arguments CodePort will use on the next launch.",
     previewLaunch: "Preview launch",
     previewingLaunch: "Previewing launch...",
     codexLaunchPreviewTitle: "Launch preview",
@@ -1964,7 +1964,7 @@ const enPart1 = {
     runtimeEngineObservationDescription:
       "Split managed runtimes and process trees by engine to pinpoint where background processes come from.",
     runtimeEngineObservationScopeNote:
-      "These metrics count ccgui-managed runtime instances and process trees, not the engine selected in the current chat tab. Claude /status and /mcp commands are passed to the Claude CLI; Codex counts usually represent the GUI background app-server/runtime.",
+      "These metrics count CodePort-managed runtime instances and process trees, not the engine selected in the current chat tab. Claude /status and /mcp commands are passed to the Claude CLI; Codex counts usually represent the GUI background app-server/runtime.",
     runtimeEngineCodex: "Codex",
     runtimeEngineClaude: "Claude",
     runtimeEngineGemini: "Gemini",
@@ -2126,7 +2126,7 @@ const enPart1 = {
     remoteBackendHostAriaLabel: "Remote backend host",
     remoteBackendTokenAriaLabel: "Remote backend token",
     remoteBackendDesc:
-      "Start the daemon separately and point ccgui to it (host:port + token).",
+      "Start the daemon separately and point CodePort to it (host:port + token).",
     webServiceTitle: "Web service",
     webServiceDescription:
       "Manage the browser-accessible Web service exposed by the daemon.",

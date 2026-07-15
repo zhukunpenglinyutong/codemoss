@@ -299,7 +299,7 @@ const enPart2 = {
     // Delete dialogs
     deleteWorkspaceTitle: "Remove Workspace",
     deleteWorkspaceConfirm: 'Are you sure you want to remove "{{name}}"?',
-    deleteWorkspaceMessage: "This will remove the workspace from ccgui.",
+    deleteWorkspaceMessage: "This will remove the workspace from CodePort.",
     deleteWorkspaceWorktreeWarning:
       "This will also delete {{count}} worktree on disk.",
     deleteWorkspaceWorktreeWarning_other:
@@ -308,7 +308,7 @@ const enPart2 = {
     deleteWorkspaceWillHappenTitle: "What will happen:",
     deleteWorkspaceWillNotHappenTitle: "What will not happen:",
     deleteWorkspaceEffectListOnly:
-      "The workspace will be removed from the ccgui list only.",
+      "The workspace will be removed from the CodePort list only.",
     deleteWorkspaceEffectSessions:
       "Active sessions under this workspace (and linked worktrees) will be closed.",
     deleteWorkspaceEffectDeleteWorktrees:
@@ -335,7 +335,7 @@ const enPart2 = {
     deleteWorktreeTitle: "Delete Worktree",
     deleteWorktreeConfirm: 'Are you sure you want to delete "{{name}}"?',
     deleteWorktreeMessage:
-      "This will close the agent, remove its worktree, and delete it from ccgui.",
+      "This will close the agent, remove its worktree, and delete it from CodePort.",
     deleteWorktreeFailed: "Delete worktree failed",
   },
 
@@ -1924,9 +1924,9 @@ const enPart2 = {
     lock: "Lock Screen",
     locked: "Locked",
     brandKicker: "Codemoss Product Atlas",
-    title: "ccgui Secure Lock · Engineering Capability Overview",
+    title: "CodePort Secure Lock · Engineering Capability Overview",
     description:
-      "Threads and tasks keep running in the background. Use this lock screen to review the full ccgui delivery loop: planning, execution orchestration, review, and shipping.",
+      "Threads and tasks keep running in the background. Use this lock screen to review the full CodePort delivery loop: planning, execution orchestration, review, and shipping.",
     tabLabel: "Lock screen tab navigation",
     tabs: {
       live: "Live Sessions",
@@ -1941,9 +1941,9 @@ const enPart2 = {
     liveRunning: "Running",
     capabilityTitle: "Capability Atlas",
     capabilityDesc:
-      "ccgui is not just a chat shell. It is a local-first engineering workspace designed for production flow.",
+      "CodePort is not just a chat shell. It is a local-first engineering workspace designed for production flow.",
     journeyTitle: "Typical Delivery Journey",
-    journeyDesc: "Most changes move through this sequence in ccgui:",
+    journeyDesc: "Most changes move through this sequence in CodePort:",
     elementsTitle: "Element Guide",
     elementsDesc:
       "Use this page to quickly review each core module and its responsibility.",

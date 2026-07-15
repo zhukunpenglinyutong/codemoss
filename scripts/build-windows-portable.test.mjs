@@ -43,9 +43,9 @@ test("assembles the complete portable layout", async (t) => {
     archiveRunner: fakeArchive,
   });
 
-  assert.equal(result.artifactName, "ccgui-1.2.3-windows-x64-portable");
+  assert.equal(result.artifactName, "codeport-1.2.3-windows-x64-portable");
   for (const relativePath of [
-    "cc-gui.exe",
+    "CodePort.exe",
     "cc_gui_daemon.exe",
     "dist/index.html",
     "dist/assets/app.js",

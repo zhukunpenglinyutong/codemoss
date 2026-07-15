@@ -2248,7 +2248,7 @@ pub(crate) async fn open_workspace_in(
     ))
 }
 
-const DEFAULT_MACOS_APP_NAME: &str = "ccgui";
+const DEFAULT_MACOS_APP_NAME: &str = "CodePort";
 
 fn normalize_new_window_path(path: Option<String>) -> Option<String> {
     path.as_deref()
@@ -2679,7 +2679,7 @@ mod tests {
     #[test]
     fn build_macos_new_window_open_args_uses_workspace_path_when_provided() {
         let args = build_macos_new_window_open_args(
-            Some(Path::new("/Applications/ccgui.app")),
+            Some(Path::new("/Applications/CodePort.app")),
             Some("/tmp/project"),
         );
         assert_eq!(
@@ -2687,7 +2687,7 @@ mod tests {
             vec![
                 "-n".to_string(),
                 "-a".to_string(),
-                "/Applications/ccgui.app".to_string(),
+                "/Applications/CodePort.app".to_string(),
                 "/tmp/project".to_string(),
             ]
         );

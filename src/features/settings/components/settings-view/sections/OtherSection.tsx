@@ -81,7 +81,7 @@ export function OtherSection({
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement("a");
       anchor.href = url;
-      anchor.download = `ccgui-perf-report-${Date.now()}.txt`;
+      anchor.download = `codeport-perf-report-${Date.now()}.txt`;
       document.body.appendChild(anchor);
       anchor.click();
       anchor.remove();

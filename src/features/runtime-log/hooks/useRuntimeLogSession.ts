@@ -25,7 +25,7 @@ const RUNTIME_TERMINAL_ID = "runtime-console";
 const DEFAULT_TERMINAL_COLS = 120;
 const DEFAULT_TERMINAL_ROWS = 32;
 const MAX_LOG_LINES = 5000;
-const EXIT_CODE_PATTERN = /\[(?:ccgui|CodeMoss) Run\] __EXIT__:(-?\d+)/;
+const EXIT_CODE_PATTERN = /\[(?:CodePort|ccgui|CodeMoss) Run\] __EXIT__:(-?\d+)/;
 const IS_WINDOWS_RUNTIME = isWindowsPlatform();
 
 export type RuntimeConsoleStatus = "idle" | "starting" | "running" | "stopped" | "error";
@@ -211,14 +211,14 @@ function buildLegacyJavaRunScript(commandOverride?: string | null) {
         "set \"CCGUI_RUN_EXIT_CODE=0\"",
         "where java >nul 2>&1",
         "if errorlevel 1 (",
-        "  echo [ccgui Run] Java not found. Install JDK and ensure java is on PATH.",
+        "  echo [CodePort Run] Java not found. Install JDK and ensure java is on PATH.",
         "  set \"CCGUI_RUN_EXIT_CODE=127\"",
         ") else (",
-        "  echo [ccgui Run] Using custom run command from console.",
+        "  echo [CodePort Run] Using custom run command from console.",
         `  ${normalizedOverride}`,
         "  set \"CCGUI_RUN_EXIT_CODE=!ERRORLEVEL!\"",
         ")",
-        "echo [ccgui Run] __EXIT__:!CCGUI_RUN_EXIT_CODE!",
+        "echo [CodePort Run] __EXIT__:!CCGUI_RUN_EXIT_CODE!",
       ].join("\r\n");
     }
 
@@ -226,59 +226,59 @@ function buildLegacyJavaRunScript(commandOverride?: string | null) {
       "@echo off",
       "setlocal EnableExtensions EnableDelayedExpansion",
       "set \"CCGUI_RUN_EXIT_CODE=0\"",
-      "echo [ccgui Run] Detecting Java launcher...",
+      "echo [CodePort Run] Detecting Java launcher...",
       "where java >nul 2>&1",
       "if errorlevel 1 (",
-      "  echo [ccgui Run] Java not found. Install JDK and ensure java is on PATH.",
+      "  echo [CodePort Run] Java not found. Install JDK and ensure java is on PATH.",
       "  set \"CCGUI_RUN_EXIT_CODE=127\"",
       ") else if exist \"mvnw.cmd\" if exist \"pom.xml\" (",
-      "  echo [ccgui Run] Using: mvnw.cmd spring-boot:run",
+      "  echo [CodePort Run] Using: mvnw.cmd spring-boot:run",
       "  call mvnw.cmd spring-boot:run",
       "  set \"CCGUI_RUN_EXIT_CODE=!ERRORLEVEL!\"",
       ") else if exist \"pom.xml\" (",
       "  where mvn >nul 2>&1",
       "  if errorlevel 1 (",
-      "    echo [ccgui Run] Maven not found. Install Maven or add mvnw.cmd to project root.",
+      "    echo [CodePort Run] Maven not found. Install Maven or add mvnw.cmd to project root.",
       "    set \"CCGUI_RUN_EXIT_CODE=127\"",
       "  ) else (",
-      "    echo [ccgui Run] Using: mvn spring-boot:run",
+      "    echo [CodePort Run] Using: mvn spring-boot:run",
       "    call mvn spring-boot:run",
       "    set \"CCGUI_RUN_EXIT_CODE=!ERRORLEVEL!\"",
       "  )",
       ") else if exist \"gradlew.bat\" if exist \"build.gradle\" (",
-      "  echo [ccgui Run] Using: gradlew.bat bootRun",
+      "  echo [CodePort Run] Using: gradlew.bat bootRun",
       "  call gradlew.bat bootRun",
       "  set \"CCGUI_RUN_EXIT_CODE=!ERRORLEVEL!\"",
       ") else if exist \"gradlew.bat\" if exist \"build.gradle.kts\" (",
-      "  echo [ccgui Run] Using: gradlew.bat bootRun",
+      "  echo [CodePort Run] Using: gradlew.bat bootRun",
       "  call gradlew.bat bootRun",
       "  set \"CCGUI_RUN_EXIT_CODE=!ERRORLEVEL!\"",
       ") else if exist \"build.gradle\" (",
       "  where gradle >nul 2>&1",
       "  if errorlevel 1 (",
-      "    echo [ccgui Run] Gradle not found. Install Gradle or add gradlew.bat to project root.",
+      "    echo [CodePort Run] Gradle not found. Install Gradle or add gradlew.bat to project root.",
       "    set \"CCGUI_RUN_EXIT_CODE=127\"",
       "  ) else (",
-      "    echo [ccgui Run] Using: gradle bootRun",
+      "    echo [CodePort Run] Using: gradle bootRun",
       "    call gradle bootRun",
       "    set \"CCGUI_RUN_EXIT_CODE=!ERRORLEVEL!\"",
       "  )",
       ") else if exist \"build.gradle.kts\" (",
       "  where gradle >nul 2>&1",
       "  if errorlevel 1 (",
-      "    echo [ccgui Run] Gradle not found. Install Gradle or add gradlew.bat to project root.",
+      "    echo [CodePort Run] Gradle not found. Install Gradle or add gradlew.bat to project root.",
       "    set \"CCGUI_RUN_EXIT_CODE=127\"",
       "  ) else (",
-      "    echo [ccgui Run] Using: gradle bootRun",
+      "    echo [CodePort Run] Using: gradle bootRun",
       "    call gradle bootRun",
       "    set \"CCGUI_RUN_EXIT_CODE=!ERRORLEVEL!\"",
       "  )",
       ") else (",
-      "  echo [ccgui Run] No Java project launcher detected in workspace root.",
-      "  echo [ccgui Run] Expected one of: pom.xml, build.gradle, build.gradle.kts.",
+      "  echo [CodePort Run] No Java project launcher detected in workspace root.",
+      "  echo [CodePort Run] Expected one of: pom.xml, build.gradle, build.gradle.kts.",
       "  set \"CCGUI_RUN_EXIT_CODE=127\"",
       ")",
-      "echo [ccgui Run] __EXIT__:!CCGUI_RUN_EXIT_CODE!",
+      "echo [CodePort Run] __EXIT__:!CCGUI_RUN_EXIT_CODE!",
     ].join("\r\n");
   }
 
@@ -287,55 +287,55 @@ function buildLegacyJavaRunScript(commandOverride?: string | null) {
     return [
       "CCGUI_RUN_EXIT_CODE=0",
       "if ! command -v java >/dev/null 2>&1; then",
-      "  echo \"[ccgui Run] Java not found. Install JDK and ensure java is on PATH.\"",
+      "  echo \"[CodePort Run] Java not found. Install JDK and ensure java is on PATH.\"",
       "  CCGUI_RUN_EXIT_CODE=127",
       "else",
-      "  echo \"[ccgui Run] Using custom run command from console.\"",
+      "  echo \"[CodePort Run] Using custom run command from console.\"",
       `  ${normalizedOverride}`,
       "  CCGUI_RUN_EXIT_CODE=$?",
       "fi",
-      "echo \"[ccgui Run] __EXIT__:${CCGUI_RUN_EXIT_CODE}\"",
+      "echo \"[CodePort Run] __EXIT__:${CCGUI_RUN_EXIT_CODE}\"",
     ].join("\n");
   }
 
   return [
     "CCGUI_RUN_EXIT_CODE=0",
-    "echo \"[ccgui Run] Detecting Java launcher...\"",
+    "echo \"[CodePort Run] Detecting Java launcher...\"",
     "if ! command -v java >/dev/null 2>&1; then",
-    "  echo \"[ccgui Run] Java not found. Install JDK and ensure java is on PATH.\"",
+    "  echo \"[CodePort Run] Java not found. Install JDK and ensure java is on PATH.\"",
     "  CCGUI_RUN_EXIT_CODE=127",
     "elif [ -f \"./mvnw\" ] && [ -f \"./pom.xml\" ]; then",
-    "  echo \"[ccgui Run] Using: ./mvnw spring-boot:run\"",
+    "  echo \"[CodePort Run] Using: ./mvnw spring-boot:run\"",
     "  ./mvnw spring-boot:run",
     "  CCGUI_RUN_EXIT_CODE=$?",
     "elif [ -f \"./pom.xml\" ]; then",
     "  if command -v mvn >/dev/null 2>&1; then",
-    "    echo \"[ccgui Run] Using: mvn spring-boot:run\"",
+    "    echo \"[CodePort Run] Using: mvn spring-boot:run\"",
     "    mvn spring-boot:run",
     "    CCGUI_RUN_EXIT_CODE=$?",
     "  else",
-    "    echo \"[ccgui Run] Maven not found. Install Maven or add ./mvnw to project root.\"",
+    "    echo \"[CodePort Run] Maven not found. Install Maven or add ./mvnw to project root.\"",
     "    CCGUI_RUN_EXIT_CODE=127",
     "  fi",
     "elif [ -f \"./gradlew\" ] && { [ -f \"./build.gradle\" ] || [ -f \"./build.gradle.kts\" ]; }; then",
-    "  echo \"[ccgui Run] Using: ./gradlew bootRun\"",
+    "  echo \"[CodePort Run] Using: ./gradlew bootRun\"",
     "  ./gradlew bootRun",
     "  CCGUI_RUN_EXIT_CODE=$?",
     "elif [ -f \"./build.gradle\" ] || [ -f \"./build.gradle.kts\" ]; then",
     "  if command -v gradle >/dev/null 2>&1; then",
-    "    echo \"[ccgui Run] Using: gradle bootRun\"",
+    "    echo \"[CodePort Run] Using: gradle bootRun\"",
     "    gradle bootRun",
     "    CCGUI_RUN_EXIT_CODE=$?",
     "  else",
-    "    echo \"[ccgui Run] Gradle not found. Install Gradle or add ./gradlew to project root.\"",
+    "    echo \"[CodePort Run] Gradle not found. Install Gradle or add ./gradlew to project root.\"",
     "    CCGUI_RUN_EXIT_CODE=127",
     "  fi",
     "else",
-    "  echo \"[ccgui Run] No Java project launcher detected in workspace root.\"",
-    "  echo \"[ccgui Run] Expected one of: pom.xml, build.gradle, build.gradle.kts.\"",
+    "  echo \"[CodePort Run] No Java project launcher detected in workspace root.\"",
+    "  echo \"[CodePort Run] Expected one of: pom.xml, build.gradle, build.gradle.kts.\"",
     "  CCGUI_RUN_EXIT_CODE=127",
     "fi",
-    "echo \"[ccgui Run] __EXIT__:${CCGUI_RUN_EXIT_CODE}\"",
+    "echo \"[CodePort Run] __EXIT__:${CCGUI_RUN_EXIT_CODE}\"",
   ].join("\n");
 }
 
@@ -683,7 +683,7 @@ export function useRuntimeLogSession({
     }));
     appendWorkspaceLog(
       workspaceId,
-      `\n[ccgui Run] Starting at ${new Date().toLocaleTimeString()}\n`,
+      `\n[CodePort Run] Starting at ${new Date().toLocaleTimeString()}\n`,
     );
     try {
       const snapshot = await runtimeLogStart(workspaceId, {
@@ -727,7 +727,7 @@ export function useRuntimeLogSession({
           }));
           appendWorkspaceLog(
             workspaceId,
-            `[ccgui Run] Failed to start runtime: ${fallbackMessage}\n`,
+            `[CodePort Run] Failed to start runtime: ${fallbackMessage}\n`,
           );
           return;
         }
@@ -740,7 +740,7 @@ export function useRuntimeLogSession({
       }));
       appendWorkspaceLog(
         workspaceId,
-        `[ccgui Run] Failed to start runtime: ${message}\n`,
+        `[CodePort Run] Failed to start runtime: ${message}\n`,
       );
     }
   }, [
@@ -773,7 +773,7 @@ export function useRuntimeLogSession({
         ...applyRuntimeSnapshot(current, snapshot, getDetectedProfiles(workspaceId)),
         status: "stopped",
       }));
-      appendWorkspaceLog(workspaceId, "[ccgui Run] Stopped.\n");
+      appendWorkspaceLog(workspaceId, "[CodePort Run] Stopped.\n");
     } catch (error) {
       if (isMissingCommandError(error)) {
         try {
@@ -783,7 +783,7 @@ export function useRuntimeLogSession({
             status: "stopped",
             exitCode: current.exitCode === null ? 130 : current.exitCode,
           }));
-          appendWorkspaceLog(workspaceId, "[ccgui Run] Stopped.\n");
+          appendWorkspaceLog(workspaceId, "[CodePort Run] Stopped.\n");
           return;
         } catch (fallbackError) {
           const fallbackMessage =
@@ -795,7 +795,7 @@ export function useRuntimeLogSession({
           }));
           appendWorkspaceLog(
             workspaceId,
-            `[ccgui Run] Stop failed: ${fallbackMessage}\n`,
+            `[CodePort Run] Stop failed: ${fallbackMessage}\n`,
           );
           return;
         }
@@ -808,7 +808,7 @@ export function useRuntimeLogSession({
       }));
       appendWorkspaceLog(
         workspaceId,
-        `[ccgui Run] Stop failed: ${message}\n`,
+        `[CodePort Run] Stop failed: ${message}\n`,
       );
     }
   }, [activeWorkspace?.id, appendWorkspaceLog, getDetectedProfiles, updateWorkspaceSession]);

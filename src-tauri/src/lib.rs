@@ -211,7 +211,7 @@ pub fn run() {
         })
         .setup(|app| {
             if let Err(error) = app_paths::app_home_dir() {
-                log::warn!("Failed to prepare ccgui home directory: {error}");
+                log::warn!("Failed to prepare CodePort home directory: {error}");
             }
             let state = state::AppState::load(&app.handle());
             app.manage(state);
@@ -263,7 +263,7 @@ pub fn run() {
             // in the system browser instead of navigating the webview.
             let mut win_builder =
                 WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::App("index.html".into()))
-                    .title("ccgui")
+                    .title("CodePort")
                     .inner_size(1300.0, 800.0)
                     .min_inner_size(800.0, 600.0)
                     .devtools(true);

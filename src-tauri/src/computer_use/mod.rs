@@ -1135,7 +1135,7 @@ fn discover_official_parent_handoff(
             } else {
                 "medium".to_string()
             },
-            notes: "MCP descriptor is treated as a Codex CLI/plugin handoff candidate. This is evidence only and was not launched by ccgui."
+            notes: "MCP descriptor is treated as a Codex CLI/plugin handoff candidate. This is evidence only and was not launched by CodePort."
                 .to_string(),
         });
     }
@@ -1498,7 +1498,7 @@ async fn run_helper_bridge_probe(
             succeeded: true,
             failure_kind: None,
             diagnostic_message:
-                "Codex CLI Computer Use plugin cache launch contract verified. ccgui did not direct-exec the helper; Codex CLI remains the supported parent."
+                "Codex CLI Computer Use plugin cache launch contract verified. CodePort did not direct-exec the helper; Codex CLI remains the supported parent."
                     .to_string(),
             stderr_snippet: None,
             exit_code: None,

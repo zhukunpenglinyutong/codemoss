@@ -59,7 +59,7 @@ pub(crate) async fn export_diagnostics_bundle_core(
         "generatedAt": generated_at,
         "generatedAtMs": generated_at_ms,
         "app": {
-            "name": "ccgui",
+            "name": "CodePort",
             "version": env!("CARGO_PKG_VERSION"),
         },
         "environment": collect_environment_summary(),

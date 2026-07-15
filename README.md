@@ -2,7 +2,7 @@
 
 # Desktop CC GUI
 
-<img width="120" alt="ccgui icon" src="./icon.png" />
+<img width="120" alt="CodePort icon" src="./icon.png" />
 
 **English** · [简体中文](./README.zh-CN.md)
 
@@ -12,19 +12,19 @@
 
 </div>
 
-**ccgui** is an open-source desktop client for AI coding. In plain words: it takes command-line AI coding tools like Claude Code, Codex CLI, and OpenCode, and wraps them in a friendly graphical interface.
+**CodePort** is an open-source desktop client for AI coding. In plain words: it takes command-line AI coding tools like Claude Code, Codex CLI, and OpenCode, and wraps them in a friendly graphical interface.
 
-No more staring at a black terminal. Open ccgui, pick a project, and chat with AI to write code, fix bugs, and commit to Git. Which files the AI touched, which commands it ran, how much it cost — everything is visible at a glance.
+No more staring at a black terminal. Open CodePort, pick a project, and chat with AI to write code, fix bugs, and commit to Git. Which files the AI touched, which commands it ran, how much it cost — everything is visible at a glance.
 
 The app is built with **Tauri 2 + React 19 + TypeScript + Rust**. All your data stays on your own machine, and it runs on macOS, Windows, and Linux.
 
 > This project originated from [CodexMonitor](https://github.com/Dimillian/CodexMonitor) and has grown into a full-featured multi-engine AI coding client.
 
-<img src="./docs/banner.png" alt="ccgui screenshot" width="800" />
+<img src="./docs/banner.png" alt="CodePort screenshot" width="800" />
 
 ---
 
-## What can ccgui do?
+## What can CodePort do?
 
 ### One client, multiple AI engines
 
@@ -54,7 +54,7 @@ The app is built with **Tauri 2 + React 19 + TypeScript + Rust**. All your data 
 - **Task Center**: every AI run is recorded — retry failures and inspect execution logs anytime.
 - **Intent Canvas**: sketch your plan on a canvas before writing any code.
 
-### Project intelligence (the part that makes ccgui different)
+### Project intelligence (the part that makes CodePort different)
 
 - **Project Map**: the AI scans your project and builds an interactive knowledge graph — file relations, API contracts, and module dependencies at a glance, with incremental updates.
 - **Project Memory**: store key conventions and hard-earned lessons as long-term memory the AI remembers next time.
@@ -147,7 +147,7 @@ npm run build:linux-x64      # Linux x64
 npm run build:linux-arm64    # Linux arm64
 ```
 
-The Windows portable build is written to `release-local/ccgui_<version>_windows_x64_portable.zip`. It requires no installer, but relies on the system WebView2 Runtime and continues to store settings and sessions in Windows AppData. Without a Windows development machine, run the **Windows Portable** GitHub Actions workflow and download its artifact; it uses no release secrets and does not create a formal GitHub Release.
+The Windows portable build is written to `release-local/codeport_<version>_windows_x64_portable.zip`. Launch `CodePort.exe` after extraction. It requires no installer, but relies on the system WebView2 Runtime and continues to store settings and sessions in Windows AppData. Without a Windows development machine, run the **Windows Portable** GitHub Actions workflow and download its artifact; it uses no release secrets and does not create a formal GitHub Release.
 
 ---
 
@@ -284,7 +284,7 @@ Thanks for the support and feedback from the friends at [LINUX DO](https://linux
 
 ## Contributors
 
-Thanks to all the contributors who help make ccgui better.
+Thanks to all the contributors who help make CodePort better.
 
 <a href="https://github.com/zhukunpenglinyutong/desktop-cc-gui/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=zhukunpenglinyutong/desktop-cc-gui" alt="Contributors" />

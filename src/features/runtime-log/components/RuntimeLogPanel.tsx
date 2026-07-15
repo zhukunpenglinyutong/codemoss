@@ -279,7 +279,11 @@ function resolveLineTone(line: string): RuntimeLineTone {
     return "default";
   }
   const normalized = line.toUpperCase();
-  if (line.includes("[ccgui Run]") || line.includes("[CodeMoss Run]")) {
+  if (
+    line.includes("[CodePort Run]") ||
+    line.includes("[ccgui Run]") ||
+    line.includes("[CodeMoss Run]")
+  ) {
     return "system";
   }
   if (
@@ -424,7 +428,7 @@ export function RuntimeLogPanel({
   const isStoppable = status === "starting" || status === "running";
   const canRun = !isStoppable && Boolean(onRun);
   const rawOutput = error
-    ? `${log}${log.endsWith("\n") || !log ? "" : "\n"}[ccgui Run] ${error}\n`
+    ? `${log}${log.endsWith("\n") || !log ? "" : "\n"}[CodePort Run] ${error}\n`
     : log;
   const output = useMemo(() => sanitizeRuntimeOutput(rawOutput), [rawOutput]);
   const logLines = useMemo(

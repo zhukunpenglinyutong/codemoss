@@ -2428,7 +2428,7 @@ export function SettingsView({
           {activeSection === "community" && (
             <section className="settings-section settings-about-section">
               <div className="settings-about-name">
-                ccgui
+                CodePort
                 {appVersion && (
                   <span className="settings-about-version">{appVersion}</span>
                 )}

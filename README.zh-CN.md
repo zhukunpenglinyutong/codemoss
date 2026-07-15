@@ -2,7 +2,7 @@
 
 # CC GUI 客户端
 
-<img width="120" alt="ccgui 图标" src="./icon.png" />
+<img width="120" alt="CodePort 图标" src="./icon.png" />
 
 [English](./README.md) · **简体中文**
 
@@ -12,19 +12,19 @@
 
 </div>
 
-**ccgui** 是一个开源的 AI 编程桌面客户端。简单说：它把 Claude Code、Codex CLI、OpenCode 这些命令行 AI 编程工具，装进了一个好看好用的图形界面里。
+**CodePort** 是一个开源的 AI 编程桌面客户端。简单说：它把 Claude Code、Codex CLI、OpenCode 这些命令行 AI 编程工具，装进了一个好看好用的图形界面里。
 
-你不用再盯着黑乎乎的终端敲命令——打开 ccgui，选好项目，像聊天一样让 AI 帮你写代码、改 Bug、提交 Git。AI 改了哪些文件、跑了什么命令、花了多少钱，全都看得清清楚楚。
+你不用再盯着黑乎乎的终端敲命令——打开 CodePort，选好项目，像聊天一样让 AI 帮你写代码、改 Bug、提交 Git。AI 改了哪些文件、跑了什么命令、花了多少钱，全都看得清清楚楚。
 
 应用基于 **Tauri 2 + React 19 + TypeScript + Rust** 开发，所有数据都存在你自己的电脑上，支持 macOS / Windows / Linux。
 
 > 本项目最初源自 [CodexMonitor](https://github.com/Dimillian/CodexMonitor)，现在已经成长为一个功能完整的多引擎 AI 编程客户端。
 
-<img src="./docs/banner.png" alt="ccgui 界面截图" width="800" />
+<img src="./docs/banner.png" alt="CodePort 界面截图" width="800" />
 
 ---
 
-## ccgui 能干什么
+## CodePort 能干什么
 
 ### 一个客户端，装下多个 AI 引擎
 
@@ -54,7 +54,7 @@
 - **任务中心**：每次 AI 执行都有记录，失败了能重试，随时翻执行日志。
 - **意图画布**：在画布上拖节点做规划，想清楚再动手。
 
-### 项目智能（ccgui 比较独特的部分）
+### 项目智能（CodePort 比较独特的部分）
 
 - **项目知识地图**：AI 扫描你的项目，生成可交互的结构图谱——文件关系、API 接口、模块依赖一目了然，还支持增量更新。
 - **项目记忆**：把项目的关键约定、踩过的坑存成长期记忆，AI 下次打开还记得。
@@ -147,7 +147,7 @@ npm run build:linux-x64      # Linux x64
 npm run build:linux-arm64    # Linux arm64
 ```
 
-Windows 便携包会输出到 `release-local/ccgui_<version>_windows_x64_portable.zip`。它不需安装，但依赖系统已有 WebView2 Runtime，配置和会话仍保存在 Windows AppData。没有 Windows 开发机时，可在 GitHub Actions 中运行 **Windows Portable** workflow 并下载 artifact；该流程不需发布密钥，也不会创建正式 Release。
+Windows 便携包会输出到 `release-local/codeport_<version>_windows_x64_portable.zip`，解压后运行 `CodePort.exe`。它不需安装，但依赖系统已有 WebView2 Runtime，配置和会话仍保存在 Windows AppData。没有 Windows 开发机时，可在 GitHub Actions 中运行 **Windows Portable** workflow 并下载 artifact；该流程不需发布密钥，也不会创建正式 Release。
 
 ---
 
@@ -284,7 +284,7 @@ docs(readme): update setup guide
 
 ## 贡献者列表
 
-感谢所有帮助 ccgui 变得更好的贡献者。
+感谢所有帮助 CodePort 变得更好的贡献者。
 
 <a href="https://github.com/zhukunpenglinyutong/desktop-cc-gui/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=zhukunpenglinyutong/desktop-cc-gui" alt="Contributors" />

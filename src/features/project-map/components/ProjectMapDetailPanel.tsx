@@ -439,7 +439,7 @@ export function DetailPanel({
                   <h4>{t("projectMap.detail.evidenceZone", { defaultValue: "Evidence" })}</h4>
                   <p>
                     {t("projectMap.detail.evidenceZoneHint", {
-                      defaultValue: "Why ccgui trusts this node and where the proof lives.",
+                      defaultValue: "Why CodePort trusts this node and where the proof lives.",
                     })}
                   </p>
                 </div>

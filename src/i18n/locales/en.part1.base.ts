@@ -73,7 +73,7 @@ const enPart1Base = {
 
   // App
   app: {
-    title: "ccgui",
+    title: "CodePort",
     subtitle: "Orchestrate agents across your local projects.",
   },
 

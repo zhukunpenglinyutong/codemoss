@@ -12,8 +12,8 @@
 - npm command: `npm run build:win-portable`
 - build script entry: `node scripts/build-windows-portable.mjs`
 - packaging helper: `assembleWindowsPortable(options) -> Promise<{ stagingDir, zipPath, artifactName }>`
-- output: `release-local/ccgui_<version>_windows_x64_portable.zip`
-- CI artifact: `ccgui-<version>-windows-x64-portable`
+- output: `release-local/codeport_<version>_windows_x64_portable.zip`
+- CI artifact: `codeport-<version>-windows-x64-portable`
 
 ### 3. Contracts
 
@@ -21,7 +21,7 @@
 - The main app MUST be built with `tauri build --config src-tauri/tauri.windows.conf.json --no-bundle --ci`.
 - `cc_gui_daemon.exe` MUST be built explicitly with Cargo even if another build happened to produce it.
 - The ZIP root MUST contain these sibling paths:
-  - `cc-gui.exe`
+  - `CodePort.exe` (renamed from the internal Cargo output `cc-gui.exe`)
   - `cc_gui_daemon.exe`
   - `dist/index.html` and `dist/assets/**`
   - `curated-skills/**`
@@ -37,7 +37,7 @@
 | Case | Required result |
 |---|---|
 | Host is not Windows | Exit non-zero with a Windows-only message before build commands run |
-| Main executable missing | Exit non-zero and name `cc-gui.exe` |
+| Main executable missing | Exit non-zero and name the internal build output `cc-gui.exe` |
 | Daemon executable missing | Exit non-zero and name `cc_gui_daemon.exe` |
 | `dist/index.html` or `dist/assets` missing | Exit non-zero and name the missing frontend resource |
 | Curated skills or lock file missing | Exit non-zero and name the missing skill resource |
@@ -49,7 +49,7 @@
 
 - Good: a clean `windows-latest` runner builds both executables, stages all resources, validates the daemon, and uploads the ZIP.
 - Base: a second build for the same version replaces the prior directory and ZIP deterministically.
-- Bad: copying only `cc-gui.exe`; daemon auto-start, web assets, or curated skills then fail at runtime.
+- Bad: copying only `CodePort.exe`; daemon auto-start, web assets, or curated skills then fail at runtime.
 
 ### 6. Tests Required
 
@@ -57,7 +57,7 @@
 - Unit test each required source category missing and assert the error names that path.
 - Unit test stale staging cleanup with a sentinel file.
 - CI MUST run the focused packaging test, `doctor:win`, the build command, `cc_gui_daemon.exe --help`, ZIP extraction, and post-extraction layout checks.
-- Manual Windows 11 smoke test: extract, launch `cc-gui.exe`, confirm the app remains running, daemon auto-start works, and curated skills load.
+- Manual Windows 11 smoke test: extract, launch `CodePort.exe`, confirm the app remains running, daemon auto-start works, and curated skills load.
 
 ### 7. Wrong vs Correct
 
@@ -80,7 +80,7 @@ This is neither portable nor complete: the installer path has release-side conce
 - run: node --test scripts/build-windows-portable.test.mjs
 - uses: actions/upload-artifact@v4
   with:
-    path: release-local/ccgui_*_windows_x64_portable.zip
+    path: release-local/codeport_*_windows_x64_portable.zip
 ```
 
 The dedicated command owns the complete layout and fails closed before CI uploads it.

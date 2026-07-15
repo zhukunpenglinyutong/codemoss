@@ -67,9 +67,9 @@ jobs:
         run: |
           $version = (Get-Content src-tauri/tauri.conf.json | ConvertFrom-Json).version
           "version=$version" >> $env:GITHUB_OUTPUT
-          "name=ccgui-$version-windows-x64-portable" >> $env:GITHUB_OUTPUT
-          "zip=release-local/ccgui_${version}_windows_x64_portable.zip" >> $env:GITHUB_OUTPUT
-          "root=release-local/ccgui_${version}_windows_x64_portable" >> $env:GITHUB_OUTPUT
+          "name=codeport-$version-windows-x64-portable" >> $env:GITHUB_OUTPUT
+          "zip=release-local/codeport_${version}_windows_x64_portable.zip" >> $env:GITHUB_OUTPUT
+          "root=release-local/codeport_${version}_windows_x64_portable" >> $env:GITHUB_OUTPUT
 
       - name: Verify portable runtime and archive
         shell: pwsh
@@ -83,12 +83,12 @@ jobs:
             throw "cc_gui_daemon.exe --help failed with exit code $LASTEXITCODE"
           }
 
-          $verifyRoot = Join-Path $env:RUNNER_TEMP "ccgui-portable-verify"
+          $verifyRoot = Join-Path $env:RUNNER_TEMP "codeport-portable-verify"
           Remove-Item $verifyRoot -Recurse -Force -ErrorAction SilentlyContinue
           Expand-Archive -LiteralPath $zipPath -DestinationPath $verifyRoot
 
           $required = @(
-            "cc-gui.exe",
+            "CodePort.exe",
             "cc_gui_daemon.exe",
             "dist/index.html",
             "dist/assets",
@@ -103,10 +103,10 @@ jobs:
             }
           }
 
-          $process = Start-Process -FilePath (Join-Path $verifyRoot "cc-gui.exe") -WorkingDirectory $verifyRoot -PassThru
+          $process = Start-Process -FilePath (Join-Path $verifyRoot "CodePort.exe") -WorkingDirectory $verifyRoot -PassThru
           Start-Sleep -Seconds 8
           if ($process.HasExited) {
-            throw "cc-gui.exe exited during startup smoke test with exit code $($process.ExitCode)"
+            throw "CodePort.exe exited during startup smoke test with exit code $($process.ExitCode)"
           }
           Stop-Process -Id $process.Id -Force
 

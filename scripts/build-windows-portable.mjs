@@ -64,10 +64,10 @@ async function readVersion(rootDir) {
 }
 
 function portablePaths(rootDir, version) {
-  const artifactBase = `ccgui_${version}_windows_x64_portable`;
+  const artifactBase = `codeport_${version}_windows_x64_portable`;
   const releaseDir = path.join(rootDir, "release-local");
   return {
-    artifactName: `ccgui-${version}-windows-x64-portable`,
+    artifactName: `codeport-${version}-windows-x64-portable`,
     stagingDir: path.join(releaseDir, artifactBase),
     zipPath: path.join(releaseDir, `${artifactBase}.zip`),
     mainExe: path.join(rootDir, "src-tauri", "target", "release", "cc-gui.exe"),
@@ -105,11 +105,11 @@ async function validatePortableInputs(paths) {
 }
 
 function portableReadme(version) {
-  return `ccgui ${version} - Windows x64 Portable Test Build
+  return `CodePort ${version} - Windows x64 Portable Test Build
 
 1. Extract the entire ZIP before running the application.
-2. Keep cc-gui.exe, cc_gui_daemon.exe, dist, curated-skills, and skills-lock.json together.
-3. Start the application by double-clicking cc-gui.exe.
+2. Keep CodePort.exe, cc_gui_daemon.exe, dist, curated-skills, and skills-lock.json together.
+3. Start the application by double-clicking CodePort.exe.
 
 Requirements:
 - Windows 10 or Windows 11 x64
@@ -155,7 +155,7 @@ async function assembleWindowsPortable({
   await rm(paths.zipPath, { force: true });
   await mkdir(paths.stagingDir, { recursive: true });
 
-  await cp(paths.mainExe, path.join(paths.stagingDir, "cc-gui.exe"));
+  await cp(paths.mainExe, path.join(paths.stagingDir, "CodePort.exe"));
   await cp(paths.daemonExe, path.join(paths.stagingDir, "cc_gui_daemon.exe"));
   await cp(paths.distDir, path.join(paths.stagingDir, "dist"), { recursive: true });
   await cp(paths.curatedSkillsDir, path.join(paths.stagingDir, "curated-skills"), {

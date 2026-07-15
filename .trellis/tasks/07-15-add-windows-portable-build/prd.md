@@ -8,9 +8,9 @@ Add a reproducible Windows x64 portable ZIP build that runs in GitHub Actions wi
 
 - Add `npm run build:win-portable` as the supported Windows portable build entrypoint.
 - Build the Tauri application with `--no-bundle` and explicitly build `cc_gui_daemon.exe`.
-- Stage `cc-gui.exe`, `cc_gui_daemon.exe`, `dist/`, `curated-skills/`, `skills-lock.json`, and `PORTABLE_README.txt` into a versioned directory.
+- Stage the internal `cc-gui.exe` build output as `CodePort.exe`, alongside `cc_gui_daemon.exe`, `dist/`, `curated-skills/`, `skills-lock.json`, and `PORTABLE_README.txt`.
 - Fail with a clear error when any required portable artifact is missing.
-- Produce `release-local/ccgui_<version>_windows_x64_portable.zip` and replace stale staging output on repeated builds.
+- Produce `release-local/codeport_<version>_windows_x64_portable.zip` and replace stale staging output on repeated builds.
 - Add an independent Windows GitHub Actions workflow for pull requests and manual dispatch, with no release secrets and no GitHub Release side effects.
 - Keep user data in the normal Windows AppData location and rely on the system WebView2 runtime.
 - Document the portable artifact contract and operator commands.
@@ -41,3 +41,4 @@ Add a reproducible Windows x64 portable ZIP build that runs in GitHub Actions wi
 - The existing formal release workflow creates GitHub releases and post-release version bump PRs, so it is intentionally not reused.
 - Tauri has no native portable bundle target; the ZIP must be assembled from the release executables and configured resources.
 - The local `openspec` CLI is unavailable, so OpenSpec creation/validation cannot be completed in this environment.
+- Follow-up packaging verification found legacy `ccgui` product naming and icon assets. User-visible app, bundle, archive, and portable executable names now use CodePort, while the existing Tauri identifier, Rust binary names, daemon name, and storage keys remain stable for compatibility.

@@ -283,14 +283,14 @@ const zhPart2 = {
     // 删除弹窗
     deleteWorkspaceTitle: "移出工作区",
     deleteWorkspaceConfirm: '确定要移出 "{{name}}" 吗？',
-    deleteWorkspaceMessage: "这将从 ccgui 中移出该工作区。",
+    deleteWorkspaceMessage: "这将从 CodePort 中移出该工作区。",
     deleteWorkspaceWorktreeWarning: "同时还将删除磁盘上的 {{count}} 个工作树。",
     deleteWorkspaceWorktreeWarning_other:
       "同时还将删除磁盘上的 {{count}} 个工作树。",
     deleteWorkspaceBeforeYouConfirm: "执行前请确认：",
     deleteWorkspaceWillHappenTitle: "将会发生：",
     deleteWorkspaceWillNotHappenTitle: "不会发生：",
-    deleteWorkspaceEffectListOnly: "仅从 ccgui 列表中移出该工作区。",
+    deleteWorkspaceEffectListOnly: "仅从 CodePort 列表中移出该工作区。",
     deleteWorkspaceEffectSessions: "会关闭该工作区及其关联工作树的活跃会话。",
     deleteWorkspaceEffectDeleteWorktrees:
       "会删除磁盘上的 {{count}} 个关联工作树目录。",
@@ -313,7 +313,7 @@ const zhPart2 = {
       "不会执行 checkout/merge/rebase 等 Git 写操作。",
     deleteWorktreeTitle: "删除工作树",
     deleteWorktreeConfirm: '确定要删除 "{{name}}" 吗？',
-    deleteWorktreeMessage: "这将关闭代理、移除工作树，并从 ccgui 中删除它。",
+    deleteWorktreeMessage: "这将关闭代理、移除工作树，并从 CodePort 中删除它。",
     deleteWorktreeFailed: "删除工作树失败",
   },
 
@@ -1840,9 +1840,9 @@ const zhPart2 = {
     lock: "锁屏",
     locked: "已锁定",
     brandKicker: "Codemoss Product Atlas",
-    title: "ccgui 安全锁屏 · 工程能力总览",
+    title: "CodePort 安全锁屏 · 工程能力总览",
     description:
-      "会话与任务在后台持续运行。你可以在锁屏页快速复盘 ccgui 的完整工程链路：从需求规划、执行编排、代码审阅到交付归档。",
+      "会话与任务在后台持续运行。你可以在锁屏页快速复盘 CodePort 的完整工程链路：从需求规划、执行编排、代码审阅到交付归档。",
     tabLabel: "锁屏内容切换",
     tabs: {
       live: "实时会话",
@@ -1858,7 +1858,7 @@ const zhPart2 = {
     capabilityDesc:
       "这不是聊天壳，而是一套围绕工程生产力构建的本地优先 AI 工作台。",
     journeyTitle: "典型工作流",
-    journeyDesc: "一个需求在 ccgui 中通常这样落地：",
+    journeyDesc: "一个需求在 CodePort 中通常这样落地：",
     elementsTitle: "界面元素介绍",
     elementsDesc: "锁屏页可直接回看核心模块职责，便于团队协作时统一认知。",
     unlockTitle: "解锁面板",

@@ -569,7 +569,7 @@ fn build_codex_broker_prompt(instruction: &str) -> String {
     format!(
         r#"You are running inside the official Codex runtime with the official Computer Use plugin available when this host is authorized.
 
-This is an explicit user-requested Computer Use task from ccgui.
+This is an explicit user-requested Computer Use task from CodePort.
 
 Task:
 """

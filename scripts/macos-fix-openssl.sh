@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-app_path="${1:-src-tauri/target/release/bundle/macos/ccgui.app}"
+app_path="${1:-src-tauri/target/release/bundle/macos/CodePort.app}"
 identity="${CODESIGN_IDENTITY:-}"
 entitlements_path="${ENTITLEMENTS_PATH:-src-tauri/Entitlements.plist}"
 

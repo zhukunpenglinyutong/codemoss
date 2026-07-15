@@ -269,7 +269,7 @@ async fn web_root() -> Html<String> {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>ccgui Web Service</title>
+    <title>CodePort Web Service</title>
   </head>
   <body>
     <div style="padding:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Helvetica Neue',Arial,sans-serif;">
@@ -305,7 +305,7 @@ async fn web_login() -> Html<String> {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>ccgui Web Service Login</title>
+    <title>CodePort Web Service Login</title>
     <style>
       * {{ box-sizing: border-box; }}
       body {{
@@ -352,7 +352,7 @@ async fn web_login() -> Html<String> {
   </head>
   <body>
     <main class="card">
-      <h1>ccgui</h1>
+      <h1>CodePort</h1>
       <p>输入访问 Token 以连接桌面端 / Enter access token to connect.</p>
       <div class="row">
         <input id="tokenInput" type="password" placeholder="Access Token" autocomplete="off" />
@@ -433,7 +433,7 @@ async fn web_welcome() -> Html<String> {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>ccgui Web Service</title>
+    <title>CodePort Web Service</title>
   </head>
   <body>
     <div style="padding:24px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Helvetica Neue',Arial,sans-serif;">
@@ -501,10 +501,10 @@ async fn serve_web_app_index(state: &WebApiState) -> Response {
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <title>ccgui Web Service</title>
+    <title>CodePort Web Service</title>
   </head>
   <body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Helvetica Neue',Arial,sans-serif;padding:24px;">
-    <h2 style="margin:0 0 8px;">ccgui Web Service</h2>
+    <h2 style="margin:0 0 8px;">CodePort Web Service</h2>
     <p style="margin:0;color:#6b7280;">Web 前端资源不存在，请先构建前端或设置 MOSSX_WEB_ASSETS_DIR 指向 dist 目录。</p>
   </body>
 </html>"#
@@ -1107,7 +1107,7 @@ fn build_web_tauri_shim_script() -> String {
       return "web-service";
     }}
     if (cmd === "plugin:app|name") {{
-      return "ccgui Web";
+      return "CodePort Web";
     }}
     if (cmd.startsWith("plugin:path|")) {{
       return "";
