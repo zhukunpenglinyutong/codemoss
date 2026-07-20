@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import type { ConversationItem, WorkspaceInfo } from "../../../types";
+import type { ConversationItem, MessageSendOptions, WorkspaceInfo } from "../../../types";
 import {
   engineSendMessage,
   getWorkspaceFiles,
@@ -189,6 +189,30 @@ describe("useThreadMessaging optimistic render", () => {
     const optimisticAction = optimisticCall?.[0] as { item?: { id?: string; text?: string } };
     expect(optimisticAction.item?.id).toMatch(/^optimistic-user-/);
     expect(optimisticAction.item?.text).toBe("hello codex");
+  });
+
+  it("uses the queued optimistic id even when normal optimistic rendering is skipped", async () => {
+    const { result, dispatch } = makeHook("codex");
+    const queuedOptions = {
+      eagerOptimisticUserId: "optimistic-user-queued-message-1",
+      skipOptimisticUserBubble: true,
+    } as MessageSendOptions;
+
+    await act(async () => {
+      await result.current.sendUserMessageToThread(
+        workspace,
+        "thread-1",
+        "第二条排队消息",
+        [],
+        queuedOptions,
+      );
+    });
+
+    const optimisticCall = findOptimisticUserCall(dispatch);
+    expect(optimisticCall).toBeDefined();
+    const optimisticAction = optimisticCall?.[0] as { item?: { id?: string; text?: string } };
+    expect(optimisticAction.item?.id).toBe("optimistic-user-queued-message-1");
+    expect(optimisticAction.item?.text).toBe("第二条排队消息");
   });
 
   it("adds generated image processing card for direct codex image request text", async () => {

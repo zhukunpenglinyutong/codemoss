@@ -3,17 +3,17 @@ import type {
   MessageSendOptions,
   QueuedMessage,
 } from "../../../types";
-import {
-  buildComparableUserMessageKey,
-  isEquivalentUserObservation,
-} from "../assembly/conversationNormalization";
+import { isEquivalentUserObservation } from "../assembly/conversationNormalization";
 
 const OPTIMISTIC_USER_ITEM_PREFIX = "optimistic-user-";
 
 type MessageConversationItem = Extract<ConversationItem, { kind: "message" }>;
 type UserConversationMessage = MessageConversationItem & { role: "user" };
 
-export type QueuedHandoffBubble = UserConversationMessage;
+export type QueuedHandoffBubble = UserConversationMessage & {
+  anchorItemId?: string;
+  optimisticUserItemId?: string;
+};
 export {
   areSameUserImages,
   normalizeComparableUserText,
@@ -22,6 +22,10 @@ export {
 
 export function isOptimisticUserMessageId(id: string): boolean {
   return id.startsWith(OPTIMISTIC_USER_ITEM_PREFIX);
+}
+
+export function buildQueuedOptimisticUserMessageId(messageId: string): string {
+  return `${OPTIMISTIC_USER_ITEM_PREFIX}queued-${messageId}`;
 }
 
 export function isUserConversationMessage(
@@ -65,6 +69,7 @@ function normalizeCollaborationMode(
 
 export function buildQueuedHandoffBubbleItem(
   item: QueuedMessage,
+  anchorItemId?: string,
 ): QueuedHandoffBubble {
   const collaborationMode = normalizeCollaborationMode(item.sendOptions);
   const selectedAgentName = normalizeSelectedAgentName(item.sendOptions);
@@ -84,7 +89,34 @@ export function buildQueuedHandoffBubbleItem(
     ...(item.sendOptions?.intentCanvasContextAttachments?.length
       ? { intentCanvasContextAttachments: item.sendOptions.intentCanvasContextAttachments }
       : {}),
+    ...(anchorItemId ? { anchorItemId } : {}),
+    ...(item.eagerOptimisticUserId
+      ? { optimisticUserItemId: item.eagerOptimisticUserId }
+      : {}),
   };
+}
+
+export function hasCanonicalUserItemForQueuedHandoffBubble(
+  items: ConversationItem[],
+  bubble: QueuedHandoffBubble,
+): boolean {
+  const anchorIndex = bubble.anchorItemId
+    ? items.findIndex((item) => item.id === bubble.anchorItemId)
+    : -1;
+  if (anchorIndex >= 0) {
+    const itemAfterAnchor = items[anchorIndex + 1];
+    return (
+      itemAfterAnchor?.id === bubble.optimisticUserItemId ||
+      (itemAfterAnchor
+        ? doesConversationItemMatchUserBubble(itemAfterAnchor, bubble)
+        : false)
+    );
+  }
+  return items.some(
+    (item) =>
+      item.id === bubble.optimisticUserItemId ||
+      doesConversationItemMatchUserBubble(item, bubble),
+  );
 }
 
 export function appendQueuedHandoffBubbleIfNeeded(
@@ -94,15 +126,18 @@ export function appendQueuedHandoffBubbleIfNeeded(
   if (!bubble) {
     return items;
   }
-  const bubbleKey = buildComparableUserMessageKey(bubble);
-  if (
-    items.some(
-      (item) =>
-        isUserConversationMessage(item) &&
-        buildComparableUserMessageKey(item) === bubbleKey,
-    )
-  ) {
+  if (hasCanonicalUserItemForQueuedHandoffBubble(items, bubble)) {
     return items;
+  }
+  const anchorIndex = bubble.anchorItemId
+    ? items.findIndex((item) => item.id === bubble.anchorItemId)
+    : -1;
+  if (anchorIndex >= 0) {
+    return [
+      ...items.slice(0, anchorIndex + 1),
+      bubble,
+      ...items.slice(anchorIndex + 1),
+    ];
   }
   return [...items, bubble];
 }

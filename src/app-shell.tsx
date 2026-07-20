@@ -1166,6 +1166,7 @@ export function AppShell() {
     clearDraftForThread,
   } = useComposerController({
     activeThreadId,
+    activeItems,
     activeTurnId,
     activeContinuationPulse: activeThreadId
       ? (threadStatusById[activeThreadId]?.continuationPulse ?? 0)

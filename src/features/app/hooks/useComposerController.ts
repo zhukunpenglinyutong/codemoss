@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type {
+  ConversationItem,
   EngineType,
   MessageSendOptions,
   QueuedMessage,
@@ -17,6 +18,7 @@ import { useQueuedSend } from "../../threads/hooks/useQueuedSend";
 
 export function useComposerController({
   activeThreadId,
+  activeItems,
   activeTurnId,
   activeContinuationPulse,
   activeTerminalPulse,
@@ -53,6 +55,7 @@ export function useComposerController({
   interruptTurn,
 }: {
   activeThreadId: string | null;
+  activeItems?: ConversationItem[];
   activeTurnId?: string | null;
   activeContinuationPulse?: number;
   activeTerminalPulse?: number;
@@ -133,6 +136,7 @@ export function useComposerController({
     activeFusingMessageId,
   } = useQueuedSend({
     activeThreadId,
+    activeItems,
     activeTurnId,
     activeContinuationPulse,
     activeTerminalPulse,

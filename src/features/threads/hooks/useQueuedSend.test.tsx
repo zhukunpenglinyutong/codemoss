@@ -181,6 +181,155 @@ describe("useQueuedSend", () => {
     });
   });
 
+  it("makes the next queued codex follow-up visible before the current turn completes", async () => {
+    const options = makeOptions({
+      activeEngine: "codex",
+      isProcessing: true,
+      steerEnabled: false,
+      activeItems: [
+        {
+          id: "assistant-current-turn",
+          kind: "message",
+          role: "assistant",
+          text: "上一轮仍在生成。",
+        },
+      ],
+    });
+    const { result, rerender } = renderHook((props) => useQueuedSend(props), {
+      initialProps: options,
+    });
+
+    await act(async () => {
+      await result.current.handleSend("第二条排队消息");
+    });
+
+    expect(result.current.activeQueue).toHaveLength(1);
+    const queuedItem = result.current.activeQueue[0];
+    expect(queuedItem).toBeDefined();
+    expect(result.current.activeQueuedHandoffBubble).toMatchObject({
+      id: expect.stringMatching(/^queued-handoff-/),
+      kind: "message",
+      role: "user",
+      text: "第二条排队消息",
+      anchorItemId: "assistant-current-turn",
+    });
+
+    await act(async () => {
+      rerender({ ...options, isProcessing: false });
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(options.sendUserMessageToThread).toHaveBeenCalledWith(
+      workspace,
+      "thread-1",
+      "第二条排队消息",
+      [],
+      expect.objectContaining({
+        eagerOptimisticUserId: `optimistic-user-queued-${queuedItem!.id}`,
+        skipOptimisticUserBubble: true,
+      }),
+    );
+  });
+
+  it("promotes a third queued codex follow-up after the prior handoff becomes canonical", async () => {
+    const options = makeOptions({
+      activeEngine: "codex",
+      isProcessing: true,
+      steerEnabled: false,
+      activeItems: [
+        {
+          id: "assistant-first-turn",
+          kind: "message",
+          role: "assistant",
+          text: "第一轮仍在生成。",
+        },
+      ],
+    });
+    const { result, rerender } = renderHook((props) => useQueuedSend(props), {
+      initialProps: options,
+    });
+
+    await act(async () => {
+      await result.current.handleSend("第二条排队消息");
+    });
+    const secondQueuedItem = result.current.activeQueue[0];
+    expect(secondQueuedItem).toBeDefined();
+
+    await act(async () => {
+      rerender({ ...options, isProcessing: false });
+    });
+    await act(async () => {
+      await Promise.resolve();
+    });
+    await act(async () => {
+      rerender({
+        ...options,
+        isProcessing: true,
+        activeItems: [
+          {
+            id: "assistant-first-turn",
+            kind: "message",
+            role: "assistant",
+            text: "第一轮已完成。",
+          },
+          {
+            id: `optimistic-user-queued-${secondQueuedItem!.id}`,
+            kind: "message",
+            role: "user",
+            text: "第二条排队消息",
+          },
+          {
+            id: "assistant-second-turn",
+            kind: "message",
+            role: "assistant",
+            text: "第二轮正在生成。",
+          },
+        ],
+      });
+    });
+
+    await act(async () => {
+      await result.current.handleSend("第三条排队消息");
+    });
+
+    expect(result.current.activeQueue.map((item) => item.text)).toEqual([
+      "第三条排队消息",
+    ]);
+    expect(result.current.activeQueuedHandoffBubble).toMatchObject({
+      id: expect.stringMatching(/^queued-handoff-/),
+      text: "第三条排队消息",
+      anchorItemId: "assistant-second-turn",
+    });
+  });
+
+  it("removes the visible handoff bubble when its queued message is removed", async () => {
+    const options = makeOptions({
+      activeEngine: "codex",
+      isProcessing: true,
+      steerEnabled: false,
+    });
+    const { result } = renderHook((props) => useQueuedSend(props), {
+      initialProps: options,
+    });
+
+    await act(async () => {
+      await result.current.handleSend("删除前的排队消息");
+    });
+
+    const queuedItem = result.current.activeQueue[0];
+    expect(queuedItem).toBeDefined();
+    expect(result.current.activeQueuedHandoffBubble).not.toBeNull();
+
+    act(() => {
+      result.current.removeQueuedMessage("thread-1", queuedItem!.id);
+    });
+
+    expect(result.current.activeQueue).toEqual([]);
+    expect(result.current.activeQueuedHandoffBubble).toBeNull();
+  });
+
   it("queues send while processing when steer is disabled", async () => {
     const options = makeOptions({ isProcessing: true, steerEnabled: false });
     const { result } = renderHook((props) => useQueuedSend(props), {
@@ -354,7 +503,10 @@ describe("useQueuedSend", () => {
       realThreadId,
       "pending codex item",
       [],
-      undefined,
+      expect.objectContaining({
+        eagerOptimisticUserId: expect.stringMatching(/^optimistic-user-queued-/),
+        skipOptimisticUserBubble: true,
+      }),
     );
   });
 

@@ -119,6 +119,7 @@ import { useCodexMessageRecovery } from "./useCodexMessageRecovery";
 type SendMessageOptions = {
   skipPromptExpansion?: boolean;
   skipOptimisticUserBubble?: boolean;
+  eagerOptimisticUserId?: string;
   suppressUserMessageRender?: boolean;
   model?: string | null;
   effort?: string | null;
@@ -429,6 +430,7 @@ export function useThreadMessaging({
         threadKind === "shared"
           ? normalizeSharedSessionEngine(activeEngine)
           : resolvedThreadEngine;
+      const eagerOptimisticUserId = options?.eagerOptimisticUserId?.trim() || null;
       dispatch({
         type: "ensureThread",
         workspaceId: workspace.id,
@@ -441,6 +443,31 @@ export function useThreadMessaging({
         threadId,
         engine: resolvedEngine,
       });
+      if (
+        eagerOptimisticUserId &&
+        resolvedEngine === "codex" &&
+        !options?.suppressUserMessageRender
+      ) {
+        const selectedAgentName = options?.selectedAgent?.name?.trim() || undefined;
+        const selectedAgentIcon = options?.selectedAgent?.icon?.trim() || undefined;
+        dispatch({
+          type: "upsertItem",
+          workspaceId: workspace.id,
+          threadId,
+          item: {
+            id: eagerOptimisticUserId,
+            kind: "message",
+            role: "user",
+            text: messageText,
+            images: images.length > 0 ? images : undefined,
+            selectedAgentName,
+            selectedAgentIcon,
+            browserContextAttachment: options?.browserContextAttachment ?? null,
+            intentCanvasContextAttachments: options?.intentCanvasContextAttachments,
+          },
+          hasCustomName: Boolean(getCustomName(workspace.id, threadId)),
+        });
+      }
       let finalText = messageText;
       if (!options?.skipPromptExpansion) {
         const promptExpansion = expandCustomPromptText(messageText, customPrompts);
@@ -877,7 +904,48 @@ export function useThreadMessaging({
         ConversationItem,
         { kind: "generatedImage" }
       > | null = null;
-      if (shouldAddOptimisticUserBubble) {
+      if (
+        eagerOptimisticUserId &&
+        resolvedEngine === "codex" &&
+        !options?.suppressUserMessageRender
+      ) {
+        optimisticUserItem = {
+          id: eagerOptimisticUserId,
+          kind: "message",
+          role: "user",
+          text: finalText,
+          images: finalImages.length > 0 ? finalImages : undefined,
+          collaborationMode: userCollaborationMode,
+          selectedAgentName,
+          selectedAgentIcon,
+          browserContextAttachment: options?.browserContextAttachment ?? null,
+          intentCanvasContextAttachments: options?.intentCanvasContextAttachments,
+        };
+        dispatch({
+          type: "upsertItem",
+          workspaceId: workspace.id,
+          threadId,
+          item: optimisticUserItem,
+          hasCustomName: Boolean(getCustomName(workspace.id, threadId)),
+        });
+        const optimisticGeneratedImagePrompt = extractOptimisticGeneratedImagePrompt(
+          visibleUserText,
+        );
+        if (optimisticGeneratedImagePrompt) {
+          optimisticGeneratedImageItem = createOptimisticGeneratedImageProcessingItem({
+            threadId,
+            userMessageId: optimisticUserItem.id,
+            promptText: optimisticGeneratedImagePrompt,
+          });
+          dispatch({
+            type: "upsertItem",
+            workspaceId: workspace.id,
+            threadId,
+            item: optimisticGeneratedImageItem,
+            hasCustomName: Boolean(getCustomName(workspace.id, threadId)),
+          });
+        }
+      } else if (shouldAddOptimisticUserBubble) {
         const optimisticDisplayText = visibleUserText;
         const optimisticText = finalText;
         const optimisticImages = finalImages;

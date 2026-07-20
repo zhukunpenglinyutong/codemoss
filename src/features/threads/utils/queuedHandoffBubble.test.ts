@@ -27,6 +27,80 @@ describe("queuedHandoffBubble", () => {
     expect(merged).toEqual([bubble]);
   });
 
+  it("keeps a queued handoff bubble before successor assistant output using its captured tail anchor", () => {
+    const bubble = Object.assign(
+      buildQueuedHandoffBubbleItem({
+        id: "queued-anchored",
+        text: "继续推送这个分支",
+        createdAt: 1,
+      }),
+      { anchorItemId: "assistant-previous-turn" },
+    );
+    const items: ConversationItem[] = [
+      {
+        id: "assistant-previous-turn",
+        kind: "message",
+        role: "assistant",
+        text: "上一轮输出已经结束。",
+      },
+      {
+        id: "assistant-successor-turn",
+        kind: "message",
+        role: "assistant",
+        text: "这是下一轮已经先到达的回复。",
+      },
+    ];
+
+    const merged = appendQueuedHandoffBubbleIfNeeded(items, bubble);
+
+    expect(merged.map((item) => item.id)).toEqual([
+      "assistant-previous-turn",
+      bubble.id,
+      "assistant-successor-turn",
+    ]);
+  });
+
+  it("does not mistake an earlier equal user message for the anchored handoff canonical item", () => {
+    const bubble = buildQueuedHandoffBubbleItem(
+      {
+        id: "queued-repeated-text",
+        text: "继续排查这个问题",
+        createdAt: 1,
+        eagerOptimisticUserId: "optimistic-user-queued-repeated-text",
+      },
+      "assistant-previous-turn",
+    );
+    const items: ConversationItem[] = [
+      {
+        id: "user-earlier-turn",
+        kind: "message",
+        role: "user",
+        text: "继续排查这个问题",
+      },
+      {
+        id: "assistant-previous-turn",
+        kind: "message",
+        role: "assistant",
+        text: "上一轮输出已经结束。",
+      },
+      {
+        id: "assistant-successor-turn",
+        kind: "message",
+        role: "assistant",
+        text: "这是下一轮已经先到达的回复。",
+      },
+    ];
+
+    const merged = appendQueuedHandoffBubbleIfNeeded(items, bubble);
+
+    expect(merged.map((item) => item.id)).toEqual([
+      "user-earlier-turn",
+      "assistant-previous-turn",
+      bubble.id,
+      "assistant-successor-turn",
+    ]);
+  });
+
   it("does not append the handoff bubble when history already contains the matching user message", () => {
     const bubble = buildQueuedHandoffBubbleItem({
       id: "queued-2",

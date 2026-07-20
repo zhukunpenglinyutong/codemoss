@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
+  ConversationItem,
   EngineType,
   MessageSendOptions,
   QueuedMessage,
   WorkspaceInfo,
 } from "../../../types";
 import {
+  buildQueuedOptimisticUserMessageId,
   buildQueuedHandoffBubbleItem,
+  hasCanonicalUserItemForQueuedHandoffBubble,
   type QueuedHandoffBubble,
 } from "../utils/queuedHandoffBubble";
 
@@ -16,6 +19,7 @@ const QUEUED_HANDOFF_BUBBLE_TTL_MS = 60_000;
 
 type UseQueuedSendOptions = {
   activeThreadId: string | null;
+  activeItems?: ConversationItem[];
   activeTurnId?: string | null;
   activeContinuationPulse?: number;
   activeTerminalPulse?: number;
@@ -276,6 +280,7 @@ function canExecuteSlashCommand(
 
 export function useQueuedSend({
   activeThreadId,
+  activeItems = [],
   activeTurnId,
   activeContinuationPulse = 0,
   activeTerminalPulse = 0,
@@ -329,6 +334,8 @@ export function useQueuedSend({
     Record<string, ThreadFusionState | null>
   >({});
   const previousActiveThreadIdRef = useRef<string | null>(activeThreadId);
+  const activeItemsRef = useRef(activeItems);
+  activeItemsRef.current = activeItems;
 
   const activeQueue = useMemo(
     () => (activeThreadId ? queuedByThread[activeThreadId] ?? [] : []),
@@ -465,14 +472,65 @@ export function useQueuedSend({
       text: string,
       images: string[] = [],
       options?: MessageSendOptions,
-    ): QueuedMessage => ({
-      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
-      text,
-      createdAt: Date.now(),
-      images,
-      sendOptions: options,
-    }),
+      eagerOptimisticUser = false,
+    ): QueuedMessage => {
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      return {
+        id,
+        text,
+        createdAt: Date.now(),
+        images,
+        sendOptions: options,
+        ...(eagerOptimisticUser
+          ? { eagerOptimisticUserId: buildQueuedOptimisticUserMessageId(id) }
+          : {}),
+      };
+    },
     [],
+  );
+
+  const buildCodexHandoffBubble = useCallback(
+    (item: QueuedMessage): QueuedHandoffBubble | null => {
+      const trimmedText = item.text.trim();
+      if (
+        activeEngine !== "codex" ||
+        parseSlashCommand(trimmedText) ||
+        ((item.images?.length ?? 0) === 0 && isImplicitModeQuery(trimmedText))
+      ) {
+        return null;
+      }
+      const activeItems = activeItemsRef.current;
+      const anchorItemId = activeItems[activeItems.length - 1]?.id;
+      return buildQueuedHandoffBubbleItem(item, anchorItemId);
+    },
+    [activeEngine],
+  );
+
+  const ensureQueuedHandoffBubble = useCallback(
+    (threadId: string, item: QueuedMessage, replaceCurrent: boolean) => {
+      const nextBubble = buildCodexHandoffBubble(item);
+      if (!nextBubble) {
+        return;
+      }
+      setQueuedHandoffByThread((previous) => {
+        const currentBubble = previous[threadId];
+        if (
+          !replaceCurrent &&
+          currentBubble &&
+          !hasCanonicalUserItemForQueuedHandoffBubble(
+            activeItemsRef.current,
+            currentBubble,
+          )
+        ) {
+          return previous;
+        }
+        if (currentBubble?.id === nextBubble.id) {
+          return previous;
+        }
+        return { ...previous, [threadId]: nextBubble };
+      });
+    },
+    [buildCodexHandoffBubble],
   );
 
   const enqueueMessage = useCallback((threadId: string, item: QueuedMessage) => {
@@ -490,6 +548,13 @@ export function useQueuedSend({
           (entry) => entry.id !== messageId,
         ),
       }));
+      setQueuedHandoffByThread((prev) => {
+        const currentBubble = prev[threadId];
+        if (currentBubble?.id !== `queued-handoff-${messageId}`) {
+          return prev;
+        }
+        return { ...prev, [threadId]: null };
+      });
     },
     [],
   );
@@ -735,7 +800,14 @@ export function useQueuedSend({
         await startMode(trimmed);
         return false;
       }
-      const effectiveOptions = withCodexCollaborationMode(item.sendOptions);
+      const selectedOptions = withCodexCollaborationMode(item.sendOptions);
+      const effectiveOptions = item.eagerOptimisticUserId
+        ? {
+            ...(selectedOptions ?? {}),
+            eagerOptimisticUserId: item.eagerOptimisticUserId,
+            skipOptimisticUserBubble: true,
+          }
+        : selectedOptions;
       const targetThreadId = options?.targetThreadId?.trim() ?? "";
       const shouldUseDirectThreadSend =
         activeEngine === "codex" &&
@@ -794,11 +866,19 @@ export function useQueuedSend({
         isProcessing && (!steerEnabled || isClaudePendingBootstrapThread);
       // A pending AskUserQuestion also holds the queue: the turn is alive but
       // blocked on the answer, so a fresh send must queue rather than dispatch.
-      if (activeThreadId && (shouldQueueWhileProcessing || hasPendingUserInput)) {
-        const item = buildQueuedMessage(trimmed, nextImages, options);
-        enqueueMessage(activeThreadId, item);
-        clearActiveImages();
-        return;
+        if (activeThreadId && (shouldQueueWhileProcessing || hasPendingUserInput)) {
+          const item = buildQueuedMessage(
+            trimmed,
+            nextImages,
+            options,
+            activeEngine === "codex" &&
+              !options?.suppressUserMessageRender &&
+              !options?.skipOptimisticUserBubble,
+          );
+          enqueueMessage(activeThreadId, item);
+          ensureQueuedHandoffBubble(activeThreadId, item, false);
+          clearActiveImages();
+          return;
       }
       await dispatchQueuedMessage(buildQueuedMessage(trimmed, nextImages, options));
       clearActiveImages();
@@ -809,6 +889,7 @@ export function useQueuedSend({
       buildQueuedMessage,
       clearActiveImages,
       dispatchQueuedMessage,
+      ensureQueuedHandoffBubble,
       enqueueMessage,
       hasPendingUserInput,
       isClaudePendingBootstrapThread,
@@ -841,8 +922,17 @@ export function useQueuedSend({
       if (!activeThreadId) {
         return;
       }
-      const item = buildQueuedMessage(trimmed, nextImages, options);
+      const item = buildQueuedMessage(
+        trimmed,
+        nextImages,
+        options,
+        (isProcessing || hasPendingUserInput) &&
+          activeEngine === "codex" &&
+          !options?.suppressUserMessageRender &&
+          !options?.skipOptimisticUserBubble,
+      );
       enqueueMessage(activeThreadId, item);
+      ensureQueuedHandoffBubble(activeThreadId, item, false);
       clearActiveImages();
     },
     [
@@ -850,8 +940,11 @@ export function useQueuedSend({
       activeThreadId,
       buildQueuedMessage,
       clearActiveImages,
+      ensureQueuedHandoffBubble,
       enqueueMessage,
+      hasPendingUserInput,
       isReviewing,
+      isProcessing,
     ],
   );
 
@@ -1174,20 +1267,7 @@ export function useQueuedSend({
     if (!nextItem) {
       return;
     }
-    const nextTrimmedText = nextItem.text.trim();
-    const shouldCreateHandoffBubble =
-      activeEngine === "codex" &&
-      !parseSlashCommand(nextTrimmedText) &&
-      !(
-        (nextItem.images?.length ?? 0) === 0 &&
-        isImplicitModeQuery(nextTrimmedText)
-      );
-    if (shouldCreateHandoffBubble) {
-      setQueuedHandoffByThread((prev) => ({
-        ...prev,
-        [threadId]: buildQueuedHandoffBubbleItem(nextItem),
-      }));
-    }
+    ensureQueuedHandoffBubble(threadId, nextItem, true);
     setInFlightByThread((prev) => ({ ...prev, [threadId]: nextItem }));
     setHasStartedByThread((prev) => ({ ...prev, [threadId]: false }));
     setQueuedByThread((prev) => ({
@@ -1215,6 +1295,7 @@ export function useQueuedSend({
     activeEngine,
     activeThreadId,
     dispatchQueuedMessage,
+    ensureQueuedHandoffBubble,
     fusionByThread,
     hasPendingUserInput,
     inFlightByThread,

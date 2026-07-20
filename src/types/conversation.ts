@@ -186,6 +186,7 @@ export type QueuedMessage = {
   createdAt: number;
   images?: string[];
   sendOptions?: MessageSendOptions;
+  eagerOptimisticUserId?: string;
 };
 
 export type IntentCanvasContextCount = {
@@ -356,6 +357,7 @@ export type MessageSendOptions = {
   accessMode?: AccessMode;
   resumeSource?: "queue-fusion-cutover" | null;
   resumeTurnId?: string | null;
+  eagerOptimisticUserId?: string;
   skipOptimisticUserBubble?: boolean;
   suppressUserMessageRender?: boolean;
   autoSession?: AutoSessionMetadata | null;
