@@ -1447,17 +1447,25 @@ export function threadReducer(state: ThreadState, action: ThreadAction): ThreadS
       const item = normalizeItem(action.item);
       const isUserMessage = isUserMessageItem(item);
       const isOptimisticUser = isUserMessage && isOptimisticUserMessageId(item.id);
+      const hadUserMessage = isUserMessage
+        ? list.some(
+            (entry) =>
+              entry.kind === "message" &&
+              entry.role === "user" &&
+              !isOptimisticUserMessageId(entry.id),
+          )
+        : false;
       let generatedImagesToReinsertAfterUser: GeneratedImageItem[] = [];
+      let replacedOptimisticUserInPlace = false;
       if (isUserMessage && !isOptimisticUser) {
         const optimisticReplacement =
           replaceOptimisticUserAndExtractAnchoredGeneratedImages(list, item);
         list = optimisticReplacement.items;
         generatedImagesToReinsertAfterUser =
           optimisticReplacement.generatedImagesToReinsert;
+        replacedOptimisticUserInPlace =
+          optimisticReplacement.replacedOptimisticUserInPlace;
       }
-      const hadUserMessage = isUserMessage
-        ? list.some((entry) => entry.kind === "message" && entry.role === "user")
-        : false;
       const renameText = isUserMessage ? extractRenameText(item.text) : "";
       if (
         item.kind === "review" &&
@@ -1659,7 +1667,9 @@ export function threadReducer(state: ThreadState, action: ThreadAction): ThreadS
           }
         }
       }
-      let nextList = upsertItem(list, nextItem);
+      let nextList = replacedOptimisticUserInPlace
+        ? list
+        : upsertItem(list, nextItem);
       if (generatedImagesToReinsertAfterUser.length > 0) {
         nextList = insertGeneratedImagesAfterAnchors(
           nextList,

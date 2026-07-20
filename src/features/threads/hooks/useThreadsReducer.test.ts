@@ -929,6 +929,56 @@ describe("threadReducer", () => {
     ]);
   });
 
+  it("keeps an authoritative user before an assistant item that arrived first", () => {
+    const base: ThreadState = {
+      ...initialState,
+      itemsByThread: {
+        "thread-1": [
+          {
+            id: "optimistic-user-1",
+            kind: "message",
+            role: "user",
+            text: "排队消息",
+          },
+          {
+            id: "assistant-1",
+            kind: "message",
+            role: "assistant",
+            text: "这是对排队消息的回复",
+          },
+        ],
+      },
+    };
+
+    const next = threadReducer(base, {
+      type: "upsertItem",
+      workspaceId: "ws-1",
+      threadId: "thread-1",
+      item: {
+        id: "user-1",
+        kind: "message",
+        role: "user",
+        text: "排队消息",
+      },
+      hasCustomName: false,
+    });
+
+    expect(next.itemsByThread["thread-1"]).toEqual([
+      {
+        id: "user-1",
+        kind: "message",
+        role: "user",
+        text: "排队消息",
+      },
+      {
+        id: "assistant-1",
+        kind: "message",
+        role: "assistant",
+        text: "这是对排队消息的回复",
+      },
+    ]);
+  });
+
   it("drops preserved optimistic user bubble once snapshot includes the real user message", () => {
     const base: ThreadState = {
       ...initialState,

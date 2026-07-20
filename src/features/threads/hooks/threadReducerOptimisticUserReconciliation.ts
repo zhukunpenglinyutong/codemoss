@@ -166,6 +166,7 @@ export function replaceOptimisticUserAndExtractAnchoredGeneratedImages(
     return {
       items: dropMatchingOptimisticUserMessage(items, incomingUser),
       generatedImagesToReinsert: [],
+      replacedOptimisticUserInPlace: false,
     };
   }
 
@@ -174,6 +175,7 @@ export function replaceOptimisticUserAndExtractAnchoredGeneratedImages(
   const nextItems: ConversationItem[] = [];
   items.forEach((item) => {
     if (isUserMessageItem(item) && replacedOptimisticUserIds.has(item.id)) {
+      nextItems.push(incomingUser);
       return;
     }
     const nextItem = isProcessingGeneratedImageItem(item)
@@ -192,5 +194,6 @@ export function replaceOptimisticUserAndExtractAnchoredGeneratedImages(
   return {
     items: nextItems,
     generatedImagesToReinsert,
+    replacedOptimisticUserInPlace: true,
   };
 }
