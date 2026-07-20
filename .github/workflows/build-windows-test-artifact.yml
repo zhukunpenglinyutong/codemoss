@@ -2,6 +2,9 @@ name: Build Windows Test Artifact
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - fix/codex-queued-message-order
 
 permissions:
   contents: read
