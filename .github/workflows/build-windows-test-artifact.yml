@@ -40,7 +40,7 @@ jobs:
         shell: pwsh
         env:
           NODE_OPTIONS: "--max-old-space-size=8192"
-        run: npm run tauri -- build --config src-tauri/tauri.windows.conf.json --bundles nsis
+        run: npm run tauri -- build --config src-tauri/tauri.windows.test.conf.json --bundles nsis
 
       - name: Upload Windows test installer
         uses: actions/upload-artifact@v4
