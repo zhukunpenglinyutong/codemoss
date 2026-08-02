@@ -1,4 +1,5 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { detectRendererPlatform } from "../utils/rendererPlatform";
 
 const BAIDU_TONGJI_SITE_ID = "daa60bcc45c658ee35054b93be3cf2e4";
 
@@ -25,16 +26,23 @@ function isMainWindow(): boolean {
  * 注入百度统计（PV/UV）脚本。
  * 仅生产构建生效，避免开发环境的访问污染统计数据。
  *
- * 注意：Tauri 生产环境页面运行在 tauri://（macOS/Linux）或 http://tauri.localhost
- * （Windows），hm.js 探测到非 https 协议会把上报 gif 降级为 http://hm.baidu.com，
- * 因此 tauri.conf.json 的 CSP img-src/connect-src 必须放行 http://hm.baidu.com，
- * 否则 beacon 被拦截、后台永远零数据。
+ * 注意：Linux 原生 Tauri/WebKitGTK 禁止加载 hm.js；现场故障中该请求会触发
+ * WebKitNetworkProcess/libsoup 崩溃并清空 renderer，必须在创建 _hmt/script 前返回。
+ * Web Service 运行在普通 browser，不经过该 native network process，保留原统计行为。
+ * 其余生产 runtime 的非 https 页面会让上报 gif 降级为 http://hm.baidu.com，
+ * 因此 tauri.conf.json 的 CSP img-src/connect-src 仍需放行该地址。
  */
 export function installBaiduTongji(): void {
   if (!import.meta.env.PROD) {
     return;
   }
   if (!isMainWindow()) {
+    return;
+  }
+  if (
+    window.__MOSSX_WEB_SERVICE__ !== true &&
+    detectRendererPlatform() === "linux"
+  ) {
     return;
   }
   window._hmt = window._hmt || [];
