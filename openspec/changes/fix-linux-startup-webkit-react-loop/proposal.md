@@ -1,6 +1,6 @@
 ## Why
 
-`ccgui@0.7.15` 在本机 Ubuntu 22.04 / X11 / WebKitGTK 2.50.4 / libsoup 3.0.7 的真实 production 启动中首先发生确定性的百度统计崩溃：v0.7.13 起注入的 `hm.baidu.com` 请求会触发 `WebKitNetworkProcess` 在 libsoup 内 `SIGSEGV`，窗口因此只剩菜单栏和标题栏。阻断统计请求的一次诊断运行随后记录过 React `Maximum update depth exceeded`（#185）并落入 ErrorBoundary；production source map 将 owner 映射到 `useModels`，但故障 bundle 与当前 baseline 重建 bundle 的 SHA-256 完全一致，而 baseline 已包含 `4c5e97c8e`、`e6e964d88` 两次 #185 收敛修复。多个隔离 settings/workspace hydration fixture 均未再次触发 #185，因此本 change 只新增可 red/green 证明的 Linux analytics guard，并把既有 #185 修复作为必须重新通过的 startup convergence baseline，而不叠加 speculative state guard。
+`ccgui@0.7.15` 在本机 Ubuntu 22.04 / X11 / WebKitGTK 2.50.4 / libsoup 3.0.7 的真实 production 启动中首先发生确定性的百度统计崩溃：v0.7.12 起注入的 `hm.baidu.com` 请求会触发 `WebKitNetworkProcess` 在 libsoup 内 `SIGSEGV`，窗口因此只剩菜单栏和标题栏。阻断统计请求的一次诊断运行随后记录过 React `Maximum update depth exceeded`（#185）并落入 ErrorBoundary；production source map 将 owner 映射到 `useModels`，但故障 bundle 与当前 baseline 重建 bundle 的 SHA-256 完全一致，而 baseline 已包含 `4c5e97c8e`、`e6e964d88` 两次 #185 收敛修复。多个隔离 settings/workspace hydration fixture 均未再次触发 #185，因此本 change 只新增可 red/green 证明的 Linux analytics guard，并把既有 #185 修复作为必须重新通过的 startup convergence baseline，而不叠加 speculative state guard。
 
 ## 目标与边界
 
