@@ -1,0 +1,5 @@
+{"file": ".claude/commands/trellis/finish-work.md", "reason": "Finish work checklist"}
+{"file": ".claude/commands/trellis/check.md", "reason": "Code quality check spec"}
+{"file": "openspec/changes/fix-linux-startup-webkit-react-loop/", "type": "directory", "reason": "Verify implementation against canonical behavior artifacts"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Verify hook convergence and cleanup"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Verify semantic no-op/reference stability"}

@@ -1,0 +1,53 @@
+{
+  "id": "fix-linux-startup-webkit-react-loop",
+  "name": "fix-linux-startup-webkit-react-loop",
+  "title": "修复 Linux analytics 启动崩溃并核验 React 收敛",
+  "description": "Linked OpenSpec change: fix-linux-startup-webkit-react-loop. 在独立 worktree 中最小修复 Linux WebKit/libsoup analytics 崩溃，核验 baseline 已有 React #185 convergence fix，并完成 ELF/AppImage/temporary launcher 验证。",
+  "status": "completed",
+  "dev_type": "frontend",
+  "scope": "src/services/baiduTongji.ts; src/services/baiduTongji.test.ts; React baseline verification; OpenSpec verification artifacts",
+  "package": null,
+  "priority": "P0",
+  "creator": "yode",
+  "assignee": "yode",
+  "createdAt": "2026-08-02",
+  "completedAt": "2026-08-02",
+  "branch": "fix/linux-startup-webkit-react-loop",
+  "base_branch": "main",
+  "worktree_path": null,
+  "current_phase": 6,
+  "next_action": [
+    {
+      "phase": 1,
+      "action": "brainstorm"
+    },
+    {
+      "phase": 2,
+      "action": "research"
+    },
+    {
+      "phase": 3,
+      "action": "implement"
+    },
+    {
+      "phase": 4,
+      "action": "check"
+    },
+    {
+      "phase": 5,
+      "action": "update-spec"
+    },
+    {
+      "phase": 6,
+      "action": "record-session"
+    }
+  ],
+  "commit": null,
+  "pr_url": null,
+  "subtasks": [],
+  "children": [],
+  "parent": null,
+  "relatedFiles": [],
+  "notes": "用户已完成初始桌面验收并授权 PR；需先关闭 /review 发现的 Linux Web Service analytics P2 scope finding，再完成 final gates 和 runtime verification。",
+  "meta": {}
+}

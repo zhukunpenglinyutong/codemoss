@@ -1,0 +1,8 @@
+{"file": ".trellis/workflow.md", "reason": "Project workflow and conventions"}
+{"file": ".trellis/spec/frontend/index.md", "reason": "Frontend development guide"}
+{"file": "openspec/changes/fix-linux-startup-webkit-react-loop/", "type": "directory", "reason": "OpenSpec behavior, design, tasks and acceptance contract"}
+{"file": ".trellis/spec/frontend/hook-guidelines.md", "reason": "Effect convergence, stable contracts and cleanup rules"}
+{"file": ".trellis/spec/frontend/state-management.md", "reason": "Active selection convergence and semantic no-op state rules"}
+{"file": ".trellis/spec/frontend/quality-guidelines.md", "reason": "Required tests, reference stability and no unrelated refactor"}
+{"file": ".trellis/spec/frontend/type-safety.md", "reason": "Strict TypeScript boundary"}
+{"file": "docs/perf/render-jank-knife-experiments-2026-07-08.md", "reason": "AppShell updater tracing method and render-loop hard redlines"}

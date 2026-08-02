@@ -1,0 +1,3 @@
+{"file": ".claude/commands/trellis/check.md", "reason": "Code quality check spec"}
+{"file": "docs/perf/render-jank-knife-experiments-2026-07-08.md", "reason": "Use memoizedUpdaters/source tracing for exact React #185 owner"}
+{"file": "openspec/changes/fix-linux-startup-webkit-react-loop/design.md", "reason": "Two-failure causal chain and single-variable probe plan"}
