@@ -168,3 +168,48 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 6: 修复 Linux WebKitGTK 启动崩溃
+
+**Date**: 2026-08-02
+**Task**: 修复 Linux WebKitGTK 启动崩溃
+**Branch**: `fix/linux-startup-webkit-react-loop`
+
+### Summary
+
+收窄 Linux analytics guard，完成真实 ELF/AppImage/收藏栏启动验证并通过最终 review
+
+### Main Changes
+
+目标：修复 cc gui 0.7.13+ 在现场 Linux native Tauri/WebKitGTK 环境启动后仅显示菜单栏与标题栏、renderer 内容为空的问题。
+
+主要修改：在百度统计初始化的 script/network creation 前增加最小平台 guard；仅当 detectRendererPlatform() 为 linux 且 window.__MOSSX_WEB_SERVICE__ !== true 时跳过 analytics。Linux Web Service browser、Windows、development、secondary window 均保持既有行为。
+
+回归覆盖：新增 Linux native 禁止加载、Linux Web Service 保留加载，以及既有 development/secondary-window 行为测试。
+
+验证结果：focused Vitest 3 files / 39 tests 通过；reviewer focused 2 files / 7 tests 通过；lint 0 errors（9 条既有 warnings）；typecheck、runtime contracts、production build、OpenSpec strict validation 均通过。完整测试仅有 Sidebar 2 failed / 51 passed，已在 main/fix 双树证明为与本修复无关的 baseline failure，并经用户明确授权跳过。
+
+真实运行：direct ELF 182 秒、direct AppImage 181 秒、收藏栏 .desktop → wrapper → AppImage 209 秒均持续显示有效内容，renderer-ready markers 正常，React ErrorBoundary、Maximum update depth、WebKitNetworkProcess/libsoup crash、coredump、apport 命中均为 0。用户也目视确认窗口内容正常。AppImage 已成功生成；后续只因本机缺少 TAURI_SIGNING_PRIVATE_KEY 在签名 gate 退出，不影响 bundle 产物与运行验证。
+
+审核：最终 codex review --uncommitted 未发现可操作缺陷。
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `fa487d0b7` | (see git log) |
+| `5fb262190` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete

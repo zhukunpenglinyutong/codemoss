@@ -8,8 +8,8 @@
 
 <!-- @@@auto:current-status -->
 - **Active File**: `journal-1.md`
-- **Total Sessions**: 5
-- **Last Active**: 2026-07-27
+- **Total Sessions**: 6
+- **Last Active**: 2026-08-02
 <!-- @@@/auto:current-status -->
 
 ---
@@ -19,7 +19,7 @@
 <!-- @@@auto:active-documents -->
 | File | Lines | Status |
 |------|-------|--------|
-| `journal-1.md` | ~170 | Active |
+| `journal-1.md` | ~215 | Active |
 <!-- @@@/auto:active-documents -->
 
 ---
@@ -29,6 +29,7 @@
 <!-- @@@auto:session-history -->
 | # | Date | Title | Commits | Branch |
 |---|------|-------|---------|--------|
+| 6 | 2026-08-02 | 修复 Linux WebKitGTK 启动崩溃 | `fa487d0b7`, `5fb262190` | `fix/linux-startup-webkit-react-loop` |
 | 5 | 2026-07-27 | 提交原生会话标题修复 PR | `7b178823b` | `fix/native-session-renamed-titles` |
 | 4 | 2026-07-27 | 显示 Codex 与 Claude 原生重命名标题 | `855e25e99` | `fix/native-session-renamed-titles` |
 | 3 | 2026-07-15 | 修复 Codex 子代理会话侧栏投影 | `a0c82451` | `fix/codex-subagent-sidebar-projection-pr` |
