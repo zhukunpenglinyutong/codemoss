@@ -213,3 +213,41 @@
 ### Next Steps
 
 - None - task complete
+
+
+## Session 7: 更正百度统计引入版本
+
+**Date**: 2026-08-03
+**Task**: 更正百度统计引入版本
+**Branch**: `fix/linux-startup-webkit-react-loop`
+
+### Summary
+
+将 PR 与 OpenSpec 中百度统计接入起点由 v0.7.13 更正为经 Git 标签确认的 v0.7.12
+
+### Main Changes
+
+核对 `d4caf1359 feat(analytics): 接入百度统计 PV/UV 埋点` 的 Git ancestry：`v0.7.11` 不包含该提交，`v0.7.12` 已包含，因此原先“v0.7.13 起”的表述晚了一版。
+
+将 `openspec/changes/fix-linux-startup-webkit-react-loop/proposal.md` 的版本起点更正为 `v0.7.12`；未修改生产代码、测试或运行行为。
+
+验证：`git diff --check` 通过；`npx --yes @fission-ai/openspec@1.3.1 validate fix-linux-startup-webkit-react-loop --strict --no-interactive` 通过；change 与 archived task 中已无 `v0.7.13` 残留。此前完成的 lint、typecheck、tests、build 与真实启动验证继续适用于未变化的代码。
+
+
+### Git Commits
+
+| Hash | Message |
+|------|---------|
+| `2a2fa7e43` | (see git log) |
+
+### Testing
+
+- [OK] (Add test results)
+
+### Status
+
+[OK] **Completed**
+
+### Next Steps
+
+- None - task complete
