@@ -503,6 +503,19 @@ export const CODEX_PROVIDER_PRESETS: CodexProviderPreset[] = [
     authJson: DEFAULT_CODEX_AUTH_JSON,
   },
   {
+    id: "atlas-cloud",
+    name: "Atlas Cloud",
+    nameKey: "settings.vendor.presets.atlasCloud",
+    configToml: buildCodexProviderConfigToml(
+      "atlas_cloud",
+      "https://api.atlascloud.ai/v1",
+      "deepseek-ai/deepseek-v4-pro",
+      "chat",
+      "atlas_cloud",
+    ),
+    authJson: DEFAULT_CODEX_AUTH_JSON,
+  },
+  {
     id: "minimax",
     name: "MiniMax",
     nameKey: "settings.vendor.presets.minimax",

@@ -78,6 +78,35 @@ describe("CodexProviderDialog", () => {
     expect(editors[1]?.value).toBe(preset!.authJson);
   });
 
+  it("fills the Atlas Cloud chat completions preset", () => {
+    const { container } = renderDialog();
+    const preset = CODEX_PROVIDER_PRESETS.find(
+      (item) => item.id === "atlas-cloud",
+    );
+    expect(preset).toBeTruthy();
+
+    const presetButton = Array.from(
+      container.querySelectorAll<HTMLButtonElement>(".vendor-preset-btn"),
+    ).find((button) => button.textContent === preset!.nameKey);
+    expect(presetButton).toBeTruthy();
+    fireEvent.click(presetButton!);
+
+    const nameInput = container.querySelector<HTMLInputElement>(
+      "input[placeholder='settings.vendor.codexDialog.namePlaceholder']",
+    );
+    expect(nameInput?.value).toBe("Atlas Cloud");
+
+    const configToml = container.querySelectorAll<HTMLTextAreaElement>(
+      ".vendor-code-editor",
+    )[0]?.value;
+    expect(configToml).toContain(
+      'base_url = "https://api.atlascloud.ai/v1"',
+    );
+    expect(configToml).toContain('model = "deepseek-ai/deepseek-v4-pro"');
+    expect(configToml).toContain('model_provider = "atlas_cloud"');
+    expect(configToml).toContain('wire_api = "chat"');
+  });
+
   it("formats valid JSON and reports formatError for invalid JSON", () => {
     const { container } = renderDialog();
     const editors = container.querySelectorAll<HTMLTextAreaElement>(

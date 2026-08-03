@@ -1395,6 +1395,7 @@ const settings = {
         kimi: "Kimi",
         kimiCoding: "Kimi Coding",
         deepseek: "DeepSeek",
+        atlasCloud: "Atlas Cloud",
         minimax: "MiniMax",
         xiaomi: "Xiaomi MiMo",
         xiaomiPlan: "Xiaomi MiMo Plan",
