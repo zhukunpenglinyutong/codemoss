@@ -22,8 +22,7 @@ use super::qoder::QoderSession;
 use super::qoder_provider_profile::{QoderDistributionSettings, QoderProviderLaunchProfile};
 use super::status::{
     detect_all_engines_scoped, detect_claude_status, detect_codex_status, detect_grok_status,
-    detect_kimi_status, detect_opencode_status_with_options, detect_pi_status_with_options,
-    detect_qoder_status_with_options,
+    detect_kimi_status, detect_opencode_status_with_options, detect_qoder_status_with_options,
 };
 use super::status::EngineStatusEventSink;
 use super::{disabled_engine_status, AuthState, EngineConfig, EngineStatus, EngineType};
@@ -354,7 +353,14 @@ impl EngineManager {
             EngineType::OpenCode => detect_opencode_status_with_options(bin, false).await,
             EngineType::Kimi => detect_kimi_status(bin).await,
             EngineType::Grok => detect_grok_status(bin).await,
-            EngineType::Pi => detect_pi_status_with_options(bin, false).await,
+            EngineType::Pi => {
+                crate::engine::status::detect_pi_status_with_options_and_home(
+                    bin,
+                    false,
+                    config.and_then(|item| item.home_dir.as_deref()),
+                )
+                .await
+            }
             EngineType::Qoder => detect_qoder_status_with_options(bin, false).await,
             EngineType::Dsh => {
                 crate::engine::dsh::detect_dsh_status(

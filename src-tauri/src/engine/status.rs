@@ -925,6 +925,21 @@ pub async fn detect_pi_status_with_options(
     custom_bin: Option<&str>,
     include_models: bool,
 ) -> EngineStatus {
+    detect_pi_status_with_options_and_home(custom_bin, include_models, None).await
+}
+
+pub async fn detect_pi_status_with_home(
+    custom_bin: Option<&str>,
+    home_override: Option<&str>,
+) -> EngineStatus {
+    detect_pi_status_with_options_and_home(custom_bin, true, home_override).await
+}
+
+pub async fn detect_pi_status_with_options_and_home(
+    custom_bin: Option<&str>,
+    include_models: bool,
+    home_override: Option<&str>,
+) -> EngineStatus {
     let bin_path = resolve_bin_path("pi", custom_bin);
     let bin = bin_path
         .as_ref()
@@ -947,7 +962,10 @@ pub async fn detect_pi_status_with_options(
             installed: true,
             version,
             bin_path: Some(bin.to_string()),
-            home_dir: get_pi_home_dir().map(|p| p.to_string_lossy().to_string()),
+            home_dir: home_override
+                .map(PathBuf::from)
+                .or_else(get_pi_home_dir)
+                .map(|p| p.to_string_lossy().to_string()),
             models: Vec::new(),
             default_model: None,
             features: EngineFeatures::pi(),
@@ -958,13 +976,14 @@ pub async fn detect_pi_status_with_options(
     // （max(version 10s, RPC 10s + list-models 10s 回退)），与 FE on-demand
     // timeout 对齐。未安装时 models 探测 spawn 立即失败，结果被丢弃。
     let version_probe = probe_cli_version(&bin, "pi", path_env.as_ref());
-    let models_probe = get_pi_models(&bin, path_env.as_ref());
+    let home_dir = home_override.map(PathBuf::from).or_else(get_pi_home_dir);
+    let home_dir_str = home_dir.as_ref().map(|p| p.to_string_lossy().to_string());
+    let models_probe = get_pi_models(&bin, path_env.as_ref(), home_dir_str.as_deref());
     let ((installed, version, error), (models, config_diagnostic)) =
         tokio::join!(version_probe, models_probe);
     if !installed {
         return not_installed_status(EngineType::Pi, error);
     }
-    let home_dir = get_pi_home_dir();
     let default_model = models.iter().find(|m| m.default).map(|m| m.id.clone());
     EngineStatus {
         engine_type: EngineType::Pi,
@@ -1509,6 +1528,7 @@ pub(crate) fn parse_pi_models_output(stdout: &str) -> Vec<ModelInfo> {
 async fn run_pi_list_models(
     bin: &str,
     path_env: Option<&String>,
+    home_dir: Option<&str>,
     extra_args: &[&str],
 ) -> Result<Vec<ModelInfo>, String> {
     let mut cmd = crate::backend::app_server::build_command_for_binary(bin);
@@ -1518,6 +1538,9 @@ async fn run_pi_list_models(
     }
     if let Some(path) = path_env {
         cmd.env("PATH", path);
+    }
+    if let Some(home) = home_dir {
+        cmd.env("PI_CODING_AGENT_DIR", home);
     }
     let output = timeout(PI_CATALOG_PROBE_TIMEOUT, cmd.output())
         .await
@@ -1535,36 +1558,92 @@ async fn run_pi_list_models(
     Ok(models)
 }
 
-async fn get_pi_models(bin: &str, path_env: Option<&String>) -> (Vec<ModelInfo>, Option<String>) {
-    let (mut models, config_diagnostic) = probe_pi_models_chain(bin, path_env).await;
-    promote_pi_default_from_settings(&mut models);
+fn merge_pi_custom_models(mut models: Vec<ModelInfo>, home_dir: Option<&str>) -> Vec<ModelInfo> {
+    let mut seen: std::collections::HashSet<String> = models.iter().map(|m| m.id.clone()).collect();
+    for (provider, value) in crate::engine::pi_models_config::load_custom_model_entries(home_dir) {
+        let Some(model_id) = value
+            .get("id")
+            .and_then(Value::as_str)
+            .map(str::trim)
+            .filter(|v| !v.is_empty())
+        else {
+            continue;
+        };
+        let id = pi_model_catalog_id(&provider, model_id);
+        if !seen.insert(id.clone()) {
+            continue;
+        }
+        let configured_name = value
+            .get("name")
+            .and_then(Value::as_str)
+            .unwrap_or(model_id);
+        let mut info = ModelInfo::new(id.clone(), id.clone())
+            .with_description(configured_name)
+            .with_provider(provider)
+            .with_protocol("pi")
+            .with_provenance("config:pi-models.json")
+            .with_source("configured");
+        if value
+            .get("reasoning")
+            .and_then(Value::as_bool)
+            .unwrap_or(false)
+        {
+            info = info.with_reasoning(
+                PI_STANDARD_THINKING_LEVELS
+                    .iter()
+                    .map(|v| (*v).to_string())
+                    .collect(),
+                None,
+            );
+        }
+        models.push(info);
+    }
+    if models.iter().all(|m| !m.default) {
+        if let Some(first) = models.first_mut() {
+            first.default = true;
+        }
+    }
+    models
+}
+
+async fn get_pi_models(
+    bin: &str,
+    path_env: Option<&String>,
+    home_dir: Option<&str>,
+) -> (Vec<ModelInfo>, Option<String>) {
+    let (mut models, config_diagnostic) = probe_pi_models_chain(bin, path_env, home_dir).await;
+    promote_pi_default_from_settings(&mut models, home_dir.map(Path::new));
     (models, config_diagnostic)
 }
 
 /// PI catalog 三条取数路径（RPC `get_available_models` → `--list-models` 两跳 →
-/// generated fallback）。default 标记保持 parse 层兜底语义（首条目），由
-/// `promote_pi_default_from_settings` 在汇合点按 settings 修正。
+/// generated fallback）。每条路径都使用同一 profile/home，并在汇合前合并
+/// configured models。
 async fn probe_pi_models_chain(
     bin: &str,
     path_env: Option<&String>,
+    home_dir: Option<&str>,
 ) -> (Vec<ModelInfo>, Option<String>) {
-    match fetch_pi_models_via_rpc(bin, None).await {
-        Ok(models) => return (models, None),
+    match fetch_pi_models_via_rpc(bin, home_dir).await {
+        Ok(models) => return (merge_pi_custom_models(models, home_dir), None),
         Err(error) => {
             log::info!("[pi] catalog rpc unavailable ({error}); falling back to --list-models");
         }
     }
     // 先跳过 extension boot（同 RPC 探测理由，实测 9.3s → 1.0s）；失败再裸
     // 跑一次兜底不识别 --no-extensions 的旧版 pi，两次皆败才落 generated fallback。
-    match run_pi_list_models(bin, path_env, &["--no-extensions"]).await {
-        Ok(models) => return (models, None),
+    match run_pi_list_models(bin, path_env, home_dir, &["--no-extensions"]).await {
+        Ok(models) => return (merge_pi_custom_models(models, home_dir), None),
         Err(error) => {
             log::info!("[pi] --list-models with --no-extensions failed ({error}); retrying bare");
         }
     }
-    match run_pi_list_models(bin, path_env, &[]).await {
-        Ok(models) => (models, None),
-        Err(error) => (get_generated_fallback_models(EngineType::Pi), Some(error)),
+    match run_pi_list_models(bin, path_env, home_dir, &[]).await {
+        Ok(models) => (merge_pi_custom_models(models, home_dir), None),
+        Err(error) => (
+            merge_pi_custom_models(get_generated_fallback_models(EngineType::Pi), home_dir),
+            Some(error),
+        ),
     }
 }
 
@@ -1604,9 +1683,8 @@ fn promote_default_model(models: &mut Vec<ModelInfo>, default_id: &str) -> bool 
 
 /// PI default 解析：settings 候选 id 依次 `{defaultProvider}/{defaultModel}` →
 /// 裸 `{defaultModel}`；全部未命中或 settings 不可用时不动列表。
-fn promote_pi_default_from_settings(models: &mut Vec<ModelInfo>) {
-    let Some((provider, model)) = read_pi_default_model_selection(get_pi_home_dir().as_deref())
-    else {
+fn promote_pi_default_from_settings(models: &mut Vec<ModelInfo>, home_dir: Option<&Path>) {
+    let Some((provider, model)) = read_pi_default_model_selection(home_dir) else {
         return;
     };
     for candidate in pi_default_candidate_ids(provider.as_deref(), &model) {

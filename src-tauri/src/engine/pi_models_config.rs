@@ -26,6 +26,32 @@ use crate::state::AppState;
 
 use super::EngineType;
 
+/// Read custom provider models for the runtime catalog. Invalid or missing
+/// files fail soft; the CLI probe remains the source of truth for built-ins.
+pub fn load_custom_model_entries(home_override: Option<&str>) -> Vec<(String, Value)> {
+    let path = resolve_pi_models_config_file(home_override);
+    let Ok(text) = std::fs::read_to_string(path) else {
+        return Vec::new();
+    };
+    let Ok(root) = validate_models_config_text(&text) else {
+        return Vec::new();
+    };
+    let Some(providers) = root.get("providers").and_then(Value::as_object) else {
+        return Vec::new();
+    };
+    providers
+        .iter()
+        .flat_map(|(provider, value)| {
+            value
+                .get("models")
+                .and_then(Value::as_array)
+                .into_iter()
+                .flatten()
+                .filter_map(|model| Some((provider.clone(), model.clone())))
+        })
+        .collect()
+}
+
 /// Default template offered when models.json is missing or empty.
 /// Frontend pre-fills the editor with this; it is NOT written until the user saves.
 const DEFAULT_TEMPLATE: &str = r#"{
@@ -419,6 +445,29 @@ mod tests {
             r#"{"providers": {"x": {"models": [{"name": "no-id"}]}}}"#
         )
         .is_err());
+    }
+
+    #[test]
+    fn runtime_entries_use_the_requested_profile_home() {
+        let dir = temp_agent_dir("runtime-catalog");
+        std::fs::write(
+            dir.join("models.json"),
+            r#"{
+              "providers": {
+                "cliproxy": {
+                  "models": [
+                    {"id": "gpt-custom", "name": "GPT Custom", "reasoning": true}
+                  ]
+                }
+              }
+            }"#,
+        )
+        .unwrap();
+
+        let entries = load_custom_model_entries(dir.to_str());
+        assert_eq!(entries.len(), 1);
+        assert_eq!(entries[0].0, "cliproxy");
+        assert_eq!(entries[0].1["id"], "gpt-custom");
     }
 
     #[tokio::test]

@@ -38,7 +38,9 @@ use super::remote_bridge::{
     call_remote_typed, remote_detect_engines_request, remote_engine_interrupt_request,
     remote_engine_send_message_sync_request,
 };
-use super::status::{detect_grok_status, detect_kimi_status, detect_pi_status, load_opencode_models};
+use super::status::{
+    detect_grok_status, detect_kimi_status, detect_pi_status_with_home, load_opencode_models,
+};
 use super::{
     engine_disabled_diagnostic, engine_enabled_in_settings, EngineConfig, EngineStatus, EngineType,
 };
@@ -1587,11 +1589,14 @@ pub async fn get_engine_models(
         EngineType::Pi => {
             let config = manager.get_engine_config(EngineType::Pi).await;
             let custom_bin = config.as_ref().and_then(|cfg| cfg.bin_path.clone());
+            let home_dir = config.as_ref().and_then(|cfg| cfg.home_dir.clone());
             Ok(resolve_engine_models_cache_first(
                 manager,
                 EngineType::Pi,
                 force_refresh,
-                move || async move { detect_pi_status(custom_bin.as_deref()).await },
+                move || async move {
+                    detect_pi_status_with_home(custom_bin.as_deref(), home_dir.as_deref()).await
+                },
             )
             .await)
         }
