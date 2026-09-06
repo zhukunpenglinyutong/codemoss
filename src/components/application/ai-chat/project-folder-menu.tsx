@@ -50,7 +50,7 @@ export function ProjectFolderMenu({
         <Folder className="size-4 shrink-0 text-foreground-icon-secondary" aria-hidden />
         <span className="flex items-center">
           <span className="text-body-2-medium whitespace-nowrap text-text-secondary">
-            {selectedName ?? "—"}
+            {selectedName ?? t("chat.noProjectSelected")}
           </span>
           <ChevronDown
             className={cx(

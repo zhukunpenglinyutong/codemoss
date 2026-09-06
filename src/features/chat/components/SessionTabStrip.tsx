@@ -1,5 +1,6 @@
 import X from "lucide-react/dist/esm/icons/x";
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import type { ReactNode, MouseEvent, KeyboardEvent } from "react";
 import type { LucideIcon } from "lucide-react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
@@ -33,6 +34,8 @@ export interface SessionTabItem {
   engine?: string;
   /** Icon for non-session tabs (e.g. files); takes precedence over engine. */
   icon?: LucideIcon;
+  /** Finished activity the user has not opened yet — solid green dot. */
+  unseen?: boolean;
   /** Unsaved-changes dot before the label. */
   dirty?: boolean;
   /** Tooltip; defaults to the label. */
@@ -71,6 +74,7 @@ export function SessionTabStrip({
   trafficLightInset = true,
 }: SessionTabStripProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { t } = useTranslation();
 
   // Vertical wheel drives the horizontal tab scroll (VSCode behavior).
   // Native non-passive listener: React wheel handlers cannot preventDefault.
@@ -170,9 +174,22 @@ export function SessionTabStrip({
                 className="size-3 shrink-0 text-foreground-icon-secondary"
               />
             )}
-            {tab.streaming && (
-              <span className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-foreground-icon-primary" />
-            )}
+            {/* Same status dots as the sidebar: breathing blue while the
+             * turn streams, solid green for unseen finished activity. */}
+            {tab.streaming ? (
+              <span
+                className="sidebar-thread-status sidebar-thread-status-processing"
+                role="status"
+                aria-label={t("chat.sessionRunning")}
+                title={t("chat.sessionRunning")}
+              />
+            ) : tab.unseen ? (
+              <span
+                className="sidebar-thread-status sidebar-thread-status-unseen"
+                aria-label={t("chat.sessionUnseen")}
+                title={t("chat.sessionUnseen")}
+              />
+            ) : null}
             {tab.dirty && (
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-foreground-icon-primary" />
             )}

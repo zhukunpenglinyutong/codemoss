@@ -45,6 +45,23 @@ fn default_shell_path() -> String {
         std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".to_string())
     }
 }
+/// Settings "terminalShellPath" wins when set and valid; anything else (unset,
+/// blank, hand-edited junk) falls back to the auto-detected shell so a bad
+/// value can never wedge every terminal spawn.
+fn resolve_shell_path() -> String {
+    let configured = crate::settings::read_settings()
+        .ok()
+        .and_then(|s| s.terminal_shell_path)
+        .map(|p| p.trim().to_string())
+        .filter(|p| !p.is_empty());
+    match configured {
+        Some(path) => match crate::settings::validate_bin_override(&path) {
+            Ok(canonical) => canonical.to_string_lossy().into_owned(),
+            Err(_) => default_shell_path(),
+        },
+        None => default_shell_path(),
+    }
+}
 
 /// Force a UTF-8 locale so tools emitting non-ASCII (git, ls, CLIs) don't
 /// fall back to garbled C-locale output.
@@ -199,7 +216,7 @@ pub async fn terminal_open(
         })
         .map_err(|e| format!("failed to open pty: {e}"))?;
 
-    let mut cmd = CommandBuilder::new(default_shell_path());
+    let mut cmd = CommandBuilder::new(resolve_shell_path());
     cmd.cwd(cwd_path);
     // `-i` for an interactive shell (aliases, prompt). N/A for cmd.exe.
     #[cfg(not(windows))]

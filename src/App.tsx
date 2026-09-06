@@ -11,10 +11,10 @@ const SettingsPage = lazy(loadSettingsPage);
 export default function App() {
   // Startup theme/language init lives in main.tsx module scope; only the
   // theme-change listeners (with their own cleanup) are registered here.
+  useEffect(() => bindThemeChangePersistence(), []);
   // bindSystemThemeSync keeps a "system" theme following OS color-scheme
   // flips app-wide — this used to live in the settings page, where it only
   // worked while Settings was open.
-  useEffect(() => bindThemeChangePersistence(), []);
   useEffect(() => bindSystemThemeSync(), []);
   // Prefetch the settings chunk once startup work has settled.
   useEffect(() => {

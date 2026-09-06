@@ -106,6 +106,10 @@ export interface AppSettings {
   defaultEfforts: Record<string, string>;
   /** Max sessions listed per workspace in the sidebar (default 5). */
   sidebarThreadLimit: number;
+  /** Composer send gesture: "enter" (Enter sends) or "cmdEnter" (⌘/Ctrl+Enter sends). */
+  composerSendShortcut: string;
+  /** Terminal shell override; null/empty = auto-detect. */
+  terminalShellPath: string | null;
 }
 
 export interface DirEntry {
@@ -154,8 +158,8 @@ export interface AppMetrics {
 }
 
 // ==================== Typed invoke wrappers ====================
-// Shared in-flight/cached app-settings promise: startup, GeneralSection,
-// CliConfigSection and the chat store all read the same settings, so fetch once.
+// Shared in-flight/cached app-settings promise: startup, the settings page
+// and the chat store all read the same settings, so fetch once.
 let settingsPromise: Promise<AppSettings> | null = null;
 
 export const ipc = {

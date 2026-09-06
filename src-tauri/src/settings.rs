@@ -17,6 +17,14 @@ pub struct AppSettings {
     /// behind a "show more" row.
     #[serde(default = "default_sidebar_thread_limit")]
     pub sidebar_thread_limit: u32,
+    /// Composer send gesture: "enter" (Enter sends, Shift+Enter newline) or
+    /// "cmdEnter" (Cmd/Ctrl+Enter sends, Enter newline).
+    #[serde(default = "default_composer_send_shortcut")]
+    pub composer_send_shortcut: String,
+    /// Terminal shell override; None/empty = auto-detect from $SHELL/COMSPEC.
+    /// Validated with the same spawn-target rules as bin overrides.
+    #[serde(default)]
+    pub terminal_shell_path: Option<String>,
     /// Per-engine binary overrides. flatten keeps the legacy flat shape
     /// (`"claudeBin": …`) the frontend depends on; keys stay camelCase and
     /// unknown extra fields round-trip untouched.
@@ -31,6 +39,10 @@ fn default_sidebar_thread_limit() -> u32 {
     5
 }
 
+fn default_composer_send_shortcut() -> String {
+    "enter".to_string()
+}
+
 fn default_language() -> String {
     "zh".to_string()
 }
@@ -43,6 +55,8 @@ impl Default for AppSettings {
             default_models: HashMap::new(),
             default_efforts: HashMap::new(),
             sidebar_thread_limit: default_sidebar_thread_limit(),
+            composer_send_shortcut: default_composer_send_shortcut(),
+            terminal_shell_path: None,
             bin_overrides: HashMap::new(),
         }
     }
@@ -128,12 +142,23 @@ pub fn update_app_settings(mut settings: AppSettings) -> Result<(), String> {
             }
         }
     });
+    // Same spawn-target validation as bin overrides; an invalid shell path is
+    // dropped so a typo can never wedge every terminal spawn.
+    if let Some(shell) = settings.terminal_shell_path.take() {
+        let trimmed = shell.trim().to_string();
+        if !trimmed.is_empty() {
+            match validate_bin_override(&trimmed) {
+                Ok(_) => settings.terminal_shell_path = Some(trimmed),
+                Err(reason) => rejected.push(format!("terminalShellPath: {reason}")),
+            }
+        }
+    }
     let path = crate::paths::settings_path();
     let content = serde_json::to_string_pretty(&settings).map_err(|e| e.to_string())?;
     atomic_write(&path, &content)?;
     if rejected.is_empty() {
         Ok(())
     } else {
-        Err(format!("rejected bin overrides: {}", rejected.join("; ")))
+        Err(format!("rejected settings: {}", rejected.join("; ")))
     }
 }

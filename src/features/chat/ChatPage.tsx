@@ -300,10 +300,11 @@ export default function ChatPage() {
           engine: tab.engine,
           label: meta?.customTitle || meta?.title || t("chat.newChat"),
           streaming: tabStreaming[index] ?? false,
+          unseen: unseen[`${tab.engine}/${tab.sessionId}`] ?? false,
           tab,
         };
       }),
-    [openTabs, sessionById, tabStreaming, t],
+    [openTabs, sessionById, tabStreaming, t, unseen],
   );
   // File tabs trail the session tabs in the same strip.
   const fileTabItems = useMemo(

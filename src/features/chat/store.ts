@@ -54,6 +54,8 @@ export interface ChatStore {
   models: Record<string, string>;
   /** Max sessions listed per workspace in the sidebar, persisted in app settings. */
   threadLimit: number;
+  /** Composer send gesture ("enter" | "cmdEnter"), persisted in app settings. */
+  sendShortcut: string;
   bySession: Record<string, SessionState>;
   /** Flat sessionKey -> streaming map, written only when a flag flips. The
    * tab strip and sidebar select this instead of scanning bySession on every
@@ -89,6 +91,7 @@ export interface ChatStore {
    * write instead of one per engine. */
   pinModels: (updates: Record<string, string>) => Promise<void>;
   setThreadLimit: (limit: number) => void;
+  setSendShortcut: (shortcut: string) => void;
   setDraft: (key: string, text: string) => void;
   /** Ask the active composer to insert an @path mention at the caret. */
   requestMention: (path: string) => void;
@@ -302,6 +305,7 @@ export const useChatStore = create<ChatStore>((set, get) => {
     efforts: {},
     models: {},
     threadLimit: 10,
+    sendShortcut: "enter",
     bySession: {},
     streamingByKey: {},
     unseen: {},
@@ -361,6 +365,7 @@ export const useChatStore = create<ChatStore>((set, get) => {
             efforts: (settings.defaultEfforts ?? {}) as Record<string, EffortLevel>,
             models: settings.defaultModels ?? {},
             threadLimit: settings.sidebarThreadLimit ?? 5,
+            sendShortcut: settings.composerSendShortcut ?? "enter",
           }),
         )
         .catch(() => {});
@@ -563,6 +568,9 @@ export const useChatStore = create<ChatStore>((set, get) => {
 
     setThreadLimit: (limit) => {
       set({ threadLimit: Math.max(1, Math.floor(limit)) });
+    },
+    setSendShortcut: (shortcut) => {
+      set({ sendShortcut: shortcut });
     },
 
     setDraft: (key, text) => {

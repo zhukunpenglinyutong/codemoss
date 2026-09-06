@@ -57,8 +57,11 @@ export interface ComposerProps {
   /** Controlled field value. */
   value?: string;
   onValueChange?: (value: string) => void;
-  /** Fires on the send button and on Enter (without Shift). */
+  /** Fires on the send button and on the configured send gesture (sendShortcut). */
   onSubmit?: (value: string) => void;
+  /** Send gesture: "enter" = Enter sends, Shift+Enter newline (default);
+   *  "cmdEnter" = ⌘/Ctrl+Enter sends, plain Enter newline. */
+  sendShortcut?: "enter" | "cmdEnter";
   /** Fires on the stop button while streaming. */
   onStop?: () => void;
   /** A turn is in flight: send becomes stop. */
@@ -80,6 +83,7 @@ export function Composer({
   value,
   onValueChange,
   onSubmit,
+  sendShortcut = "enter",
   onStop,
   streaming = false,
   disabled = false,
@@ -191,7 +195,7 @@ export function Composer({
           role="textbox"
           aria-multiline="true"
           aria-label={t("chat.send")}
-          data-placeholder={t("chat.inputPlaceholder")}
+          data-placeholder={sendShortcut === "cmdEnter" ? t("chat.inputPlaceholderCmdEnter") : t("chat.inputPlaceholder")}
           onInput={() => {
             emitChange();
             syncTags();
@@ -207,7 +211,11 @@ export function Composer({
             syncTags();
           }}
           onKeyDown={(event) => {
-            if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) return;
+            if (event.key !== "Enter" || event.nativeEvent.isComposing) return;
+            // "cmdEnter": only ⌘/Ctrl+Enter sends; bare Enter falls through to
+            // the contentEditable default and inserts a newline.
+            const meta = event.metaKey || event.ctrlKey;
+            if (sendShortcut === "cmdEnter" ? !meta : event.shiftKey) return;
             if (isComposingRef.current) return;
             if (event.nativeEvent.keyCode === 229) return;
             // Swallow the Enter that only committed the IME candidate.

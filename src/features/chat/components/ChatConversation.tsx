@@ -1,7 +1,6 @@
 import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useShallow } from "zustand/react/shallow";
-import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import {
   Composer,
   StatusBar,
@@ -21,7 +20,6 @@ import { parseUsage } from "../usage";
 import { MessageTimeline } from "./MessageTimeline";
 import { ImageLightbox } from "./MessageImages";
 import { useGitStore } from "@/features/git/store";
-import { fileName } from "@/features/files/store";
 import { ipc, type CliConfig, type EngineCatalog, type EngineInfo, type Workspace } from "@/lib/ipc";
 import { isPseudoProvider, providerModel, type EngineId } from "@/features/settings/providers";
 import { EmptyState } from "@/components/base/empty-state";
@@ -122,6 +120,7 @@ export const ChatConversation = memo(function ChatConversation({
   const sessionUsage = useChatStore((s) => (key ? s.bySession[key]?.usage : undefined));
   const hasSession = useChatStore((s) => key in s.bySession);
   const draft = useChatStore((s) => s.drafts[key] ?? "");
+  const sendShortcut = useChatStore((s) => s.sendShortcut);
   const pendingMention = useChatStore((s) => s.pendingMention);
   // Engine/effort/model prefs: low-frequency, grouped into one shallow watch.
   const { activeEngine, efforts, models } = useChatStore(
@@ -322,27 +321,6 @@ export const ChatConversation = memo(function ChatConversation({
     [usage, t],
   );
 
-  const attachImages = useCallback(() => {
-    setImageError(null);
-    // Tauri v2: File.path no longer exists, so a web <input type="file">
-    // cannot yield usable paths. The dialog plugin returns real paths; the
-    // backend then copies the picks into the app sandbox so the engines'
-    // path-based image pipeline (and the asset protocol) can read them.
-    void openDialog({
-      multiple: true,
-      filters: [{ name: "Images", extensions: ["png", "jpg", "jpeg", "gif", "webp"] }],
-    })
-      .then(async (selected) => {
-        const picked = Array.isArray(selected) ? selected : selected ? [selected] : [];
-        if (!picked.length) return;
-        const imported = await ipc.importAttachments(picked);
-        if (!imported.length) return;
-        setImages((prev) => [...prev, ...imported]);
-        for (const path of imported) loadPreview(path, fileName(path));
-      })
-      .catch((err) => setImageError(t("chat.imageAttachFailed", { message: String(err) })));
-  }, [t, loadPreview]);
-
   // Clipboard images are blobs without a path: persist them via the backend
   // so they flow through the same path-based pipeline every engine consumes
   // (codex -i, kimi path injection, pi/omp @file, claude/grok base64).
@@ -435,12 +413,11 @@ export const ChatConversation = memo(function ChatConversation({
   const addMenu = useMemo(
     () => (
       <AddMenu
-        onAttach={attachImages}
         disabled={!supportsImages}
         disabledReason={t("chat.imagesUnsupported")}
       />
     ),
-    [attachImages, supportsImages, t],
+    [supportsImages, t],
   );
   const cliMenu = useMemo(
     () => (
@@ -542,6 +519,7 @@ export const ChatConversation = memo(function ChatConversation({
           value={draft}
           onValueChange={handleDraftChange}
           onSubmit={submit}
+          sendShortcut={sendShortcut === "cmdEnter" ? "cmdEnter" : "enter"}
           onStop={handleStop}
           streaming={streaming}
           disabled={!active || (!draft.trim() && images.length === 0)}

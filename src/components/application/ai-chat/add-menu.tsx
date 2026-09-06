@@ -19,9 +19,8 @@ import { usePopoverState } from "@/utils/use-dismiss-on-outside-press";
  * Board UI → "ai_chat" dropdowns (nodes 4035:6313 / 4035:6925), adapted to
  * live data. Same react-aria non-modal popover recipe as the template;
  * contents are props-driven:
- * - AddMenu — the composer's plus button: "Add / Plugins" popover
- *   (Figma 4040:5414); only "Files and folders" is wired (image attach), the
- *   remaining demo rows render disabled until they get backends.
+ * - AddMenu — the composer's plus button: "Add" popover
+ *   (Figma 4040:5414); all rows render disabled until they get backends.
  */
 
 /** The add menu is a custom, wider panel than the other popovers (Figma
@@ -41,16 +40,12 @@ interface AddMenuRow {
   description?: string;
   /** 20px lucide rows ("Add" group). */
   icon?: typeof Paperclip;
-  /** 24px illustrated icon rows ("Plugins" group). */
-  image?: string;
-  /** Optional manual-dark-theme variant of the illustrated icon. */
-  darkImage?: string;
-  /** Wired action. Rows without one render disabled: Goal / Plan mode and
-   *  the plugin demos have no backend yet. */
+  /** Wired action. Rows without one render disabled: no row has a backend
+   *  yet. */
   onSelect?: () => void;
 }
 
-function AddMenuItem({ icon: Icon, image, darkImage, label, description, onSelect }: AddMenuRow) {
+function AddMenuItem({ icon: Icon, label, description, onSelect }: AddMenuRow) {
   return (
     <button
       type="button"
@@ -64,28 +59,6 @@ function AddMenuItem({ icon: Icon, image, darkImage, label, description, onSelec
       )}
     >
       {Icon && <Icon className="size-5 shrink-0 text-foreground-icon-secondary" aria-hidden />}
-      {image && (
-        <>
-          <img
-            src={image}
-            alt=""
-            width={24}
-            height={24}
-            className={cx("size-6 shrink-0", darkImage && "theme-asset-light")}
-            aria-hidden
-          />
-          {darkImage && (
-            <img
-              src={darkImage}
-              alt=""
-              width={24}
-              height={24}
-              className="theme-asset-dark size-6 shrink-0"
-              aria-hidden
-            />
-          )}
-        </>
-      )}
       <span className="truncate text-body-medium whitespace-nowrap">
         <span className="text-text-primary">{label}</span>
         {description && <span className="ml-1.5 text-text-secondary">{description}</span>}
@@ -108,57 +81,23 @@ function AddMenuGroup({ label, rows }: { label: string; rows: AddMenuRow[] }) {
 }
 
 /**
- * Composer plus-button + "Add / Plugins" popover (Figma node 4040:5414).
- * Only "Files and folders" is wired (image attach); the remaining demo rows
- * render disabled until they get real backends.
+ * Composer plus-button + "Add" popover (Figma node 4040:5414). Every row
+ * renders disabled until it gets a real backend.
  */
 export function AddMenu({
-  onAttach,
   disabled = false,
   disabledReason,
 }: {
-  onAttach?: () => void;
   disabled?: boolean;
   disabledReason?: string;
 }) {
   const { t } = useTranslation();
-  const { isOpen, triggerRef, popoverRef, close, setOpen } = usePopoverState();
+  const { isOpen, triggerRef, popoverRef, setOpen } = usePopoverState();
 
   const addRows: AddMenuRow[] = [
-    {
-      icon: Paperclip,
-      label: t("chat.addFilesFolders"),
-      onSelect: () => {
-        onAttach?.();
-        close();
-      },
-    },
+    { icon: Paperclip, label: t("chat.addFilesFolders") },
     { icon: Crosshair, label: t("chat.addGoal"), description: t("chat.addGoalDesc") },
     { icon: ListChecks, label: t("chat.addPlanMode"), description: t("chat.addPlanModeDesc") },
-  ];
-
-  const pluginRows: AddMenuRow[] = [
-    {
-      image: "/ai-chat/plugin-documents.svg",
-      darkImage: "/ai-chat/plugin-documents-dark.svg",
-      label: t("chat.pluginDocuments"),
-      description: t("chat.pluginDocumentsDesc"),
-    },
-    {
-      image: "/ai-chat/plugin-spreadsheets.svg",
-      label: t("chat.pluginSpreadsheets"),
-      description: t("chat.pluginSpreadsheetsDesc"),
-    },
-    {
-      image: "/ai-chat/plugin-presentations.svg",
-      label: t("chat.pluginPresentations"),
-      description: t("chat.pluginPresentationsDesc"),
-    },
-    {
-      image: "/ai-chat/plugin-codeblocks.svg",
-      label: t("chat.pluginCodeblocks"),
-      description: t("chat.pluginCodeblocksDesc"),
-    },
   ];
 
   return (
@@ -195,7 +134,6 @@ export function AddMenu({
       >
         <AriaDialog aria-label={t("chat.attach")} className="flex flex-col gap-2 outline-none">
           <AddMenuGroup label={t("chat.attach")} rows={addRows} />
-          <AddMenuGroup label={t("chat.plugins")} rows={pluginRows} />
         </AriaDialog>
       </AriaPopover>
     </AriaDialogTrigger>
