@@ -1,9 +1,0 @@
-{
-  "id": "0.1.1",
-  "tagName": "v0.1.1",
-  "version": "0.1.1",
-  "title": "v0.1.1",
-  "dateLabel": "2026/02/09",
-  "englishBody": "✨ Features\n\n- Merge skill commons panel and kanban context mode in composer\n\n🐛 Fixes\n\n- Add retry logic for DMG detach in CI environment",
-  "chineseBody": "✨ Features\n\n- 合并 Composer 中的 Skill 公共面板与看板上下文模式\n\n🐛 Fixes\n\n- CI 环境中 DMG 弹出添加重试逻辑"
-}

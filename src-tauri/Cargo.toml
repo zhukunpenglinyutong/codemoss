@@ -1,97 +1,52 @@
 [package]
-name = "cc-gui"
-version = "0.3.0"
-description = "A Tauri App"
-authors = ["you"]
+name = "ccgui-next"
+version = "1.0.0"
+description = "CC GUI - multi-CLI AI chat desktop"
 edition = "2021"
-default-run = "cc-gui"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[features]
-custom-protocol = ["tauri/custom-protocol"]
+rust-version = "1.77.2"
 
 [lib]
-# The `_lib` suffix may seem redundant but it is necessary
-# to make the lib name unique and wouldn't conflict with the bin name.
-# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "cc_gui_lib"
+name = "ccgui_next_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
-serde_json = "1"
-sha2 = "0.10"
 
 [dependencies]
-tauri = { version = "2", features = ["protocol-asset", "macos-private-api", "unstable", "devtools", "image-png"] }
+tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-opener = "2"
-tauri-plugin-process = "2"
-serde = { version = "1", features = ["derive"] }
-# unbounded_depth 只开放 API（crate 级默认 128 层递归限制不变）：pi RPC 的
-# get_tree 响应是深嵌套树（线性会话 ~2000 层），由解析点显式放开。
-serde_json = { version = "1", features = ["unbounded_depth"] }
-serde_yaml = "0.9"
-log = "0.4"
-tokio = { version = "1", features = ["fs", "net", "io-util", "process", "rt", "sync", "time", "macros", "signal"] }
-uuid = { version = "1", features = ["v4"] }
 tauri-plugin-dialog = "2"
-git2 = "0.20.3"
-notify = "6"
-base64 = "0.22"
-fix-path-env = { git = "https://github.com/tauri-apps/fix-path-env-rs" }
-ignore = "0.4.25"
-portable-pty = "0.8"
-reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "stream"] }
-tokio-tungstenite = { version = "0.21", default-features = false, features = ["connect"] }
-futures-util = "0.3"
-zip = { version = "4.6.1", default-features = false, features = ["deflate-flate2"] }
-# flate2 1.1.8 requires an explicit backend; zip pulls it in with default-features off,
-# so select rust_backend (miniz_oxide, no system zlib) here for the target build.
-flate2 = { version = "1", features = ["rust_backend"] }
-axum = { version = "0.7", features = ["ws"] }
-libc = "0.2"
-chrono = { version = "0.4", features = ["clock"] }
-shell-words = "1.1"
-toml = "0.8"
-dirs = "5"
-which = "7"
-trash = "5"
-dunce = "1"
-rusqlite = { version = "0.32", features = ["bundled"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order", "raw_value"] }
 regex = "1"
+toml = "0.8"
+rusqlite = { version = "0.32", features = ["bundled"] }
+tokio = { version = "1", features = ["rt", "macros", "process", "time", "sync", "io-util"] }
 sha2 = "0.10"
-hmac = "0.12"
-chardetng = "0.1"
-encoding_rs = "0.8"
-lettre = { version = "0.11.21", default-features = false, features = ["smtp-transport", "builder", "tokio1-rustls-tls", "hostname"] }
-imap = { version = "3.0.0-alpha.15", default-features = false, features = ["rustls-tls"] }
-mailparse = "0.16.1"
-# ONNX embedding（ort）已移除：ort-sys 无 x86_64-apple-darwin 预编译，阻断 Intel macOS 打包。
-# 命令面仍在 project_memory/embed.rs（health=unavailable → lexical）；后续若恢复需另选可跨 Intel 的 runtime。
+dirs = "6"
+dunce = "1"
+git2 = "0.20"
+# Feature-unify openssl-sys to "vendored": git2 → libgit2-sys/libssh2-sys otherwise
+# dynamically links Homebrew's libssl/libcrypto (e.g. libssl.4.dylib), which crashes
+# the shipped .app at launch on any machine without that exact Homebrew install.
+openssl-sys = { version = "0.9", features = ["vendored"] }
+trash = "5"
+uuid = { version = "1", features = ["v4"] }
+base64 = "0.22"
+zstd = "0.13"
+which = "7"
+# PTY for the integrated terminal panel.
+portable-pty = "0.8"
+sysinfo = "0.36.1"
+libc = "0.2"
 
-[target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
-tauri-plugin-updater = "2"
-tauri-plugin-window-state = "2"
-tauri-plugin-notification = "2"
+[dev-dependencies]
+tauri = { version = "2", features = ["test"] }
 
-[target."cfg(target_os = \"windows\")".dependencies]
-windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_UI_WindowsAndMessaging"] }
-webview2-com = "0.38"
-
-[target."cfg(target_os = \"macos\")".dependencies]
-objc2 = "0.6"
-objc2-app-kit = { version = "0.3", features = ["NSAppearance", "NSApplication", "NSDockTile", "NSImage", "NSResponder", "NSWindow", "objc2-core-foundation"] }
-objc2-foundation = { version = "0.3", features = ["NSString", "NSProcessInfo", "NSUUID", "NSDictionary", "NSError", "NSBundle", "NSURL"] }
-block2 = "0.6"
-# Modern UserNotifications path (see system_notification.rs). Required because
-# tauri-plugin-notification desktop uses deprecated NSUserNotificationCenter.
-objc2-user-notifications = "0.3"
-
-# Binary size: strip + fat LTO + size-biased opt.
-# No panic="abort": tokio task isolation relies on unwinding; a task panic must not kill the app.
 [profile.release]
-strip = true
-lto = true
+# Unwind (not abort): a panicking thread must still run destructors so engine
+# child processes get reaped instead of leaked.
 codegen-units = 1
-opt-level = "s"
+lto = "thin"
+opt-level = 3
+strip = true

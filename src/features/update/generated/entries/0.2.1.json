@@ -1,9 +1,0 @@
-{
-  "id": "0.2.1",
-  "tagName": "v0.2.1",
-  "version": "0.2.1",
-  "title": "v0.2.1",
-  "dateLabel": "2026/03/02",
-  "englishBody": "✨ Features\n\n- Optimize Windows frameless window interaction, layout behavior and message code highlighting\n- Refactor settings panel into modular section components for better maintainability\n\n🐛 Fixes\n\n- Correct topbar z-index stacking and sidebar placeholder scope\n\n🔧 Improvements\n\n- Rewrite README with detailed feature overview and development guide",
-  "chineseBody": "✨ Features\n\n- 优化 Windows 无边框窗口交互、布局行为与消息代码高亮\n- 重构设置面板为模块化 Section 组件，提升可维护性\n\n🐛 Fixes\n\n- 修复顶栏 z-index 层叠与侧栏占位区域范围问题\n\n🔧 Improvements\n\n- 重写 README，补充详细的功能概览和开发指南"
-}

@@ -1,9 +1,0 @@
-{
-  "id": "0.6.1",
-  "tagName": "v0.6.1",
-  "version": "0.6.1",
-  "title": "v0.6.1",
-  "dateLabel": "2026/06/28",
-  "englishBody": "✨ Features\n\n- Bump the app version to `0.6.1` across frontend package metadata and Tauri bundle configuration\n\n🔧 Improvements\n\n- `feat(windows)`: fix the argv transport boundary for Claude / Codex curated skills on Windows, removing injection-chain history pollution so curated-skill injection and command wrapping stay reliable on Windows\n- `refactor(codex)`: move `resolve_default_codex_home` into the home submodule to clarify Codex home resolution\n- `fix(codex)`: converge disk-session invalidation notices to reduce noisy staleness warnings\n\n🐛 Fixes\n\n- `fix(claude)`: fix the stream-json empty-prompt placeholder on Windows so empty prompts no longer break streaming startup\n- `fix(stream)`: fix a Windows conversation streaming-output regression\n- `fix(codex)`: fix Windows curated-skill startup fallback\n- `fix(messages)`: fix a streaming-render update-depth crash\n- `fix(messages)`: scope canvas rendering per scenario to avoid cross-scenario render bleed\n- `fix(threads)`: preserve the session-directory pagination cursor so it is no longer lost after paging",
-  "chineseBody": "✨ Features\n\n- 升级应用版本号到 `0.6.1`，同步前端包配置与 Tauri 打包配置\n\n🔧 Improvements\n\n- `feat(windows)`: 修复 Windows 平台 Claude / Codex 内置技能的 argv 传输边界，消除注入链路历史污染，让内置技能注入与命令包装在 Windows 下更稳定\n- `refactor(codex)`: 将 `resolve_default_codex_home` 收敛到 home 子模块，理清 Codex home 解析路径\n- `fix(codex)`: 收敛磁盘会话失效提示，减少无谓的失效告警\n\n🐛 Fixes\n\n- `fix(claude)`: 修复 Windows 下 stream-json 空 prompt 占位问题，避免空提示导致的流式启动异常\n- `fix(stream)`: 修复 Windows 对话流式输出回归\n- `fix(codex)`: 修复 Windows 内置技能启动回退\n- `fix(messages)`: 修复流式渲染更新深度崩溃\n- `fix(messages)`: 隔离幕布渲染场景作用域，避免跨场景渲染串扰\n- `fix(threads)`: 保留会话目录分页游标，避免翻页后游标丢失"
-}

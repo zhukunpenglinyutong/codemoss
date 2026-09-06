@@ -1,9 +1,0 @@
-{
-  "id": "0.1.0",
-  "tagName": "v0.1.0",
-  "version": "0.1.0",
-  "title": "v0.1.0",
-  "dateLabel": "2026/02/09",
-  "englishBody": "✨ Features\n\n- Reduce typing friction and improve task progress cues\n- Improve kanban task discussions with richer markdown\n\n🐛 Fixes\n\n- Prevent macOS DMG builds failing on Finder scripting in CI",
-  "chineseBody": "✨ Features\n\n- 减少输入摩擦并改善任务进度提示\n- 改进看板任务讨论，支持更丰富的 Markdown\n\n🐛 Fixes\n\n- 修复 CI 中 macOS DMG 构建因 Finder 脚本失败的问题"
-}

@@ -1,9 +1,0 @@
-{
-  "id": "0.1.6",
-  "tagName": "v0.1.6",
-  "version": "0.1.6",
-  "title": "v0.1.6",
-  "dateLabel": "2026/02/11",
-  "englishBody": "✨ Features\n\n- Add unified search panel with category filtering\n- Optimize kanban strip density and ordering in composer\n\n🐛 Fixes\n\n- Stabilize kanban links across workspace ID changes\n- Stabilize context menus with portal and compact layout in composer",
-  "chineseBody": "✨ Features\n\n- 新增统一搜索面板与分区筛选\n- 优化 Composer 中看板条目密度和排序\n\n🐛 Fixes\n\n- 修复工作区 ID 变更时看板链接稳定性\n- 使用 Portal 和紧凑布局稳定右键菜单"
-}

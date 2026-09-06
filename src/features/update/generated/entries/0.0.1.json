@@ -1,9 +1,0 @@
-{
-  "id": "0.0.1",
-  "tagName": "v0.0.1",
-  "version": "0.0.1",
-  "title": "v0.0.1",
-  "dateLabel": "2026/02/04",
-  "englishBody": "✨ Features\n\n- Initial release of MossX desktop application\n- Tauri 2 + React 19 + TypeScript architecture\n- Claude Code CLI integration with session management",
-  "chineseBody": "✨ Features\n\n- MossX 桌面应用初始发布\n- Tauri 2 + React 19 + TypeScript 架构\n- Claude Code CLI 集成与会话管理"
-}

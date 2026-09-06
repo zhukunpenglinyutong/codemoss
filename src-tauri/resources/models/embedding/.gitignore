@@ -1,4 +1,0 @@
-# ONNX 模型文件体积大，不提交 git；本地通过 scripts/download-embed-model.sh 拉取。
-*.onnx
-# tokenizer 与模型配套，同脚本下载。
-tokenizer.json

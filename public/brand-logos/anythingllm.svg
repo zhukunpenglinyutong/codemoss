@@ -1,9 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 35 22">
-  <!-- Official AnythingLLM infinity mark from Mintplex-Labs/anything-llm.
-       Source: frontend/src/media/logo/anything-llm-infinity.png (MIT). -->
-  <image
-    width="35"
-    height="22"
-    href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACMAAAAWCAYAAABKbiVHAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAG9SURBVHgBvVbhVcJADE59/pcRbgPqBjiBOoEwATABZQLKBMAE4AS4gWzAbYAbnIk9JA3XkoDP7728K2mS+7jk0mQQEUKY4NKHZniUVZZlS1ACY3ZwobgvF+IOMK4/Oi2CHm+gJIKyN8TNj04WHFCcgsws2LC4R79cxJmjfAkdHfeQPa9RHluIUGpGTOVRVgnTZ7a/I8eeYOggvUEp7GYNdrmw27fEXDK7rYUMpfNT2PaEjQvndZJDAySZO1ACq51S9wr1FMp0boGO+4Qp+u1ACTWZSMjjMoaqBmobxbQ5Zj7H9wVYoE3ThRjDRJ10FH7XpakloMOlZCqP8hTTasJNZCKRrVCPf7vpf5KBqt849pvqaANX4moyoWps/NpuzAX7F2SoYHEpmMqjDOBGmMnEOimYigq1VrDxdi00N4rj3mLMCpZvUitYtKFxgd8u9YlZT0Y2tmlivumx5z6SG4EWhm/TRNitG+zk9+kQlB9KSpNsTiN8IXUPcD4SjFMbUMrQn1Jz7D8/Iwfq3hPmXUj8Ewu0w1VpjFumjusSVDUQ0iNHG1zGnAuoJq+m6+ih+hKrO2w4tYFuS9xdjPvxDY+2JGgA4IyZAAAAAElFTkSuQmCC"
-  />
-</svg>

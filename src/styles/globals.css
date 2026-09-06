@@ -1,284 +1,400 @@
-/*
- * Cascade layer order (declared before importing Tailwind so it wins as the
- * first declaration). `app` sits below Tailwind's `utilities` but above
- * `base`, which means:
- *   - utility classes (Tailwind / shadcn) always override hand-written app CSS
- *   - hand-written app CSS still overrides Tailwind's preflight base reset
- * Hand-written stylesheets opt into this by wrapping their rules in
- * `@layer app { ... }` (see buttons.css).
- */
-@layer theme, base, components, app, utilities;
-
 @import "tailwindcss";
-/* 设计稿 HTML 里的 Windows 路径会被 Oxide 当成 unicode escape，打爆 Vite overlay */
-@source not "../../docs/designs";
-@source not "../../docs/prototypes";
-@import "tw-animate-css";
+@import "./theme.css";
+@import "./typography.css";
 
-/*
- * Map shadcn's `dark:` variant to this app's theme mechanism.
- * The app sets data-theme="dark" | "dim" | "light" on <html>
- * (see features/layout/hooks/useThemePreference.ts); theme="system"
- * removes the attribute and follows the OS preference. Tailwind v4
- * defaults `dark:` to prefers-color-scheme, which is wrong whenever the
- * user overrides the OS theme — so we key the variant off data-theme.
+/* ---------------------------------------------------------------------------
+ * Dark mode strategy
  *
- * The `.dark` class clause additionally scopes the variant to subtrees that
- * manage their own theme class — currently the vendored TokenTracker
- * dashboard, whose ThemeProvider toggles `.dark` on its `.tt-dashboard`
- * wrapper (see styles/tokentracker-dashboard.css).
- */
-@custom-variant dark {
-  &:where([data-theme="dark"], [data-theme="dark"] *) {
-    @slot;
+ * We use a class-based dark variant. Toggle dark mode by adding the `.dark`
+ * class to <html> (a theme provider like `next-themes` can do this later).
+ *
+ *   <html class="dark">  →  every `dark:*` utility activates
+ *
+ * Components should NOT use `dark:` prefixes directly. Instead they reference
+ * semantic color tokens (e.g. `bg-bg-primary`, `text-text-primary`) that flip
+ * under `.dark` in styles/theme.css.
+ * --------------------------------------------------------------------------- */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@keyframes ai-chat-text-shimmer {
+  from {
+    background-position: 200% center;
   }
-  &:where([data-theme="dim"], [data-theme="dim"] *) {
-    @slot;
-  }
-  &:where(.dark, .dark *) {
-    @slot;
-  }
-  @media (prefers-color-scheme: dark) {
-    &:where(:root:not([data-theme]) *) {
-      @slot;
-    }
+
+  to {
+    background-position: -100% center;
   }
 }
 
-/*
- * Theme variables are defined in themes.dark.css / themes.light.css
- * using the @coss/ui standard naming (--background, --foreground, --card, etc.)
- * This file maps those CSS variables to Tailwind theme tokens.
- */
-
-@theme {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-info: var(--info);
-  --color-info-foreground: var(--info-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-sidebar-background: var(--sidebar-background);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-xl: calc(var(--radius) * 1.4);
-
-  --font-sans: var(--ui-font-family, "SF Pro Text", system-ui, sans-serif);
-  --font-mono: var(
-    --code-font-family,
-    "SF Mono",
-    "Menlo",
-    "Monaco",
-    monospace
+.agent-progress-loading-text {
+  color: transparent;
+  background-image: linear-gradient(
+    100deg,
+    var(--color-text-secondary) 16%,
+    var(--color-text-secondary) 38%,
+    var(--color-text-primary) 50%,
+    var(--color-text-secondary) 62%,
+    var(--color-text-secondary) 84%
   );
-
-  /*
-   * Vendored TokenTracker dashboard palette (colors.oai from upstream
-   * tailwind.config.cjs). Must live in THIS compilation: Tailwind v4 only
-   * generates color utilities for tokens visible to the utilities-emitting
-   * stylesheet. Names are oai-unique, so app-wide theme is untouched; the
-   * dashboard's scoped overrides stay in tokentracker-dashboard.css.
-   */
-  --color-oai-black: #0a0a0a;
-  --color-oai-white: #fafafa;
-  --color-oai-gray-50: #fafafa;
-  --color-oai-gray-100: #f5f5f5;
-  --color-oai-gray-200: #e5e5e5;
-  --color-oai-gray-300: #d4d4d4;
-  --color-oai-gray-400: #a3a3a3;
-  --color-oai-gray-500: #737373;
-  --color-oai-gray-600: #525252;
-  --color-oai-gray-700: #404040;
-  --color-oai-gray-800: #262626;
-  --color-oai-gray-900: #171717;
-  --color-oai-gray-950: #0a0a0a;
-
-  --color-oai-brand: #059669;
-  --color-oai-brand-dark: #047857;
-  --color-oai-brand-light: #10b981;
-  --color-oai-brand-50: #ecfdf5;
-  --color-oai-brand-100: #d1fae5;
-  --color-oai-brand-200: #a7f3d0;
-  --color-oai-brand-300: #6ee7b7;
-  --color-oai-brand-400: #34d399;
-  --color-oai-brand-500: #10b981;
-  --color-oai-brand-600: #059669;
-  --color-oai-brand-700: #047857;
-  --color-oai-brand-800: #065f46;
-  --color-oai-brand-900: #064e3b;
-  --color-oai-brand-950: #022c22;
-
-  --color-oai-forest: #10b981;
-  --color-oai-forest-dark: #059669;
-  --color-oai-forest-light: #34d399;
-  --color-oai-forest-50: #ecfdf5;
-
-  --color-oai-amber: #f59e0b;
-  --color-oai-amber-dark: #d97706;
-  --color-oai-amber-light: #fbbf24;
-  --color-oai-amber-50: #fffbeb;
-
-  --color-oai-success: #10b981;
-  --color-oai-warning: #f59e0b;
-  --color-oai-error: #ef4444;
-  --color-oai-info: #059669;
-
-  --color-oai-blue: #059669;
-  --color-oai-blue-dark: #047857;
-  --color-oai-blue-light: #10b981;
-  --color-oai-blue-50: #ecfdf5;
+  background-position: 200% center;
+  background-size: 300% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: ai-chat-text-shimmer 3.4s linear infinite;
+  will-change: background-position;
 }
 
-/*
- * Tailwind v4 defaults the bare `border` utility to `currentColor`, so shadcn
- * components that rely on a plain `border` (dropdown-menu / popover / command /
- * dialog …) would otherwise paint a near-black border from the popover text
- * color. shadcn expects this base rule to be present: every default border is
- * painted with the light, theme-aware `--border` token instead. Kept in the
- * `base` layer so any element that sets its own border-color still wins.
- */
-@layer base {
-  *,
-  ::after,
-  ::before {
-    border-color: var(--border);
+@media (prefers-reduced-motion: reduce) {
+  .agent-progress-loading-text {
+    color: var(--color-text-secondary);
+    background-image: none;
+    animation: none;
   }
 }
 
-.proxy-status-badge {
-  --proxy-badge-accent: color-mix(in srgb, #8b5cf6 78%, var(--text-strong) 22%);
-  --proxy-badge-halo: color-mix(in srgb, #8b5cf6 26%, transparent);
+/* Composer rich-text field (contentEditable) + inline file tags ("chips").
+ * Ported from desktop-cc-gui's .file-tag styles, mapped to our tokens. */
+.composer-editable {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.composer-editable:empty::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-tertiary);
+  pointer-events: none;
+}
+.composer-file-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 6px;
+  margin: 0 2px;
+  background: var(--color-background-tertiary-default);
+  border: 1px solid var(--color-separator-border);
+  border-radius: 4px;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--color-text-secondary);
+  user-select: none;
+  vertical-align: middle;
+}
+.composer-file-tag-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 999px;
-  white-space: nowrap;
-  flex-shrink: 0;
-  position: relative;
-  color: var(--proxy-badge-accent);
-  background: transparent;
-  isolation: isolate;
+  width: 14px;
+  height: 14px;
+  color: var(--color-foreground-icon-tertiary);
 }
-
-.proxy-status-badge__halo {
-  position: absolute;
-  inset: 50%;
+.composer-file-tag-icon svg {
   width: 100%;
   height: 100%;
+}
+.composer-file-tag-text {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.composer-file-tag-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  margin-left: 2px;
+  border-radius: 2px;
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  transition: color 150ms;
+}
+.composer-file-tag-close:hover {
+  color: var(--color-text-primary);
+}
+
+/* Reset + base */
+html,
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-variant-ligatures: contextual;
+  font-kerning: normal;
+}
+/* Thin scrollbars matching the BoardUI demo. The thumb rides on a transparent
+ * track and keeps a 2px transparent inset so it reads as an overlay instead
+ * of the OS default slab. Semantic neutral tokens flip under `.dark`. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-button-hover) transparent;
+}
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  /* background-tertiary-hover is neutral-300 light / neutral-700 dark — the
+   * exact pair this thumb used to hardcode per theme, so the old `.dark`
+   * overrides below are gone. */
+  background-color: var(--color-background-tertiary-hover);
+  border: 2px solid transparent;
   border-radius: 999px;
-  transform: translate(-50%, -50%);
-  background:
-    radial-gradient(
-      circle,
-      color-mix(in srgb, var(--proxy-badge-halo) 100%, transparent) 0%,
-      color-mix(in srgb, var(--proxy-badge-halo) 55%, transparent) 45%,
-      transparent 76%
-    );
-  opacity: 0.55;
-  transition: opacity 180ms ease, transform 180ms ease;
-  pointer-events: none;
-  z-index: -1;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover {
+  /* border-button-active: neutral-400 light / neutral-600 dark. */
+  background-color: var(--color-border-button-active);
+}
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
-.proxy-status-badge__icon {
+html {
+  color-scheme: light;
+  background-color: var(--color-background-full);
+}
+html.dark {
+  color-scheme: dark;
+}
+body {
+  background-color: var(--color-background-full);
+  color: var(--color-text-primary);
+}
+
+/* Theme-aware monochrome BoardUI mark. Both images keep their intrinsic
+ * dimensions while the root theme class decides which one participates in
+ * layout, avoiding a light-logo flash during hydration. */
+.theme-asset-dark {
+  display: none;
+}
+.dark .theme-asset-light {
+  display: none;
+}
+.dark .theme-asset-dark {
+  display: block;
+}
+
+/* Tailwind expands shadow utilities into `--tw-shadow` at build time. Point
+ * those generated utilities back to the live dark elevation tokens so the
+ * class-based theme can adjust opacity without component-level overrides. */
+.dark .shadow-2xs {
+  --tw-shadow: var(--shadow-2xs);
+}
+.dark .shadow-xs {
+  --tw-shadow: var(--shadow-xs);
+}
+.dark .shadow-sm {
+  --tw-shadow: var(--shadow-sm);
+}
+.dark .shadow-md {
+  --tw-shadow: var(--shadow-md);
+}
+.dark .shadow-lg {
+  --tw-shadow: var(--shadow-lg);
+}
+.dark .shadow-xl {
+  --tw-shadow: var(--shadow-xl);
+}
+.dark .shadow-card {
+  --tw-shadow: var(--shadow-card);
+}
+.dark .shadow-dropdown {
+  --tw-shadow: var(--shadow-dropdown);
+}
+.dark .shadow-sidebar {
+  --tw-shadow: var(--shadow-sidebar);
+}
+
+/* Hide default expand arrow on Safari */
+details summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Hide default number-input spinners */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Hide default search clear button */
+input[type="search"]::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+}
+
+/* iOS Safari auto-zooms the page when a focused form field's font-size is
+ * under 16px — our text-body-regular/medium tokens are 14px by design, so
+ * bump just the font-size (not the whole token) on small screens instead of
+ * changing the design system's type scale. */
+@media (max-width: 639px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Sidebar session status dot, ported from desktop-cc-gui's .thread-status:
+ * breathing blue heartbeat while a turn streams, solid green for sessions
+ * with unseen activity. Colors are the --color-status-* tokens in theme.css. */
+.sidebar-thread-status {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
   flex-shrink: 0;
-  stroke-width: 2.2;
-  filter:
-    drop-shadow(0 0 0.35rem color-mix(in srgb, var(--proxy-badge-accent) 28%, transparent))
-    drop-shadow(0 0 0.08rem color-mix(in srgb, var(--proxy-badge-accent) 62%, transparent));
 }
-
-.proxy-status-badge--compact {
-  width: 16px;
-  height: 16px;
-  opacity: 0.94;
+.sidebar-thread-status-processing {
+  background: var(--color-status-streaming);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-status-streaming) 18%, transparent);
+  animation: sidebar-thread-status-heartbeat 0.92s ease-in-out infinite;
 }
-
-.proxy-status-badge--prominent {
-  width: 18px;
-  height: 18px;
-  opacity: 1;
+.sidebar-thread-status-unseen {
+  background: var(--color-status-unseen);
 }
-
-.proxy-status-badge--prominent .proxy-status-badge__halo {
-  width: 128%;
-  height: 128%;
-  opacity: 0.78;
-}
-
-.proxy-status-badge--animated .proxy-status-badge__icon {
-  animation: proxy-badge-zap 1.05s ease-in-out infinite;
-}
-
-.proxy-status-badge--animated .proxy-status-badge__halo {
-  animation: proxy-badge-halo 1.05s ease-in-out infinite;
-}
-
-@keyframes proxy-badge-zap {
+@keyframes sidebar-thread-status-heartbeat {
   0%,
   100% {
-    transform: translateY(0) scale(1);
-    opacity: 0.9;
+    transform: scale(1);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-status-streaming) 18%, transparent);
   }
-  18% {
-    transform: translateY(-0.5px) scale(1.08);
+  50% {
+    transform: scale(1.35);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-status-streaming) 10%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar-thread-status-processing {
+    animation: none;
+  }
+}
+
+/* Checkbox tick: draws the stroke on like it's being ticked by hand.
+ * The path sets pathLength=1 so the dash math is resolution-independent. */
+@keyframes check-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.animate-check-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: check-draw 200ms cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-check-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Agent Thinking (components/application/agent-thinking): the agent thinking state
+ * above a chat composer. The label reuses the ai-chat-text-shimmer travel;
+ * its base/highlight both derive from the tone the component sets via
+ * --bui-agent-thinking-tone, so every tone shimmers consistently. */
+.bui-agent-thinking-label {
+  color: transparent;
+  background-image: linear-gradient(
+    100deg,
+    color-mix(in oklab, var(--bui-agent-thinking-tone) 55%, transparent) 30%,
+    var(--bui-agent-thinking-tone) 50%,
+    color-mix(in oklab, var(--bui-agent-thinking-tone) 55%, transparent) 70%
+  );
+  background-position: 200% center;
+  background-size: 300% 100%;
+  background-clip: text;
+  -webkit-background-clip: text;
+  animation: ai-chat-text-shimmer 2.6s linear infinite;
+  will-change: background-position;
+}
+
+/* Star sparkle: scale + fade in, settle, and vanish; per-star duration and
+ * stagger come in via inline animation-duration/-delay. */
+@keyframes bui-agent-thinking-star {
+  0%,
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  40% {
+    transform: scale(1);
     opacity: 1;
   }
-  36% {
-    transform: translateY(0.25px) scale(0.96);
-    opacity: 0.82;
-  }
-  54% {
-    transform: translateY(-0.35px) scale(1.04);
-    opacity: 1;
-  }
-  72% {
-    transform: translateY(0) scale(0.98);
+  60% {
+    transform: scale(0.8);
     opacity: 0.9;
   }
 }
 
-@keyframes proxy-badge-halo {
-  0%,
-  100% {
-    opacity: 0.4;
-    transform: translate(-50%, -50%) scale(0.88);
+.bui-agent-thinking-star {
+  transform: scale(0);
+  animation-name: bui-agent-thinking-star;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+
+/* Infinity comet: the dash segment laps the normalized (pathLength=100)
+ * figure-eight once per animation-duration. */
+@keyframes bui-agent-thinking-dash {
+  to {
+    stroke-dashoffset: -100;
   }
-  22% {
-    opacity: 0.92;
-    transform: translate(-50%, -50%) scale(1.18);
+}
+
+.bui-agent-thinking-comet {
+  animation-name: bui-agent-thinking-dash;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bui-agent-thinking-label {
+    color: var(--bui-agent-thinking-tone);
+    background-image: none;
+    animation: none;
   }
-  48% {
-    opacity: 0.48;
-    transform: translate(-50%, -50%) scale(0.94);
+
+  /* Stars rest visible instead of frozen at scale(0). */
+  .bui-agent-thinking-star {
+    animation: none;
+    transform: none;
+    opacity: 0.7;
   }
-  70% {
-    opacity: 0.82;
-    transform: translate(-50%, -50%) scale(1.08);
+
+  .bui-agent-thinking-comet {
+    animation: none;
   }
+}
+
+/* Star glyphs read a touch heavier than the dot grids on light backgrounds;
+ * soften only them (not the label) there. Dark mode keeps the full tone. */
+.bui-agent-thinking-stars {
+  color: color-mix(in oklab, currentColor 75%, transparent);
+}
+
+.dark .bui-agent-thinking-stars {
+  color: inherit;
+}
+
+/* Integrated terminal: xterm fills its host; padding lives on the viewport
+ * so the fit addon measures the full host box. */
+.terminal-host .xterm {
+  height: 100%;
+  padding: 4px 8px;
+}
+
+.terminal-host .xterm .xterm-viewport {
+  /* xterm.css hardcodes #000 here for transparent-background terminals; ours
+     is opaque, and the black leaked through the padding ring and the partial
+     row below the last line as a black frame. The extra .xterm in the
+     selector outranks the lazily injected xterm.css rule of equal weight. */
+  background-color: transparent;
+  scrollbar-width: thin;
 }

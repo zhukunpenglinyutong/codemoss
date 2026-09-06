@@ -1,1 +1,0 @@
-export { GitHistoryPanel } from "./GitHistoryPanelImpl";

@@ -1,0 +1,257 @@
+/* ---------------------------------------------------------------------------
+ * BoardUI typography
+ *
+ * Type ramp from Figma → text styles. Each style registers a Tailwind v4
+ * text utility — `text-{name}` applies font-size + line-height + letter-spacing
+ * + font-weight in one go.
+ *
+ * Family: Inter for the whole ramp. (The Figma export marks Large Title /
+ * Regular as "Inter Display"; we map everything to Inter for consistency since
+ * Inter ships a variable optical-size axis. Flag if a true Inter Display load
+ * is needed.)
+ *
+ * Weight mapping (mirrors Figma variables — font/weight/*):
+ *   Regular   = 400
+ *   Medium    = 500
+ *   Semibold  = 600  (Figma variable font/weight/semibold = 600)
+ *   Bold      = 700
+ *
+ * Naming: `<family>-<weight>` in lowercase kebab — e.g. `text-body-medium`,
+ * `text-title-1-semibold`, `text-caption-2-bold`.
+ * --------------------------------------------------------------------------- */
+
+@theme {
+  /* ===== Large Title — 64 / 80 ============================================= */
+  --text-large-title-regular: 4rem;
+  --text-large-title-regular--line-height: 5rem;
+  --text-large-title-regular--letter-spacing: 0;
+  --text-large-title-regular--font-weight: 400;
+  --text-large-title-medium: 4rem;
+  --text-large-title-medium--line-height: 5rem;
+  --text-large-title-medium--letter-spacing: 0;
+  --text-large-title-medium--font-weight: 500;
+  --text-large-title-semibold: 4rem;
+  --text-large-title-semibold--line-height: 5rem;
+  --text-large-title-semibold--letter-spacing: 0;
+  --text-large-title-semibold--font-weight: 600;
+  --text-large-title-bold: 4rem;
+  --text-large-title-bold--line-height: 5rem;
+  --text-large-title-bold--letter-spacing: 0;
+  --text-large-title-bold--font-weight: 700;
+
+  /* ===== Display 1 — 56 / 72 =============================================== */
+  --text-display-1-regular: 3.5rem;
+  --text-display-1-regular--line-height: 4.5rem;
+  --text-display-1-regular--letter-spacing: 0;
+  --text-display-1-regular--font-weight: 400;
+  --text-display-1-medium: 3.5rem;
+  --text-display-1-medium--line-height: 4.5rem;
+  --text-display-1-medium--letter-spacing: 0;
+  --text-display-1-medium--font-weight: 500;
+  --text-display-1-semibold: 3.5rem;
+  --text-display-1-semibold--line-height: 4.5rem;
+  --text-display-1-semibold--letter-spacing: 0;
+  --text-display-1-semibold--font-weight: 600;
+  --text-display-1-bold: 3.5rem;
+  --text-display-1-bold--line-height: 4.5rem;
+  --text-display-1-bold--letter-spacing: 0;
+  --text-display-1-bold--font-weight: 700;
+
+  /* ===== Display 2 — 48 / 64 =============================================== */
+  --text-display-2-regular: 3rem;
+  --text-display-2-regular--line-height: 4rem;
+  --text-display-2-regular--letter-spacing: 0;
+  --text-display-2-regular--font-weight: 400;
+  --text-display-2-medium: 3rem;
+  --text-display-2-medium--line-height: 4rem;
+  --text-display-2-medium--letter-spacing: 0;
+  --text-display-2-medium--font-weight: 500;
+  --text-display-2-semibold: 3rem;
+  --text-display-2-semibold--line-height: 4rem;
+  --text-display-2-semibold--letter-spacing: 0;
+  --text-display-2-semibold--font-weight: 600;
+  --text-display-2-bold: 3rem;
+  --text-display-2-bold--line-height: 4rem;
+  --text-display-2-bold--letter-spacing: 0;
+  --text-display-2-bold--font-weight: 700;
+
+  /* ===== Display 3 — 40 / 54 =============================================== */
+  --text-display-3-regular: 2.5rem;
+  --text-display-3-regular--line-height: 3.375rem;
+  --text-display-3-regular--letter-spacing: 0;
+  --text-display-3-regular--font-weight: 400;
+  --text-display-3-medium: 2.5rem;
+  --text-display-3-medium--line-height: 3.375rem;
+  --text-display-3-medium--letter-spacing: 0;
+  --text-display-3-medium--font-weight: 500;
+  --text-display-3-semibold: 2.5rem;
+  --text-display-3-semibold--line-height: 3.375rem;
+  --text-display-3-semibold--letter-spacing: 0;
+  --text-display-3-semibold--font-weight: 600;
+  --text-display-3-bold: 2.5rem;
+  --text-display-3-bold--line-height: 3.375rem;
+  --text-display-3-bold--letter-spacing: 0;
+  --text-display-3-bold--font-weight: 700;
+
+  /* ===== Display 4 — 32 / 44 =============================================== */
+  --text-display-4-regular: 2rem;
+  --text-display-4-regular--line-height: 2.75rem;
+  --text-display-4-regular--letter-spacing: 0;
+  --text-display-4-regular--font-weight: 400;
+  --text-display-4-medium: 2rem;
+  --text-display-4-medium--line-height: 2.75rem;
+  --text-display-4-medium--letter-spacing: 0;
+  --text-display-4-medium--font-weight: 500;
+  --text-display-4-semibold: 2rem;
+  --text-display-4-semibold--line-height: 2.75rem;
+  --text-display-4-semibold--letter-spacing: 0;
+  --text-display-4-semibold--font-weight: 600;
+  --text-display-4-bold: 2rem;
+  --text-display-4-bold--line-height: 2.75rem;
+  --text-display-4-bold--letter-spacing: 0;
+  --text-display-4-bold--font-weight: 700;
+
+  /* ===== Title 1 — 24 / 34 ================================================= */
+  --text-title-1-regular: 1.5rem;
+  --text-title-1-regular--line-height: 2.125rem;
+  --text-title-1-regular--letter-spacing: 0;
+  --text-title-1-regular--font-weight: 400;
+  --text-title-1-medium: 1.5rem;
+  --text-title-1-medium--line-height: 2.125rem;
+  --text-title-1-medium--letter-spacing: 0;
+  --text-title-1-medium--font-weight: 500;
+  --text-title-1-semibold: 1.5rem;
+  --text-title-1-semibold--line-height: 2.125rem;
+  --text-title-1-semibold--letter-spacing: 0;
+  --text-title-1-semibold--font-weight: 600;
+  --text-title-1-bold: 1.5rem;
+  --text-title-1-bold--line-height: 2.125rem;
+  --text-title-1-bold--letter-spacing: 0;
+  --text-title-1-bold--font-weight: 700;
+
+  /* ===== Title 2 — 20 / 26 ================================================= */
+  --text-title-2-regular: 1.25rem;
+  --text-title-2-regular--line-height: 1.625rem;
+  --text-title-2-regular--letter-spacing: 0;
+  --text-title-2-regular--font-weight: 400;
+  --text-title-2-medium: 1.25rem;
+  --text-title-2-medium--line-height: 1.625rem;
+  --text-title-2-medium--letter-spacing: 0;
+  --text-title-2-medium--font-weight: 500;
+  --text-title-2-semibold: 1.25rem;
+  --text-title-2-semibold--line-height: 1.625rem;
+  --text-title-2-semibold--letter-spacing: 0;
+  --text-title-2-semibold--font-weight: 600;
+  --text-title-2-bold: 1.25rem;
+  --text-title-2-bold--line-height: 1.625rem;
+  --text-title-2-bold--letter-spacing: 0;
+  --text-title-2-bold--font-weight: 700;
+
+  /* ===== Title 3 — 18 / 24-26 ============================================== */
+  --text-title-3-regular: 1.125rem;
+  --text-title-3-regular--line-height: 1.5rem;     /* 24 per Figma */
+  --text-title-3-regular--letter-spacing: 0;
+  --text-title-3-regular--font-weight: 400;
+  --text-title-3-medium: 1.125rem;
+  --text-title-3-medium--line-height: 1.625rem;    /* 26 per Figma */
+  --text-title-3-medium--letter-spacing: 0;
+  --text-title-3-medium--font-weight: 500;
+  --text-title-3-semibold: 1.125rem;
+  --text-title-3-semibold--line-height: 1.625rem;
+  --text-title-3-semibold--letter-spacing: 0;
+  --text-title-3-semibold--font-weight: 600;
+  --text-title-3-bold: 1.125rem;
+  --text-title-3-bold--line-height: 1.625rem;
+  --text-title-3-bold--letter-spacing: 0;
+  --text-title-3-bold--font-weight: 700;
+
+  /* ===== Headline — 16 / 22 ================================================ */
+  --text-headline-regular: 1rem;
+  --text-headline-regular--line-height: 1.375rem;
+  --text-headline-regular--letter-spacing: 0;
+  --text-headline-regular--font-weight: 400;
+  --text-headline-medium: 1rem;
+  --text-headline-medium--line-height: 1.375rem;
+  --text-headline-medium--letter-spacing: 0;
+  --text-headline-medium--font-weight: 500;
+  --text-headline-semibold: 1rem;
+  --text-headline-semibold--line-height: 1.375rem;
+  --text-headline-semibold--letter-spacing: 0;
+  --text-headline-semibold--font-weight: 600;
+  --text-headline-bold: 1rem;
+  --text-headline-bold--line-height: 1.375rem;
+  --text-headline-bold--letter-spacing: 0;
+  --text-headline-bold--font-weight: 700;
+
+  /* ===== Body — 14 / 20 ==================================================== */
+  --text-body-regular: 0.875rem;
+  --text-body-regular--line-height: 1.25rem;
+  --text-body-regular--letter-spacing: 0;
+  --text-body-regular--font-weight: 400;
+  --text-body-medium: 0.875rem;
+  --text-body-medium--line-height: 1.25rem;
+  --text-body-medium--letter-spacing: 0;
+  --text-body-medium--font-weight: 500;
+  --text-body-semibold: 0.875rem;
+  --text-body-semibold--line-height: 1.25rem;
+  --text-body-semibold--letter-spacing: 0;
+  --text-body-semibold--font-weight: 600;
+  --text-body-bold: 0.875rem;
+  --text-body-bold--line-height: 1.25rem;
+  --text-body-bold--letter-spacing: 0;
+  --text-body-bold--font-weight: 700;
+
+  /* ===== Body 2 — 13 / 18 ================================================== */
+  --text-body-2-regular: 0.8125rem;
+  --text-body-2-regular--line-height: 1.125rem;
+  --text-body-2-regular--letter-spacing: 0;
+  --text-body-2-regular--font-weight: 400;
+  --text-body-2-medium: 0.8125rem;
+  --text-body-2-medium--line-height: 1.125rem;
+  --text-body-2-medium--letter-spacing: 0;
+  --text-body-2-medium--font-weight: 500;
+  --text-body-2-semibold: 0.8125rem;
+  --text-body-2-semibold--line-height: 1.125rem;
+  --text-body-2-semibold--letter-spacing: 0;
+  --text-body-2-semibold--font-weight: 600;
+  --text-body-2-bold: 0.8125rem;
+  --text-body-2-bold--line-height: 1.125rem;
+  --text-body-2-bold--letter-spacing: 0;
+  --text-body-2-bold--font-weight: 700;
+
+  /* ===== Caption 1 — 12 / 16 (tracking 0.15) =============================== */
+  --text-caption-1-regular: 0.75rem;
+  --text-caption-1-regular--line-height: 1rem;
+  --text-caption-1-regular--letter-spacing: 0.15px;
+  --text-caption-1-regular--font-weight: 400;
+  --text-caption-1-medium: 0.75rem;
+  --text-caption-1-medium--line-height: 1rem;
+  --text-caption-1-medium--letter-spacing: 0.15px;
+  --text-caption-1-medium--font-weight: 500;
+  --text-caption-1-semibold: 0.75rem;
+  --text-caption-1-semibold--line-height: 1rem;
+  --text-caption-1-semibold--letter-spacing: 0.15px;
+  --text-caption-1-semibold--font-weight: 600;
+  --text-caption-1-bold: 0.75rem;
+  --text-caption-1-bold--line-height: 1rem;
+  --text-caption-1-bold--letter-spacing: 0.15px;
+  --text-caption-1-bold--font-weight: 700;
+
+  /* ===== Caption 2 — 11 / 15 (tracking 0.2) ================================ */
+  --text-caption-2-regular: 0.6875rem;
+  --text-caption-2-regular--line-height: 0.9375rem;
+  --text-caption-2-regular--letter-spacing: 0.2px;
+  --text-caption-2-regular--font-weight: 400;
+  --text-caption-2-medium: 0.6875rem;
+  --text-caption-2-medium--line-height: 0.9375rem;
+  --text-caption-2-medium--letter-spacing: 0.2px;
+  --text-caption-2-medium--font-weight: 500;
+  --text-caption-2-semibold: 0.6875rem;
+  --text-caption-2-semibold--line-height: 0.9375rem;
+  --text-caption-2-semibold--letter-spacing: 0.2px;
+  --text-caption-2-semibold--font-weight: 600;
+  --text-caption-2-bold: 0.6875rem;
+  --text-caption-2-bold--line-height: 0.9375rem;
+  --text-caption-2-bold--letter-spacing: 0.2px;
+  --text-caption-2-bold--font-weight: 700;
+}

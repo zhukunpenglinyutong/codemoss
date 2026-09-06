@@ -1,9 +1,0 @@
-{
-  "id": "0.2.2",
-  "tagName": "v0.2.2",
-  "version": "0.2.2",
-  "title": "v0.2.2",
-  "dateLabel": "2026/03/03",
-  "englishBody": "✨ Features\n\n- Enhance message display and add user bubble color customization\n- Add `@@` manual memory completion in ChatInputBox with dropdown preview panel, title/summary/tags display, and detached draft support for no-active-thread scenarios\n- Add real-time usage entry and plan mode toggle for Codex engine in composer\n- Align Codex plan mode protocol with requestUserInput lifecycle\n\n🐛 Fixes\n\n- Fix Codex engine inconsistency after Plan -> Code mode switch within session\n- Fix file tree `+` button insertion: use native `@absolutePath` mention format instead of icon+path text\n- Fix thread mode sync and stale user input event handling on thread switch\n- Address code review issues from PR #153",
-  "chineseBody": "✨ Features\n\n- 增强消息显示效果并新增用户气泡颜色自定义\n- 在 ChatInputBox 中新增 `@@` 手动记忆补全：下拉预览面板（标题/摘要/标签/重要度/更新时间）、无活跃线程时的草稿支持\n- Codex 模式新增实时用量入口与计划模式切换\n- 对齐 Codex 计划模式协议与 requestUserInput 生命周期\n\n🐛 Fixes\n\n- 修复 Codex 引擎在会话内 Plan -> Code 切换后的表现不一致问题\n- 修复文件树 `+` 按钮插入行为：改为原生 `@absolutePath` mention 形式，避免行级点击干扰\n- 修复线程切换时模式同步与过期 user input 事件处理\n- 修复 PR #153 代码审查中发现的问题"
-}

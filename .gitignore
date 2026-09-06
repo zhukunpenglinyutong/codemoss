@@ -1,49 +1,28 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
-
+# Dependencies
 node_modules
+
+# Build output
 dist
-dist-ssr
-*.local
+src-tauri/target
+src-tauri/gen
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-.idea
+# Secrets — never commit
+.env
+.env.*
+*.pem
+*.key
+*.p12
+
+# OS
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-/release-artifacts
-.codex-worktrees/
-.ace-tool/
-.artifacts/
-release-local
-CLAUDE.md
-.claude.github/workflows/release.yml
-.pi
-# AI workflow local-only state
-.claude/settings.local.json
-.codex/hooks/__pycache__/
-.ccgui/
-.omx/
+Thumbs.db
 
-# i18n translation scratch workspace
-scripts/i18n/.work/
-
-.specstory/
-.superpowers/
-
-# Playwright MCP scratch output
+# Local agent / editor tooling
+.claude/
+.agents/
+.omp/
 .playwright-mcp/
-
-.mossx
+.vscode/
+skills-lock.json
+boardui.dev.env
+CLAUDE.md

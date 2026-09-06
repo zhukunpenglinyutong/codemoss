@@ -1,26 +1,31 @@
-import { installRendererLifecycleDiagnostics } from "./services/rendererDiagnostics";
-import {
-  isReactScanStartupEnabled,
-  startReactScanOverlay,
-} from "./services/reactScanController";
-import { installRendererPlatformAttribute } from "./utils/rendererPlatform";
-import { installWindowsReloadShortcutGuard } from "./utils/windowsReloadShortcutGuard";
+import React from "react";
+import ReactDOM from "react-dom/client";
+import App from "./App";
+import "./index.css";
+import i18n from "./lib/i18n";
+import { ipc } from "./lib/ipc";
+import { applyTheme, THEME_STORAGE_KEY } from "./features/settings/theme";
 
-installRendererPlatformAttribute();
-installWindowsReloadShortcutGuard();
-installRendererLifecycleDiagnostics();
-// P1-2: Baidu Tongji is deferred until after shell-ready / idle (see bootstrapApp).
-// Synchronous install on cold path competed with first paint for main-thread time.
+// Apply the locally cached theme synchronously, before first paint, so the
+// window never flashes the wrong color scheme while settings load.
+const cachedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+if (cachedTheme) applyTheme(cachedTheme);
 
-// react-scan 必须在 React 首次 import 之前完成 instrumentation，否则生产版
-// 会报 "Must import React Scan before React runs" 且 topRenders 恒空。
-// bootstrapApp 顶层静态 import React，因此这里只能动态 import startApp。
-async function boot() {
-  if (isReactScanStartupEnabled()) {
-    await startReactScanOverlay();
-  }
-  const { startApp } = await import("./bootstrapApp");
-  await startApp();
-}
+// Kick off the authoritative settings fetch at module scope (shared cached
+// promise in ipc.ts); apply theme/language as soon as it resolves. Rendering
+// is not blocked on this.
+void ipc
+  .getAppSettings()
+  .then((settings) => {
+    applyTheme(settings.theme);
+    if (settings.language && settings.language !== i18n.language) {
+      void i18n.changeLanguage(settings.language);
+    }
+  })
+  .catch(() => {});
 
-void boot();
+ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>,
+);

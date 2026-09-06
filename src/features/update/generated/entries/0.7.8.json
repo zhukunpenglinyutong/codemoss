@@ -1,9 +1,0 @@
-{
-  "id": "0.7.8",
-  "tagName": "v0.7.8",
-  "version": "0.7.8",
-  "title": "v0.7.8",
-  "dateLabel": "2026/07/24",
-  "englishBody": "✨ Features\n\n- Bump the app version to `0.7.8` across frontend package metadata, the lockfile, and Tauri bundle configuration\n- `feat(extensions)`: isolate extension management into a self-contained module boundary\n- `feat`: connect to the tokenpacker CLI to extend token-processing capabilities\n- `feat(session-activity)`: enhance recent-activity panel and quick-switcher interactions\n- `feat(theme)`: add theme-aware code and diff colors so code blocks and diffs adapt to the active theme\n\n🔧 Improvements\n\n- `refactor(orchestration)`: remove the orchestration center along with its assembly and dispatch wiring, migrate the open-task-run event bus to the tasks module, and slim down the app shell\n- `refactor(client)`: remove unused client modules\n\n🐛 Fixes\n\n- `fix(quick-switcher)`: fix incorrect main-area routing when activating a file\n- `fix(styles)`: fix the sticky layout gap on extension tabs",
-  "chineseBody": "✨ Features\n\n- 升级应用版本号到 `0.7.8`，同步前端包配置、lockfile 与 Tauri 打包配置\n- `feat(extensions)`: 扩展管理独立隔离，形成自包含的 extensions 模块边界\n- `feat`: 接入 tokenpacker CLI，扩展 Token 处理能力\n- `feat(session-activity)`: 增强最近活动面板与快速切换器交互\n- `feat(theme)`: 增加主题感知代码与差异配色，代码块与 diff 随主题自动适配\n\n🔧 Improvements\n\n- `refactor(orchestration)`: 移除编排中心本体、装配与派发接线，open-task-run 事件总线迁移至 tasks 模块，精简应用骨架\n- `refactor(client)`: 清理未使用的客户端模块\n\n🐛 Fixes\n\n- `fix(quick-switcher)`: 修复文件激活时主区路由错误\n- `fix(styles)`: 修复扩展页签 sticky 布局间隙"
-}

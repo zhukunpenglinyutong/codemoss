@@ -1,9 +1,0 @@
-{
-  "id": "0.0.2",
-  "tagName": "v0.0.2",
-  "version": "0.0.2",
-  "title": "v0.0.2",
-  "dateLabel": "2026/02/05",
-  "englishBody": "✨ Features\n\n- Improve tool-call UX and harden signing key handling\n- Prioritize desktop UX and restore auto-updates",
-  "chineseBody": "✨ Features\n\n- 改进工具调用 UX 并加固签名密钥处理\n- 优先桌面 UX 并恢复自动更新"
-}

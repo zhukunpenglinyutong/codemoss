@@ -1,30 +1,16 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Capability for the main window",
-  "windows": ["main", "about", "file-explorer", "file-explorer-*", "spec-hub", "browser-agent-window", "browser-agent-dock"],
+  "description": "Default capability set",
+  "windows": ["main"],
   "permissions": [
     "core:default",
-    "core:event:allow-emit-to",
-    "core:event:allow-listen",
-    "core:webview:allow-set-webview-zoom",
-    "core:webview:allow-create-webview-window",
-    "opener:default",
-    "dialog:default",
-    "process:default",
-    "updater:default",
-    "window-state:default",
-    "core:window:allow-set-effects",
     "core:window:allow-start-dragging",
-    "core:window:allow-minimize",
-    "core:window:allow-toggle-maximize",
-    "core:window:allow-is-maximized",
-    "core:window:allow-close",
-    "core:window:allow-create",
-    "core:window:allow-show",
-    "core:window:allow-set-focus",
-    "core:window:allow-set-decorations",
-    "core:window:allow-set-title",
-    "notification:default"
+    "core:webview:allow-set-webview-zoom",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [{ "url": "https://**" }, { "url": "mailto:**" }]
+    },
+    "dialog:default"
   ]
 }

@@ -1,9 +1,0 @@
-{
-  "id": "0.1.5",
-  "tagName": "v0.1.5",
-  "version": "0.1.5",
-  "title": "v0.1.5",
-  "dateLabel": "2026/02/10",
-  "englishBody": "✨ Features\n\n- Remove Sentry telemetry, add About page and kanban git panel",
-  "chineseBody": "✨ Features\n\n- 移除 Sentry 遥测，新增关于页面和看板 Git 面板"
-}

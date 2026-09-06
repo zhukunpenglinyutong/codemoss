@@ -1,9 +1,0 @@
-{
-  "id": "0.1.4",
-  "tagName": "v0.1.4",
-  "version": "0.1.4",
-  "title": "v0.1.4",
-  "dateLabel": "2026/02/10",
-  "englishBody": "✨ Features\n\n- Reduce context switching with in-app long-term memory view\n- Improve UX with thread tooltips, task draft persistence, and interrupt handling\n- Support multi-source skill discovery with priority merge\n\n🐛 Fixes\n\n- Prevent memory navigation hijacks and reduce setup confusion\n- Improve DMG detach reliability in create-dmg script",
-  "chineseBody": "✨ Features\n\n- 新增应用内长期记忆视图，减少上下文切换\n- 改进线程工具提示、任务草稿持久化和中断处理\n- 支持多来源 Skill 发现与优先级合并\n\n🐛 Fixes\n\n- 防止记忆导航劫持并减少设置困惑\n- 提升 create-dmg 脚本中 DMG 弹出可靠性"
-}

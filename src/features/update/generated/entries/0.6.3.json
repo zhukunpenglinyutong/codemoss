@@ -1,9 +1,0 @@
-{
-  "id": "0.6.3",
-  "tagName": "v0.6.3",
-  "version": "0.6.3",
-  "title": "v0.6.3",
-  "dateLabel": "2026/07/03",
-  "englishBody": "✨ Features\n\n- Bump the app version to `0.6.3` across frontend package metadata and Tauri bundle configuration\n- `feat(models)`: add a builtin Claude model catalog with override precedence\n- `feat`: rework the context-usage indicator with an ai-elements style\n- `feat(composer)`: persist per-engine composer preferences\n- `feat(skills)`: add the vercel-optimize and writing-guidelines agent skills\n\n🔧 Improvements\n\n- `perf`: pause background polling to cut idle render storms\n- `perf`: eliminate O(L²) streaming-merge overhead and keep heavy vendors lazy\n- `perf`: stop heavy subtrees from re-rendering on every app-shell root render\n- `perf`: move composer state out of the app-shell root to tame render storms\n\n🐛 Fixes\n\n- `fix(timeline)`: remeasure mounted rows instead of wiping the virtualizer size cache to reduce timeline jumpiness",
-  "chineseBody": "✨ Features\n\n- 升级应用版本号到 `0.6.3`，同步前端包配置与 Tauri 打包配置\n- `feat(models)`: 新增内置 Claude 模型目录，并支持覆盖优先级\n- `feat`: 以 ai-elements 风格重做上下文用量指示器\n- `feat(composer)`: 按引擎持久化 Composer 偏好设置\n- `feat(skills)`: 新增 vercel-optimize 与 writing-guidelines 两个 agent 技能\n\n🔧 Improvements\n\n- `perf`: 暂停后台轮询，消除 idle 空闲渲染风暴\n- `perf`: 消除 O(L²) 流式合并开销，并保持重型依赖懒加载\n- `perf`: app-shell 根渲染时不再牵动重型子树重渲染\n- `perf`: 将 Composer 状态移出 app-shell 根，收敛渲染风暴\n\n🐛 Fixes\n\n- `fix(timeline)`: 改为重测已挂载行而非清空虚拟化尺寸缓存，减少时间线跳动"
-}

@@ -1,31 +1,38 @@
+//! Integrated terminal: one PTY session per frontend terminal tab.
+//!
+//! Output is pushed through the terminal `EventSink` (32ms / 64KB batching)
+//! as `terminal://output` arrays of `{ id, data }` so output floods (e.g.
+//! `cat` of a large file) never swamp the IPC channel with one event per
+//! 8KB read.
+
+use std::collections::HashMap;
 use std::io::{Read, Write};
-use std::path::PathBuf;
 use std::sync::Arc;
 
 use portable_pty::{native_pty_system, CommandBuilder, PtySize};
 use serde::Serialize;
-use tauri::{AppHandle, Manager, State};
+use tauri::State;
 use tokio::sync::Mutex;
 
-use crate::backend::events::{EventSink, TerminalOutput};
-use crate::event_sink::build_event_sink;
-use crate::state::AppState;
-use crate::types::AppSettings;
+use crate::event_sink::EventSink;
+use crate::AppState;
 
-pub(crate) struct TerminalSession {
-    pub(crate) id: String,
-    pub(crate) master: Mutex<Box<dyn portable_pty::MasterPty + Send>>,
-    pub(crate) writer: Mutex<Box<dyn Write + Send>>,
-    pub(crate) child: Mutex<Box<dyn portable_pty::Child + Send>>,
+pub const TERMINAL_OUTPUT_EVENT: &str = "terminal://output";
+
+pub struct TerminalSession {
+    pub master: Mutex<Box<dyn portable_pty::MasterPty + Send>>,
+    pub writer: Mutex<Box<dyn Write + Send>>,
+    pub child: Mutex<Box<dyn portable_pty::Child + Send>>,
 }
 
-#[derive(Debug, Serialize, Clone)]
-pub(crate) struct TerminalSessionInfo {
+/// Sessions keyed by frontend-generated terminal id (globally unique).
+pub type TerminalRegistry = Arc<Mutex<HashMap<String, Arc<TerminalSession>>>>;
+
+#[derive(Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+struct TerminalOutput {
     id: String,
-}
-
-fn terminal_key(workspace_id: &str, terminal_id: &str) -> String {
-    format!("{workspace_id}:{terminal_id}")
+    data: String,
 }
 
 fn default_shell_path() -> String {
@@ -38,17 +45,26 @@ fn default_shell_path() -> String {
         std::env::var("SHELL").unwrap_or_else(|_| "/bin/zsh".to_string())
     }
 }
-
-fn resolve_terminal_shell_path(settings: &AppSettings) -> String {
-    settings
-        .terminal_shell_path
-        .as_deref()
-        .map(str::trim)
-        .filter(|path| !path.is_empty())
-        .map(ToOwned::to_owned)
-        .unwrap_or_else(default_shell_path)
+/// Settings "terminalShellPath" wins when set and valid; anything else (unset,
+/// blank, hand-edited junk) falls back to the auto-detected shell so a bad
+/// value can never wedge every terminal spawn.
+fn resolve_shell_path() -> String {
+    let configured = crate::settings::read_settings()
+        .ok()
+        .and_then(|s| s.terminal_shell_path)
+        .map(|p| p.trim().to_string())
+        .filter(|p| !p.is_empty());
+    match configured {
+        Some(path) => match crate::settings::validate_bin_override(&path) {
+            Ok(canonical) => canonical.to_string_lossy().into_owned(),
+            Err(_) => default_shell_path(),
+        },
+        None => default_shell_path(),
+    }
 }
 
+/// Force a UTF-8 locale so tools emitting non-ASCII (git, ls, CLIs) don't
+/// fall back to garbled C-locale output.
 fn resolve_locale() -> String {
     let candidate = std::env::var("LC_ALL")
         .or_else(|_| std::env::var("LANG"))
@@ -60,15 +76,40 @@ fn resolve_locale() -> String {
     "en_US.UTF-8".to_string()
 }
 
-fn spawn_terminal_reader(
-    app: AppHandle,
-    event_sink: impl EventSink,
-    workspace_id: String,
-    terminal_id: String,
+/// Blocking PTY reads run on their own thread; decoded chunks go to the
+/// batching sink. Splits only on UTF-8 boundaries so multibyte characters
+/// straddling two reads survive intact.
+fn spawn_reader(
+    sink: Arc<EventSink>,
+    registry: TerminalRegistry,
+    id: String,
     session: Arc<TerminalSession>,
     mut reader: Box<dyn Read + Send>,
 ) {
     std::thread::spawn(move || {
+        // sink.push schedules its flush via tokio::spawn; this std thread has
+        // no runtime of its own, so enter the app runtime for the thread's
+        // lifetime (plain Handle::enter, no block_on: reads must not block
+        // the runtime).
+        let runtime = tauri::async_runtime::handle();
+        let _runtime_guard = match &runtime {
+            tauri::async_runtime::RuntimeHandle::Tokio(handle) => Some(handle.enter()),
+            // tauri's RuntimeHandle is effectively Tokio-only today; keep a
+            // catch-all so a future second variant compiles unchanged.
+            #[allow(unreachable_patterns)]
+            _ => None,
+        };
+        let emit = |data: String| {
+            if data.is_empty() {
+                return;
+            }
+            let payload = serde_json::to_value(TerminalOutput {
+                id: id.clone(),
+                data,
+            })
+            .unwrap_or(serde_json::Value::Null);
+            sink.push(payload);
+        };
         let mut buffer = [0u8; 8192];
         let mut pending: Vec<u8> = Vec::new();
         loop {
@@ -79,41 +120,22 @@ fn spawn_terminal_reader(
                     loop {
                         match std::str::from_utf8(&pending) {
                             Ok(decoded) => {
-                                if !decoded.is_empty() {
-                                    let payload = TerminalOutput {
-                                        workspace_id: workspace_id.clone(),
-                                        terminal_id: terminal_id.clone(),
-                                        data: decoded.to_string(),
-                                    };
-                                    event_sink.emit_terminal_output(payload);
-                                }
+                                emit(decoded.to_string());
                                 pending.clear();
                                 break;
                             }
                             Err(error) => {
                                 let valid_up_to = error.valid_up_to();
-                                if valid_up_to == 0 {
-                                    if error.error_len().is_none() {
-                                        break;
-                                    }
-                                    let invalid_len = error.error_len().unwrap_or(1);
-                                    pending.drain(..invalid_len.min(pending.len()));
-                                    continue;
+                                if valid_up_to > 0 {
+                                    emit(String::from_utf8_lossy(&pending[..valid_up_to])
+                                        .into_owned());
+                                    pending.drain(..valid_up_to);
                                 }
-                                let chunk =
-                                    String::from_utf8_lossy(&pending[..valid_up_to]).to_string();
-                                if !chunk.is_empty() {
-                                    let payload = TerminalOutput {
-                                        workspace_id: workspace_id.clone(),
-                                        terminal_id: terminal_id.clone(),
-                                        data: chunk,
-                                    };
-                                    event_sink.emit_terminal_output(payload);
-                                }
-                                pending.drain(..valid_up_to);
+                                // Incomplete trailing sequence: wait for more bytes.
                                 if error.error_len().is_none() {
                                     break;
                                 }
+                                // Invalid bytes: drop them and resync.
                                 let invalid_len = error.error_len().unwrap_or(1);
                                 pending.drain(..invalid_len.min(pending.len()));
                             }
@@ -123,121 +145,84 @@ fn spawn_terminal_reader(
                 Err(_) => break,
             }
         }
-        let key = terminal_key(&workspace_id, &terminal_id);
+        // Shell exited (or read failed): drop the session so a later write
+        // fails with "not found" and the frontend respawns on demand.
         tauri::async_runtime::block_on(async move {
-            let state = app.state::<AppState>();
-            remove_terminal_session_if_current(&state.terminal_sessions, &key, &session).await;
+            let mut sessions = registry.lock().await;
+            if sessions
+                .get(&id)
+                .is_some_and(|current| Arc::ptr_eq(current, &session))
+            {
+                sessions.remove(&id);
+            }
         });
     });
 }
 
-async fn remove_terminal_session_if_current(
-    sessions: &Mutex<std::collections::HashMap<String, Arc<TerminalSession>>>,
-    key: &str,
-    session: &Arc<TerminalSession>,
-) {
-    let mut sessions = sessions.lock().await;
-    if sessions
-        .get(key)
-        .is_some_and(|current| Arc::ptr_eq(current, session))
-    {
-        sessions.remove(key);
-    }
-}
-
-async fn kill_terminal_session(session: Arc<TerminalSession>) {
+async fn kill_session(session: Arc<TerminalSession>) {
     let mut child = session.child.lock().await;
     let _ = child.kill();
 }
 
-pub(crate) async fn cleanup_terminal_sessions_for_workspace(state: &AppState, workspace_id: &str) {
-    let removed_sessions = {
-        let mut sessions = state.terminal_sessions.lock().await;
-        let keys_to_remove: Vec<String> = sessions
-            .keys()
-            .filter(|key| key.starts_with(&format!("{workspace_id}:")))
-            .cloned()
-            .collect();
-        keys_to_remove
-            .into_iter()
-            .filter_map(|key| sessions.remove(&key))
-            .collect::<Vec<_>>()
+/// Kill every session; called when the window is destroyed.
+pub async fn kill_all(registry: &TerminalRegistry) {
+    let sessions: Vec<Arc<TerminalSession>> = {
+        let mut sessions = registry.lock().await;
+        sessions.drain().map(|(_, session)| session).collect()
     };
-
-    for session in removed_sessions {
-        kill_terminal_session(session).await;
+    for session in sessions {
+        kill_session(session).await;
     }
 }
 
-pub(crate) async fn cleanup_all_terminal_sessions(state: &AppState) {
-    let removed_sessions = {
-        let mut sessions = state.terminal_sessions.lock().await;
-        sessions
-            .drain()
-            .map(|(_, session)| session)
-            .collect::<Vec<_>>()
-    };
-
-    for session in removed_sessions {
-        kill_terminal_session(session).await;
-    }
-}
-
-async fn get_workspace_path(
-    workspace_id: &str,
-    state: &State<'_, AppState>,
-) -> Result<PathBuf, String> {
-    let workspaces = state.workspaces.lock().await;
-    let entry = workspaces
-        .get(workspace_id)
-        .ok_or_else(|| "Unknown workspace".to_string())?;
-    Ok(PathBuf::from(&entry.path))
-}
+/// Global cap on live PTY sessions — each one owns a shell process and a
+/// reader thread, so unbounded tabs would leak real resources.
+const MAX_TERMINAL_SESSIONS: usize = 32;
 
 #[tauri::command]
-pub(crate) async fn terminal_open(
-    workspace_id: String,
-    terminal_id: String,
+pub async fn terminal_open(
+    id: String,
+    cwd: String,
     cols: u16,
     rows: u16,
     state: State<'_, AppState>,
-    app: AppHandle,
-) -> Result<TerminalSessionInfo, String> {
-    if terminal_id.is_empty() {
-        return Err("Terminal id is required".to_string());
+) -> Result<(), String> {
+    if id.is_empty() {
+        return Err("terminal id is required".to_string());
     }
-    let key = terminal_key(&workspace_id, &terminal_id);
     {
-        let sessions = state.terminal_sessions.lock().await;
-        if let Some(existing) = sessions.get(&key) {
-            return Ok(TerminalSessionInfo {
-                id: existing.id.clone(),
-            });
+        let sessions = state.terminals.lock().await;
+        if sessions.contains_key(&id) {
+            return Ok(());
+        }
+        if sessions.len() >= MAX_TERMINAL_SESSIONS {
+            return Err(format!(
+                "terminal session limit ({MAX_TERMINAL_SESSIONS}) reached; close one first"
+            ));
         }
     }
+    let cwd_path = std::path::Path::new(&cwd);
+    if !cwd_path.is_dir() {
+        return Err(format!("terminal cwd does not exist: {cwd}"));
+    }
 
-    let cwd = get_workspace_path(&workspace_id, &state).await?;
     let pty_system = native_pty_system();
-    let size = PtySize {
-        rows: rows.max(2),
-        cols: cols.max(2),
-        pixel_width: 0,
-        pixel_height: 0,
-    };
     let pair = pty_system
-        .openpty(size)
-        .map_err(|e| format!("Failed to open pty: {e}"))?;
+        .openpty(PtySize {
+            rows: rows.max(2),
+            cols: cols.max(2),
+            pixel_width: 0,
+            pixel_height: 0,
+        })
+        .map_err(|e| format!("failed to open pty: {e}"))?;
 
-    let shell_path = {
-        let settings = state.app_settings.lock().await;
-        resolve_terminal_shell_path(&settings)
-    };
-    let mut cmd = CommandBuilder::new(shell_path);
-    cmd.cwd(cwd);
-    // On Unix, pass -i for interactive shell; cmd.exe on Windows doesn't support it
+    let mut cmd = CommandBuilder::new(resolve_shell_path());
+    cmd.cwd(cwd_path);
+    // `-i` for an interactive shell (aliases, prompt). N/A for cmd.exe.
     #[cfg(not(windows))]
     cmd.arg("-i");
     cmd.env("TERM", "xterm-256color");
+    cmd.env("COLORTERM", "truecolor");
     let locale = resolve_locale();
     cmd.env("LANG", &locale);
     cmd.env("LC_ALL", &locale);
@@ -246,171 +231,105 @@ pub(crate) async fn terminal_open(
     let child = pair
         .slave
         .spawn_command(cmd)
-        .map_err(|e| format!("Failed to spawn shell: {e}"))?;
+        .map_err(|e| format!("failed to spawn shell: {e}"))?;
     let reader = pair
         .master
         .try_clone_reader()
-        .map_err(|e| format!("Failed to open pty reader: {e}"))?;
+        .map_err(|e| format!("failed to open pty reader: {e}"))?;
     let writer = pair
         .master
         .take_writer()
-        .map_err(|e| format!("Failed to open pty writer: {e}"))?;
+        .map_err(|e| format!("failed to open pty writer: {e}"))?;
 
     let session = Arc::new(TerminalSession {
-        id: terminal_id.clone(),
         master: Mutex::new(pair.master),
         writer: Mutex::new(writer),
         child: Mutex::new(child),
     });
-    let session_id = session.id.clone();
 
     {
-        let mut sessions = state.terminal_sessions.lock().await;
-        if let Some(existing) = sessions.get(&key) {
-            let mut child = session.child.lock().await;
-            let _ = child.kill();
-            return Ok(TerminalSessionInfo {
-                id: existing.id.clone(),
-            });
+        let mut sessions = state.terminals.lock().await;
+        // Lost a concurrent open race: keep the existing session.
+        if sessions.contains_key(&id) {
+            drop(sessions);
+            kill_session(session).await;
+            return Ok(());
         }
-        sessions.insert(key, Arc::clone(&session));
+        sessions.insert(id.clone(), Arc::clone(&session));
     }
-    let event_sink = build_event_sink(app.clone());
-    spawn_terminal_reader(
-        app,
-        event_sink,
-        workspace_id,
-        terminal_id,
-        Arc::clone(&session),
+    spawn_reader(
+        Arc::clone(&state.terminal_sink),
+        Arc::clone(&state.terminals),
+        id,
+        session,
         reader,
     );
-
-    Ok(TerminalSessionInfo { id: session_id })
-}
-
-#[tauri::command]
-pub(crate) async fn terminal_write(
-    workspace_id: String,
-    terminal_id: String,
-    data: String,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
-    let key = terminal_key(&workspace_id, &terminal_id);
-    let sessions = state.terminal_sessions.lock().await;
-    let session = sessions
-        .get(&key)
-        .ok_or_else(|| "Terminal session not found".to_string())?;
-    let mut writer = session.writer.lock().await;
-    writer
-        .write_all(data.as_bytes())
-        .map_err(|e| format!("Failed to write to pty: {e}"))?;
-    writer
-        .flush()
-        .map_err(|e| format!("Failed to flush pty: {e}"))?;
     Ok(())
 }
 
 #[tauri::command]
-pub(crate) async fn terminal_resize(
-    workspace_id: String,
-    terminal_id: String,
+pub async fn terminal_write(
+    id: String,
+    data: String,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let session = {
+        let sessions = state.terminals.lock().await;
+        sessions
+            .get(&id)
+            .cloned()
+            .ok_or_else(|| "Terminal session not found".to_string())?
+    };
+    // A large paste can exceed the PTY buffer and block mid-write; keep that
+    // off the async worker threads.
+    tauri::async_runtime::spawn_blocking(move || {
+        tauri::async_runtime::block_on(async move {
+            let mut writer = session.writer.lock().await;
+            writer
+                .write_all(data.as_bytes())
+                .and_then(|()| writer.flush())
+                .map_err(|e| format!("failed to write to pty: {e}"))
+        })
+    })
+    .await
+    .map_err(|e| e.to_string())?
+}
+
+#[tauri::command]
+pub async fn terminal_resize(
+    id: String,
     cols: u16,
     rows: u16,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let key = terminal_key(&workspace_id, &terminal_id);
-    let sessions = state.terminal_sessions.lock().await;
-    let session = sessions
-        .get(&key)
-        .ok_or_else(|| "Terminal session not found".to_string())?;
-    let size = PtySize {
-        rows: rows.max(2),
-        cols: cols.max(2),
-        pixel_width: 0,
-        pixel_height: 0,
+    let session = {
+        let sessions = state.terminals.lock().await;
+        sessions
+            .get(&id)
+            .cloned()
+            .ok_or_else(|| "Terminal session not found".to_string())?
     };
     let master = session.master.lock().await;
     master
-        .resize(size)
-        .map_err(|e| format!("Failed to resize pty: {e}"))?;
+        .resize(PtySize {
+            rows: rows.max(2),
+            cols: cols.max(2),
+            pixel_width: 0,
+            pixel_height: 0,
+        })
+        .map_err(|e| format!("failed to resize pty: {e}"))?;
     Ok(())
 }
 
 #[tauri::command]
-pub(crate) async fn terminal_close(
-    workspace_id: String,
-    terminal_id: String,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
-    let key = terminal_key(&workspace_id, &terminal_id);
-    let mut sessions = state.terminal_sessions.lock().await;
-    let session = sessions
-        .remove(&key)
-        .ok_or_else(|| "Terminal session not found".to_string())?;
-    kill_terminal_session(session).await;
+pub async fn terminal_close(id: String, state: State<'_, AppState>) -> Result<(), String> {
+    let session = {
+        let mut sessions = state.terminals.lock().await;
+        sessions.remove(&id)
+    };
+    // Closing an already-dead session is a no-op, not an error.
+    if let Some(session) = session {
+        kill_session(session).await;
+    }
     Ok(())
-}
-
-#[cfg(test)]
-mod tests {
-    use std::collections::HashMap;
-    use std::sync::Arc;
-
-    use super::remove_terminal_session_if_current;
-    use portable_pty::{native_pty_system, CommandBuilder, PtySize};
-    use tokio::sync::Mutex;
-
-    use super::resolve_terminal_shell_path;
-    use crate::types::AppSettings;
-
-    fn build_test_terminal_session() -> Arc<super::TerminalSession> {
-        let pty_system = native_pty_system();
-        let pair = pty_system
-            .openpty(PtySize {
-                rows: 2,
-                cols: 2,
-                pixel_width: 0,
-                pixel_height: 0,
-            })
-            .expect("open test pty");
-        let shell_path = super::default_shell_path();
-        let mut cmd = CommandBuilder::new(shell_path);
-        #[cfg(not(windows))]
-        cmd.arg("-i");
-        let child = pair.slave.spawn_command(cmd).expect("spawn test shell");
-        let writer = pair.master.take_writer().expect("take test writer");
-        Arc::new(super::TerminalSession {
-            id: "terminal-test".to_string(),
-            master: Mutex::new(pair.master),
-            writer: Mutex::new(writer),
-            child: Mutex::new(child),
-        })
-    }
-
-    #[test]
-    fn resolve_terminal_shell_path_prefers_configured_path() {
-        let mut settings = AppSettings::default();
-        settings.terminal_shell_path =
-            Some("  C:\\Program Files\\PowerShell\\7\\pwsh.exe  ".to_string());
-
-        assert_eq!(
-            resolve_terminal_shell_path(&settings),
-            "C:\\Program Files\\PowerShell\\7\\pwsh.exe"
-        );
-    }
-
-    #[tokio::test]
-    async fn remove_terminal_session_if_current_only_removes_matching_session() {
-        let session = build_test_terminal_session();
-        let replacement = build_test_terminal_session();
-        let sessions: Mutex<HashMap<String, Arc<super::TerminalSession>>> = Mutex::new(
-            HashMap::from([("workspace:terminal".to_string(), Arc::clone(&session))]),
-        );
-
-        remove_terminal_session_if_current(&sessions, "workspace:terminal", &replacement).await;
-        assert!(sessions.lock().await.contains_key("workspace:terminal"));
-
-        remove_terminal_session_if_current(&sessions, "workspace:terminal", &session).await;
-        assert!(!sessions.lock().await.contains_key("workspace:terminal"));
-    }
 }

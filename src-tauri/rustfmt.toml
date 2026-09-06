@@ -1,8 +1,0 @@
-# 提交树不是 rustfmt-clean。稳定版 rustfmt 会顺着 lib.rs / mod.rs 的 `mod`
-# 把整棵 crate 重排；`skip_children` 是 nightly-only，这里不能开。
-# 因此：禁止全仓 cargo fmt；编辑器关闭 Rust formatOnSave。
-# 全仓 fmt 只能单独开纯格式 PR。
-edition = "2021"
-style_edition = "2021"
-reorder_modules = false
-reorder_imports = false

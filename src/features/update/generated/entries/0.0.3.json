@@ -1,9 +1,0 @@
-{
-  "id": "0.0.3",
-  "tagName": "v0.0.3",
-  "version": "0.0.3",
-  "title": "v0.0.3",
-  "dateLabel": "2026/02/05",
-  "englishBody": "✨ Features\n\n- Implement menu localization with i18n support\n- Expose Claude command library for slash command usage\n\n🐛 Fixes\n\n- Align Windows release artifacts with Tauri 2 outputs\n\n🔧 Improvements\n\n- Improve Windows CMake detection and refactor Claude engine",
-  "chineseBody": "✨ Features\n\n- 实现菜单国际化支持\n- 开放 Claude 命令库用于斜杠命令\n\n🐛 Fixes\n\n- 对齐 Windows 发布产物与 Tauri 2 输出\n\n🔧 Improvements\n\n- 改进 Windows CMake 检测并重构 Claude 引擎"
-}

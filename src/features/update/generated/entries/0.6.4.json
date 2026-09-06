@@ -1,9 +1,0 @@
-{
-  "id": "0.6.4",
-  "tagName": "v0.6.4",
-  "version": "0.6.4",
-  "title": "v0.6.4",
-  "dateLabel": "2026/07/03",
-  "englishBody": "✨ Features\n\n- Bump the app version to `0.6.4` across frontend package metadata and Tauri bundle configuration\n- rework file tree panel and add pinnable right-panel tabs\n- open deferred Claude images in the lightbox on click\n- let users pin open-app actions to the toolbar\n- merge same-segment thinking runs and refine reading UX\n- add anchor rail for jumping between user messages\n\n🐛 Fixes\n\n- keep the plan panel collapsed by default and on thread switch\n- stop `contain: strict` from collapsing scroll viewports to 0px",
-  "chineseBody": "✨ Features\n\n- 升级应用版本号到 `0.6.4`，同步前端包配置与 Tauri 打包配置\n- 重做文件树面板，并新增可固定的右侧面板标签页\n- 点击即可在灯箱中打开延迟加载的 Claude 图片\n- 支持将「打开应用」类操作固定到工具栏\n- 合并同段思考片段，并优化阅读体验\n- 新增锚点导航栏，用于在用户消息间快速跳转\n\n🐛 Fixes\n\n- 计划面板默认折叠，并在切换线程时保持折叠\n- 修复 `contain: strict` 导致滚动视口塌陷为 0px 的问题"
-}

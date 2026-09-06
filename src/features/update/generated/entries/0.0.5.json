@@ -1,9 +1,0 @@
-{
-  "id": "0.0.5",
-  "tagName": "v0.0.5",
-  "version": "0.0.5",
-  "title": "v0.0.5",
-  "dateLabel": "2026/02/07",
-  "englishBody": "✨ Features\n\n- Surface task status near composer to reduce context switching\n- Enable localized dictation and empty state text\n- Support localized UX and per-turn engine isolation\n- Persist auto-generated thread titles for reuse\n- Surface more thread and Claude history by default\n- Support new agent workflow across models and UI\n\n🐛 Fixes\n\n- Prevent dropped tool events and reduce UI friction across locales\n- Refresh pinned thread list on pin state changes\n- Prevent stale tool states and unify CLI-missing errors\n- Avoid auto-rename conflicts during parallel Claude runs\n- Streamline thread UX and tool status consistency",
-  "chineseBody": "✨ Features\n\n- 在 Composer 附近展示任务状态以减少上下文切换\n- 支持本地化语音输入和空状态文案\n- 支持本地化 UX 和每轮引擎隔离\n- 持久化自动生成的线程标题以供复用\n- 默认展示更多线程和 Claude 历史记录\n- 支持跨模型和 UI 的新 Agent 工作流\n\n🐛 Fixes\n\n- 防止工具事件丢失并减少跨语言环境的 UI 摩擦\n- Pin 状态变更时刷新置顶线程列表\n- 防止工具状态过期并统一 CLI 缺失错误\n- 避免并行 Claude 运行时的自动重命名冲突\n- 精简线程 UX 和工具状态一致性"
-}

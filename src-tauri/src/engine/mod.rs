@@ -1,788 +1,708 @@
-//! Multi-engine abstraction layer for CLI tools (Claude Code, Codex, Gemini, etc.)
-//!
-//! This module provides a unified interface for different AI coding assistants,
-//! allowing the application to seamlessly switch between engines while maintaining
-//! a consistent API.
-
-use serde::{Deserialize, Serialize};
-use serde_json::Value;
-
-pub(crate) mod adapter_registry;
-pub(crate) mod agent_event_bus;
-#[cfg(test)]
-mod capability_matrix;
 pub mod claude;
-pub mod claude_history;
-#[cfg(test)]
-mod claude_history_delete_tests;
-pub(crate) mod claude_history_entries;
-#[cfg(test)]
-mod claude_history_issue529_tests;
-pub(crate) mod claude_history_large_payload;
-#[cfg(test)]
-mod claude_history_large_payload_tests;
-#[cfg(test)]
-mod claude_history_list_budget_tests;
-#[cfg(test)]
-mod claude_history_window_fidelity_tests;
-pub(crate) mod claude_history_subagents;
-pub(crate) mod claude_message_content;
-pub(crate) mod cli_image_input;
-pub(crate) mod codex_adapter;
-pub(crate) mod codex_prompt_service;
-pub mod commands;
+pub mod codex;
 pub mod dsh;
-pub(crate) mod dsh_provider_profile;
-pub(crate) mod error_mapper;
-pub mod events;
-pub mod gemini;
-pub mod gemini_history;
-pub(crate) mod gemini_proxy_guard;
+pub mod pi_family;
 pub mod grok;
-pub mod grok_history;
-pub(crate) mod grok_provider_profile;
+pub mod images;
 pub mod kimi;
-pub mod kimi_history;
-pub(crate) mod kimi_provider_profile;
-pub mod manager;
-pub(crate) mod omp_provider_profile;
-pub mod opencode;
-pub(crate) mod opencode_native_artifact;
-pub(crate) mod opencode_provider_profile;
-pub mod pi;
-pub mod pi_auth;
-pub mod pi_models_config;
-pub mod pi_rpc;
-pub(crate) mod pi_history;
-pub(crate) mod pi_provider_profile;
-pub mod qoder;
-pub(crate) mod qoder_auth;
-pub mod qoder_history;
-pub(crate) mod qoder_provider_profile;
-pub(crate) mod remote_bridge;
-pub mod rewind_commands;
-pub mod session_directory_grant;
-pub mod session_history_commands;
-pub mod status;
-pub mod task_output;
+pub mod models;
 
-// Re-exports for convenience
-pub use commands::*;
-pub use manager::EngineManager;
-pub use pi_auth::{pi_auth_delete_credential, pi_auth_list_providers, pi_auth_set_api_key};
-pub use pi_models_config::{pi_models_config_read, pi_models_config_write};
-pub use qoder_auth::{qoder_auth_delete_pat, qoder_auth_set_pat, qoder_auth_status};
-pub use rewind_commands::*;
-pub use session_history_commands::*;
-pub use status::resolve_engine_type;
-pub use task_output::*;
+use crate::event_sink;
+use serde::Serialize;
+use serde_json::Value;
+use std::collections::HashMap;
+use std::path::PathBuf;
+use std::sync::{Arc, Mutex};
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::process::{Child, ChildStderr, ChildStdout, Command};
+use tokio::sync::Mutex as TokioMutex;
 
-/// Supported engine types
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(rename_all = "lowercase")]
-pub enum EngineType {
-    /// Claude Code by Anthropic
-    Claude,
-    /// Codex CLI
-    Codex,
-    /// Google Gemini CLI
-    Gemini,
-    /// xAI Grok CLI
-    Grok,
-    /// OpenCode CLI
-    OpenCode,
-    /// Kimi Code CLI
-    Kimi,
-    /// PI CLI
-    Pi,
-    /// OMP CLI (oh-my-pi, pi fork — shares the pi-family runtime)
-    Omp,
-    /// DeepSeek Harness (dsh web host)
-    Dsh,
-    /// Qoder CLI (ACP over stdio)
-    Qoder,
-}
-
-impl Default for EngineType {
-    fn default() -> Self {
-        EngineType::Claude // Default to Claude Code as per user requirement
-    }
-}
-
-impl EngineType {
-    /// Get display name for UI
-    pub fn display_name(&self) -> &'static str {
-        match self {
-            EngineType::Claude => "Claude Code",
-            EngineType::Codex => "Codex",
-            EngineType::Gemini => "Gemini",
-            EngineType::Grok => "Grok CLI",
-            EngineType::OpenCode => "OpenCode",
-            EngineType::Kimi => "Kimi CLI",
-            EngineType::Pi => "PI CLI",
-            EngineType::Omp => "OMP CLI",
-            EngineType::Dsh => "DeepSeek Harness",
-            EngineType::Qoder => "Qoder CLI",
-        }
-    }
-
-    /// Get icon identifier for UI
-    pub fn icon(&self) -> &'static str {
-        match self {
-            EngineType::Claude => "claude",
-            EngineType::Codex => "codex",
-            EngineType::Gemini => "gemini",
-            EngineType::Grok => "grok",
-            EngineType::OpenCode => "opencode",
-            EngineType::Kimi => "kimi",
-            EngineType::Pi => "pi",
-            EngineType::Omp => "omp",
-            EngineType::Dsh => "dsh",
-            EngineType::Qoder => "qoder",
-        }
-    }
-}
-/// pi-family identity spec（add-omp-engine）：omp 与 pi 协议面全等
-///（mossx-omp-capability-spike），运行时共享同一实现，全部身份差异收敛于此。
-/// thread id / pending 前缀直接复用 `icon()`（= serde id），不入 spec。
-#[derive(Debug, Clone, Copy)]
-pub(crate) struct PiFamilySpec {
-    pub engine: EngineType,
-    /// CLI binary name（`find_cli_binary` / spawn 用）
-    pub bin_name: &'static str,
-    /// 用户 home 下的引擎目录名（`.pi` / `.omp`）
-    pub home_dir_name: &'static str,
-    /// 面向用户的 CLI 短名（fallback catalog 条目 / 诊断文案用："PI" / "OMP"）
-    pub cli_label: &'static str,
-    /// local provider profile sentinel
-    pub local_profile_id: &'static str,
-}
-
-impl EngineType {
-    /// pi 族（pi / omp）身份 spec；非 pi 族引擎返回 None。
-    pub(crate) fn pi_family_spec(self) -> Option<PiFamilySpec> {
-        match self {
-            EngineType::Pi => Some(PiFamilySpec {
-                engine: EngineType::Pi,
-                bin_name: "pi",
-                home_dir_name: ".pi",
-                cli_label: "PI",
-                local_profile_id: pi_provider_profile::PI_LOCAL_PROVIDER_PROFILE_ID,
-            }),
-            EngineType::Omp => Some(PiFamilySpec {
-                engine: EngineType::Omp,
-                bin_name: "omp",
-                home_dir_name: ".omp",
-                cli_label: "OMP",
-                local_profile_id: omp_provider_profile::OMP_LOCAL_PROVIDER_PROFILE_ID,
-            }),
-            _ => None,
-        }
-    }
-
-    pub(crate) fn is_pi_family(self) -> bool {
-        self.pi_family_spec().is_some()
-    }
-    /// Per-engine feature capabilities（三处重复 match 的抽离：
-    /// disabled_engine_status / capability_matrix / commands 共用此口）。
-    pub(crate) fn features(self) -> EngineFeatures {
-        match self {
-            EngineType::Claude => EngineFeatures::claude(),
-            EngineType::Codex => EngineFeatures::codex(),
-            EngineType::Gemini => EngineFeatures::gemini(),
-            EngineType::Grok => EngineFeatures::grok(),
-            EngineType::OpenCode => EngineFeatures::opencode(),
-            EngineType::Kimi => EngineFeatures::kimi(),
-            EngineType::Pi => EngineFeatures::pi(),
-            EngineType::Omp => EngineFeatures::omp(),
-            EngineType::Dsh => EngineFeatures::dsh(),
-            EngineType::Qoder => EngineFeatures::qoder(),
-        }
-    }
-}
-
-pub(crate) fn engine_enabled_in_settings(
-    _settings: &crate::types::AppSettings,
-    engine_type: EngineType,
-) -> bool {
-    match engine_type {
-        EngineType::Gemini => crate::engine_policy::GEMINI_RUNTIME_ENABLED,
-        EngineType::OpenCode
-        | EngineType::Claude
-        | EngineType::Codex
-        | EngineType::Grok
-        | EngineType::Kimi
-        | EngineType::Pi
-        | EngineType::Omp
-        | EngineType::Dsh
-        | EngineType::Qoder => true,
-    }
-}
-
-/// 检测范围黑名单（refactor-engine-detection-pipeline D9 启用范围铁律）：
-/// 供应商页面关闭的引擎不进入检测环节（0 spawn）。只作用于 detect 路径，
-/// 不改变 switch/send 的既有「开关只控制可见性」语义。
-pub(crate) fn detection_disabled_engines(settings: &crate::types::AppSettings) -> Vec<EngineType> {
-    [
-        EngineType::Claude,
-        EngineType::Codex,
-        EngineType::Gemini,
-        EngineType::Grok,
-        EngineType::OpenCode,
-        EngineType::Kimi,
-        EngineType::Pi,
-        EngineType::Omp,
-        EngineType::Dsh,
-        EngineType::Qoder,
-    ]
-    .into_iter()
-    .filter(|engine_type| {
-        settings
-            .disabled_cli_engines
-            .iter()
-            .any(|id| id == engine_type.icon())
-    })
-    .collect()
-}
-
-pub(crate) fn engine_disabled_diagnostic(engine_type: EngineType) -> Option<&'static str> {
-    match engine_type {
-        EngineType::Gemini => Some(crate::engine_policy::GEMINI_DISABLED_DIAGNOSTIC),
-        EngineType::OpenCode
-        | EngineType::Claude
-        | EngineType::Codex
-        | EngineType::Grok
-        | EngineType::Kimi
-        | EngineType::Pi
-        | EngineType::Omp
-        | EngineType::Dsh
-        | EngineType::Qoder => None,
-    }
-}
-
-pub(crate) fn disabled_engine_status(engine_type: EngineType) -> EngineStatus {
-    let features = engine_type.features();
-    EngineStatus {
-        engine_type,
-        auth_state: crate::engine::AuthState::default(),
-        installed: false,
-        version: None,
-        bin_path: None,
-        home_dir: None,
-        models: Vec::new(),
-        default_model: None,
-        features,
-        error: engine_disabled_diagnostic(engine_type).map(str::to_string),
-    }
-}
-
-impl std::fmt::Display for EngineType {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.display_name())
-    }
-}
-
-/// 登录态三态（refactor-engine-detection-pipeline B6/D6）：detect phase 1 只做
-/// 同步凭据检查（多为 Unknown），spawn 型登录探测在 phase 2 异步补推。
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "snake_case")]
-pub enum AuthState {
-    #[default]
-    Unknown,
-    Authenticated,
-    RequiresLogin,
-}
-
-/// Engine installation and capability status
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct EngineStatus {
-    /// Engine type identifier
-    pub engine_type: EngineType,
-    /// 登录态（serde default 向后兼容 remote/daemon 与历史 last-good）。
-    #[serde(default)]
-    pub auth_state: AuthState,
-    /// Whether the CLI is installed and accessible
-    pub installed: bool,
-    /// CLI version string if available
-    pub version: Option<String>,
-    /// Path to the CLI binary
-    pub bin_path: Option<String>,
-    /// Home/config directory for the engine
-    pub home_dir: Option<String>,
-    /// Available models for this engine
-    pub models: Vec<ModelInfo>,
-    /// Default model ID
-    pub default_model: Option<String>,
-    /// Feature capabilities
-    pub features: EngineFeatures,
-    /// Error message if detection failed
-    pub error: Option<String>,
-}
-
-/// Model information
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct ModelInfo {
-    /// Unique model identifier (e.g., "claude-sonnet-4-5-20250929")
-    pub id: String,
-    /// Runtime model value passed to the CLI.
-    #[serde(default)]
-    pub model: String,
-    /// Human-readable name (e.g., "Claude Sonnet 4.5")
-    #[serde(rename = "displayName")]
-    pub name: String,
-    /// Whether this is the default model
-    #[serde(rename = "isDefault")]
-    pub default: bool,
-    /// Model description
-    #[serde(default)]
-    pub description: String,
-    /// Provider name (e.g., "anthropic", "openai")
-    #[serde(default)]
-    pub provider: Option<String>,
-    /// API/wire protocol, independent from provider identity.
-    #[serde(default)]
-    pub protocol: Option<String>,
-    /// Source owner used to explain catalog precedence.
-    #[serde(default)]
-    pub provenance: Option<String>,
-    /// Managed provider profile that owns this configured model.
-    #[serde(default)]
-    pub provider_profile_id: Option<String>,
-    #[serde(default)]
-    pub observed_at: Option<u64>,
-    #[serde(default)]
-    pub last_verified_at: Option<String>,
-    #[serde(default)]
-    pub lifecycle: Option<String>,
-    /// Discovery/configuration source for diagnostics.
-    #[serde(default = "default_model_source")]
-    pub source: String,
-    /// Adapter-owned reasoning effort ids exposed by the host catalog
-    /// (e.g. DSH llm.models reasoning.efforts: off/low/high/max).
-    #[serde(default)]
-    pub supported_reasoning_efforts: Vec<String>,
-    /// Model default reasoning effort, when the host declares one.
-    #[serde(default)]
-    pub default_reasoning_effort: Option<String>,
-}
-
-fn default_model_source() -> String {
-    "unknown".to_string()
-}
-
-impl ModelInfo {
-    pub fn new(id: impl Into<String>, name: impl Into<String>) -> Self {
-        let id = id.into();
-        Self {
-            model: id.clone(),
-            id,
-            name: name.into(),
-            default: false,
-            description: String::new(),
-            provider: None,
-            protocol: None,
-            provenance: None,
-            provider_profile_id: None,
-            observed_at: None,
-            last_verified_at: None,
-            lifecycle: None,
-            source: default_model_source(),
-            supported_reasoning_efforts: Vec::new(),
-            default_reasoning_effort: None,
-        }
-    }
-
-    pub fn as_default(mut self) -> Self {
-        self.default = true;
-        self
-    }
-
-    pub fn with_provider(mut self, provider: impl Into<String>) -> Self {
-        self.provider = Some(provider.into());
-        self
-    }
-
-    pub fn with_protocol(mut self, protocol: impl Into<String>) -> Self {
-        self.protocol = Some(protocol.into());
-        self
-    }
-
-    pub fn with_provenance(mut self, provenance: impl Into<String>) -> Self {
-        self.provenance = Some(provenance.into());
-        self
-    }
-
-    pub fn with_provider_profile_id(mut self, provider_profile_id: impl Into<String>) -> Self {
-        self.provider_profile_id = Some(provider_profile_id.into());
-        self
-    }
-
-    pub fn with_observed_at(mut self, observed_at: u64) -> Self {
-        self.observed_at = Some(observed_at);
-        self
-    }
-
-    pub fn with_fallback_freshness(
-        mut self,
-        last_verified_at: impl Into<String>,
-        lifecycle: impl Into<String>,
-    ) -> Self {
-        self.last_verified_at = Some(last_verified_at.into());
-        self.lifecycle = Some(lifecycle.into());
-        self
-    }
-
-    pub fn with_description(mut self, description: impl Into<String>) -> Self {
-        self.description = description.into();
-        self
-    }
-
-    pub fn with_reasoning(
-        mut self,
-        supported_reasoning_efforts: Vec<String>,
-        default_reasoning_effort: Option<String>,
-    ) -> Self {
-        self.supported_reasoning_efforts = supported_reasoning_efforts;
-        self.default_reasoning_effort = default_reasoning_effort;
-        self
-    }
-
-    pub fn with_runtime_model(mut self, model: impl Into<String>) -> Self {
-        self.model = model.into();
-        self
-    }
-
-    pub fn with_source(mut self, source: impl Into<String>) -> Self {
-        let source = source.into();
-        self.source = if source.trim().is_empty() {
-            default_model_source()
-        } else {
-            source
-        };
-        self
-    }
-}
-
-/// Engine feature capabilities
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct EngineFeatures {
-    /// Supports reasoning effort levels (low/medium/high)
-    pub reasoning_effort: bool,
-    /// Supports collaboration modes
-    pub collaboration_mode: bool,
-    /// Supports image input
-    pub image_input: bool,
-    /// Supports session resume/continue
-    pub session_resume: bool,
-    /// Supports tool/permission control
-    pub tools_control: bool,
-    /// Supports streaming output
-    pub streaming: bool,
-    /// Supports MCP (Model Context Protocol)
-    pub mcp: bool,
-}
-
-impl EngineFeatures {
-    /// Features for Claude Code
-    pub fn claude() -> Self {
-        Self {
-            reasoning_effort: true,
-            collaboration_mode: false,
-            image_input: true,
-            session_resume: true,
-            tools_control: true,
-            streaming: true,
-            mcp: true,
-        }
-    }
-
-    /// Features for Codex
-    pub fn codex() -> Self {
-        Self {
-            reasoning_effort: true,
-            collaboration_mode: true,
-            image_input: true,
-            session_resume: true,
-            tools_control: true,
-            streaming: true,
-            mcp: true,
-        }
-    }
-
-    /// Features for OpenCode
-    pub fn opencode() -> Self {
-        Self {
-            reasoning_effort: false,
-            collaboration_mode: false,
-            // `opencode run -f <file>` attaches local images/files to the message.
-            image_input: true,
-            session_resume: true,
-            tools_control: true,
-            streaming: true,
-            mcp: false,
-        }
-    }
-
-    /// Features for Gemini
-    pub fn gemini() -> Self {
-        Self {
-            reasoning_effort: false,
-            collaboration_mode: false,
-            image_input: true,
-            session_resume: true,
-            tools_control: true,
-            streaming: true,
-            mcp: true,
-        }
-    }
-
-    /// Features for Kimi CLI
-    pub fn kimi() -> Self {
-        Self {
-            reasoning_effort: false,
-            collaboration_mode: false,
-            // Headless: path tags + ReadMediaFile (print mode permission=auto).
-            image_input: true,
-            session_resume: true,
-            tools_control: true,
-            streaming: true,
-            mcp: false,
-        }
-    }
-
-    /// Features for Grok CLI
-    pub fn grok() -> Self {
-        Self {
-            // Grok CLI: `--reasoning-effort` / `--effort` (TUI + headless).
-            reasoning_effort: true,
-            collaboration_mode: false,
-            // Headless multimodal via `grok --prompt-file` ACP image blocks.
-            image_input: true,
-            session_resume: true,
-            tools_control: true,
-            streaming: true,
-            mcp: false,
-        }
-    }
-
-    pub fn pi() -> Self {
-        Self {
-            // PI: `--thinking` levels (off/minimal/low/medium/high/xhigh/max).
-            reasoning_effort: true,
-            collaboration_mode: false,
-            image_input: true,
-            session_resume: true,
-            tools_control: true,
-            streaming: true,
-            mcp: false,
-        }
-    }
-    /// Features for OMP CLI (oh-my-pi): protocol-identical pi fork
-    /// (mossx-omp-capability-spike) — same headless/RPC surface.
-    pub fn omp() -> Self {
-        Self::pi()
-    }
-
-    /// Features for DeepSeek Harness (host-managed tools / catalog).
-    pub fn dsh() -> Self {
-        Self {
-            reasoning_effort: true,
-            collaboration_mode: false,
-            image_input: true,
-            session_resume: true,
-            tools_control: true,
-            streaming: true,
-            mcp: false,
-        }
-    }
-
-    /// Features for Qoder CLI (ACP: reasoning_effort configOption, image blocks,
-    /// session resume/fork, MCP http/sse — per mossx-qoder-capability-spike).
-    pub fn qoder() -> Self {
-        Self {
-            reasoning_effort: true,
-            collaboration_mode: false,
-            image_input: true,
-            session_resume: true,
-            tools_control: true,
-            streaming: true,
-            mcp: true,
-        }
-    }
-}
-
-/// Parameters for sending a message to an engine
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct SendMessageParams {
-    /// The message text/prompt
-    pub text: String,
-    /// Model to use (optional, uses default if not specified)
-    pub model: Option<String>,
-    /// Reasoning effort level (for engines that support it)
-    pub effort: Option<String>,
-    /// Force-disable Claude Code extended thinking for this request.
-    pub disable_thinking: bool,
-    /// Access/permission mode
-    pub access_mode: Option<String>,
-    /// Image paths to include
-    pub images: Option<Vec<String>>,
-    /// Whether to continue from previous session
-    pub continue_session: bool,
-    /// Session ID to resume (for Claude)
+pub struct SendRequest {
     pub session_id: Option<String>,
-    /// Parent session ID to fork from (for Claude)
-    pub fork_session_id: Option<String>,
-    /// Agent id/name (for OpenCode)
-    pub agent: Option<String>,
-    /// Variant/reasoning mode (for OpenCode)
-    pub variant: Option<String>,
-    /// Collaboration mode settings (for Codex)
-    pub collaboration_mode: Option<Value>,
-    /// Optional external OpenSpec root to expose for the session.
-    pub custom_spec_root: Option<String>,
+    pub workspace: PathBuf,
+    pub prompt: String,
+    pub images: Vec<String>,
+    pub model: Option<String>,
+    /// Reasoning effort ("low" | "medium" | "high" | "xhigh" | "max"); engines without an
+    /// effort knob ignore it, engines with a narrower knob clamp.
+    pub effort: Option<String>,
 }
 
-impl Default for SendMessageParams {
-    fn default() -> Self {
-        Self {
-            text: String::new(),
-            model: None,
-            effort: None,
-            disable_thinking: false,
-            access_mode: None,
-            images: None,
-            continue_session: false,
-            session_id: None,
-            fork_session_id: None,
-            agent: None,
-            variant: None,
-            collaboration_mode: None,
-            custom_spec_root: None,
+pub struct BuiltCommand {
+    pub command: Command,
+    /// Written to stdin after spawn; stdin is then closed.
+    pub stdin_payload: Option<String>,
+    /// Temp files to remove once the process exits.
+    pub cleanup_files: Vec<PathBuf>,
+    /// Session id assigned before spawn (grok `-s <uuid>`).
+    pub preassigned_session_id: Option<String>,
+}
+
+pub enum EngineEvent {
+    /// Streaming text delta (append).
+    Delta(String),
+    /// Reasoning/thinking delta (append).
+    Thinking(String),
+    /// A completed message block (role, text).
+    Message { role: String, text: String },
+    /// Native session id became known.
+    SessionId(String),
+    /// Token usage snapshot from the engine.
+    Usage(Value),
+    /// Engine-reported error.
+    Error(String),
+    /// Turn finished successfully.
+    Done {
+        session_id: Option<String>,
+        usage: Option<Value>,
+    },
+}
+
+pub trait Engine: Send + Sync {
+    fn id(&self) -> &'static str;
+    fn build_command(
+        &self,
+        req: &SendRequest,
+        env: &HashMap<String, String>,
+        bin: &str,
+    ) -> Result<BuiltCommand, String>;
+    /// Parse one NDJSON stdout line into zero or more events.
+    fn parse_line(&self, line: &str, out: &mut Vec<EngineEvent>);
+    /// Whether this engine accepts image attachments.
+    fn supports_images(&self) -> bool;
+}
+
+pub fn engine_by_id(id: &str) -> Option<Box<dyn Engine>> {
+    match id {
+        "claude" => Some(Box::new(claude::ClaudeEngine)),
+        "kimi" => Some(Box::new(kimi::KimiEngine)),
+        "grok" => Some(Box::new(grok::GrokEngine)),
+        "codex" => Some(Box::new(codex::CodexEngine)),
+        "pi" => Some(Box::new(pi_family::pi())),
+        "omp" => Some(Box::new(pi_family::omp())),
+        "dsh" => Some(Box::new(dsh::DshEngine)),
+        _ => None,
+    }
+}
+
+/// Engine home dir: `$ENV_KEY` (with `~` expansion, as the CLIs resolve it)
+/// when set and non-empty, else `~/<default_dir>`.
+pub(crate) fn engine_home(env_key: Option<&str>, default_dir: &str) -> PathBuf {
+    if let Some(key) = env_key {
+        if let Some(value) = std::env::var_os(key).filter(|v| !v.is_empty()) {
+            let text = value.to_string_lossy();
+            if let Ok(expanded) = crate::open_app::expand_user_path(&text) {
+                return expanded;
+            }
+            return PathBuf::from(value);
+        }
+    }
+    dirs::home_dir().unwrap_or_default().join(default_dir)
+}
+
+/// A leading '-' would parse as a flag (pi also treats '@' as a file
+/// reference): prefix a space so the prompt stays positional text.
+pub(crate) fn safe_prompt_arg(prompt: &str) -> String {
+    if prompt.starts_with('-') || prompt.starts_with('@') {
+        format!(" {prompt}")
+    } else {
+        prompt.to_string()
+    }
+}
+
+// ==================== Process registry ====================
+
+/// Live engine child processes keyed by session key (native session id once
+/// known, otherwise the run id). Drop kills everything synchronously.
+pub struct ChildEntry {
+    pub child: Arc<TokioMutex<Child>>,
+    pub pid: u32,
+    /// The run id this entry started under; after a rekey the map key is the
+    /// native session id, but the frontend may still cancel by run id.
+    pub run_id: String,
+    /// Set by `kill()`: a user-initiated stop is not an error — at EOF the
+    /// runner commits the partial turn as done instead of pushing a bogus
+    /// "exited with status …" error.
+    pub killed: Arc<std::sync::atomic::AtomicBool>,
+}
+
+#[derive(Default)]
+pub struct ProcessRegistry(pub Mutex<HashMap<String, ChildEntry>>);
+
+/// Two concurrent runs of one session must never evict each other's entries:
+/// an evicted child leaks (no key routes an interrupt to it).
+impl ProcessRegistry {
+    fn insert(&self, key: String, entry: ChildEntry) {
+        if let Ok(mut map) = self.0.lock() {
+            map.insert(key, entry);
+        }
+    }
+
+    fn len(&self) -> usize {
+        self.0.lock().map(|map| map.len()).unwrap_or(0)
+    }
+
+    /// Move an entry to the native-session key once known. A colliding target
+    /// key belongs to another live run — keep both instead of overwriting.
+    fn rekey(&self, from: &str, to: String) {
+        if from == to {
+            return;
+        }
+        if let Ok(mut map) = self.0.lock() {
+            if map.contains_key(&to) {
+                return;
+            }
+            if let Some(entry) = map.remove(from) {
+                map.insert(to, entry);
+            }
+        }
+    }
+
+    /// Remove only if the entry is still the same child (pid match): a run
+    /// that lost its session key to nothing must not evict another run's
+    /// entry that now lives under that key.
+    fn remove_if_pid(&self, key: &str, pid: u32) {
+        if let Ok(mut map) = self.0.lock() {
+            if map.get(key).map(|entry| entry.pid) == Some(pid) {
+                map.remove(key);
+            }
+        }
+    }
+
+    pub fn kill(&self, key: &str) -> bool {
+        let entry = match self.0.lock() {
+            Ok(map) => map.get(key).map(|e| (e.pid, Arc::clone(&e.child), Arc::clone(&e.killed))),
+            Err(_) => None,
+        };
+        // Fallback: the frontend may cancel by run id after the entry was
+        // rekeyed to the native session id.
+        let entry = entry.or_else(|| {
+            self.0.lock().ok().and_then(|map| {
+                map.values()
+                    .find(|e| e.run_id == key)
+                    .map(|e| (e.pid, Arc::clone(&e.child), Arc::clone(&e.killed)))
+            })
+        });
+        let Some((pid, child, killed)) = entry else {
+            return false;
+        };
+        killed.store(true, std::sync::atomic::Ordering::SeqCst);
+        if let Ok(mut guard) = child.try_lock() {
+            // Pid-reuse guard: a reaped child's pid may already belong to
+            // someone else — never signal a group we no longer own.
+            match guard.try_wait() {
+                Ok(Some(_)) => {}
+                _ => {
+                    kill_process_group(pid);
+                    let _ = guard.start_kill();
+                }
+            }
+        } else {
+            // The runner holds the lock only while reaping post-EOF; that
+            // window is tiny and the kill flag already settles the turn.
+            kill_process_group(pid);
+        }
+        true
+    }
+
+    pub fn kill_all(&self) {
+        // Blocking lock on the teardown path: skipping children because the
+        // lock was briefly contended would leak engine processes.
+        let entries: Vec<ChildEntry> = match self.0.lock() {
+            Ok(mut map) => map.drain().map(|(_, e)| e).collect(),
+            Err(poisoned) => poisoned.into_inner().drain().map(|(_, e)| e).collect(),
+        };
+        for entry in entries {
+            kill_process_group(entry.pid);
+            if let Ok(mut guard) = entry.child.try_lock() {
+                let _ = guard.start_kill();
+            }
         }
     }
 }
 
-/// Engine configuration stored in app settings
-#[derive(Debug, Clone, Default, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct EngineConfig {
-    /// Custom binary path (overrides default)
-    pub bin_path: Option<String>,
-    /// Custom home/config directory
-    pub home_dir: Option<String>,
-    /// Additional CLI arguments
-    pub custom_args: Option<String>,
-    /// Default model for this engine
-    pub default_model: Option<String>,
+impl Drop for ProcessRegistry {
+    fn drop(&mut self) {
+        // &mut self makes locking unnecessary; poisoning must not skip the
+        // kill sweep either (a panicked run leaves live children).
+        let map = self.0.get_mut().unwrap_or_else(|e| e.into_inner());
+        for (_, entry) in map.drain() {
+            kill_process_group(entry.pid);
+            if let Ok(mut guard) = entry.child.try_lock() {
+                let _ = guard.start_kill();
+            }
+        }
+    }
+}
+/// SIGKILL the child's whole process group (spawn used `process_group(0)`,
+/// so pgid == pid). Grandchildren holding the stdout pipe die too, which is
+/// what lets the reader task observe EOF and drain the registry.
+#[cfg(unix)]
+fn kill_process_group(pid: u32) {
+    // SAFETY: kill with a negated pgid signals the group; no memory touched.
+    unsafe { libc::kill(-(pid as i32), libc::SIGKILL) };
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+#[cfg(not(unix))]
+fn kill_process_group(_pid: u32) {}
 
-    #[test]
-    fn engine_type_default_is_claude() {
-        assert_eq!(EngineType::default(), EngineType::Claude);
+// ==================== stderr redaction ====================
+
+/// Engine stderr can echo the provider env we injected; redact credential
+/// shapes before the tail is shown to the user in an error banner.
+fn redact_secrets(text: &str) -> String {
+    use std::sync::LazyLock;
+    static PATTERNS: LazyLock<Vec<regex::Regex>> = LazyLock::new(|| {
+        [
+            r"(?i)sk-[A-Za-z0-9_-]+",
+            r"(?i)bearer\s+\S+",
+            r"(?i)api[_-]?key\s*[=:]\s*\S+",
+            r"(?i)token\s*[=:]\s*\S+",
+        ]
+        .iter()
+        .filter_map(|p| regex::Regex::new(p).ok())
+        .collect()
+    });
+    let mut out = text.to_string();
+    for pattern in PATTERNS.iter() {
+        out = pattern.replace_all(&out, "***").into_owned();
+    }
+    out
+}
+
+// ==================== Commands ====================
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SendResult {
+    pub run_id: String,
+    pub session_id: Option<String>,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EngineInfo {
+    pub id: String,
+    pub available: bool,
+    pub supports_images: bool,
+}
+
+fn engine_bin(settings: &crate::settings::AppSettings, engine_id: &str) -> String {
+    if let Some(custom) = settings.bin_override(engine_id) {
+        let trimmed = custom.trim();
+        if !trimmed.is_empty() {
+            // Defense in depth: settings write validates too, but the file
+            // may have been hand-edited since.
+            match crate::settings::validate_bin_override(trimmed) {
+                Ok(path) => return path.to_string_lossy().to_string(),
+                Err(reason) => {
+                    eprintln!("[engine] ignoring invalid {engine_id} bin override: {reason}");
+                }
+            }
+        }
+    }
+    which::which(engine_id)
+        .map(|p| p.to_string_lossy().to_string())
+        .unwrap_or_else(|_| engine_id.to_string())
+}
+
+#[tauri::command]
+pub fn list_engines() -> Vec<EngineInfo> {
+    let settings = crate::settings::read_settings().unwrap_or_default();
+    crate::config::ENGINES
+        .iter()
+        .map(|id| {
+            let engine = engine_by_id(id).expect("known engine");
+            let available = match settings.bin_override(id) {
+                Some(custom) if !custom.trim().is_empty() => {
+                    crate::settings::validate_bin_override(custom).is_ok()
+                }
+                _ => which::which(id).is_ok(),
+            };
+            EngineInfo {
+                id: id.to_string(),
+                available,
+                supports_images: engine.supports_images(),
+            }
+        })
+        .collect()
+}
+
+/// Concurrent engine runs; past this the machine thrashes and the registry
+/// fan-out makes interrupts unreliable anyway.
+const MAX_CONCURRENT_RUNS: usize = 16;
+
+/// Resolved launch parameters for one send: request, binary, built command.
+struct Launch {
+    req: SendRequest,
+    bin: String,
+    built: BuiltCommand,
+    engine_impl: Box<dyn Engine>,
+    env: HashMap<String, String>,
+}
+
+fn prepare_launch(
+    engine: &str,
+    workspace_path: &str,
+    session_id: Option<String>,
+    prompt: String,
+    image_paths: Option<Vec<String>>,
+    model: Option<String>,
+    effort: Option<String>,
+) -> Result<Launch, String> {
+    let engine_impl = engine_by_id(engine).ok_or_else(|| format!("unknown engine: {engine}"))?;
+    let env = crate::config::resolve_provider_env(engine)?;
+    let settings = crate::settings::read_settings().unwrap_or_default();
+    let model = model
+        .filter(|m| !m.trim().is_empty())
+        .or_else(|| settings.default_models.get(engine).cloned())
+        .filter(|m| !m.trim().is_empty());
+    let effort = effort
+        .filter(|e| !e.trim().is_empty())
+        .or_else(|| settings.default_efforts.get(engine).cloned())
+        .filter(|e| !e.trim().is_empty());
+    let req = SendRequest {
+        session_id: session_id.filter(|s| !s.trim().is_empty()),
+        workspace: PathBuf::from(workspace_path),
+        prompt,
+        images: image_paths.unwrap_or_default(),
+        model,
+        effort,
+    };
+    let bin = engine_bin(&settings, engine);
+    let built = engine_impl.build_command(&req, &env, &bin)?;
+    Ok(Launch {
+        req,
+        bin,
+        built,
+        engine_impl,
+        env,
+    })
+}
+
+/// Stdin payload writer: engines consuming stream-json stdin get the payload
+/// then EOF (drop closes the pipe).
+fn spawn_stdin_writer(child: &mut Child, payload: Option<String>) {
+    let Some(payload) = payload else {
+        return;
+    };
+    if let Some(mut stdin) = child.stdin.take() {
+        tokio::spawn(async move {
+            let _ = stdin.write_all(payload.as_bytes()).await;
+            let _ = stdin.write_all(b"\n").await;
+            // drop closes stdin -> EOF
+        });
+    }
+}
+
+/// Stderr capture ring: keeps the last 4KB for the error banner.
+fn spawn_stderr_capture(stderr: ChildStderr) -> Arc<Mutex<String>> {
+    let buf = Arc::new(Mutex::new(String::new()));
+    let target = Arc::clone(&buf);
+    tokio::spawn(async move {
+        let mut reader = BufReader::new(stderr);
+        let mut line = String::new();
+        loop {
+            line.clear();
+            match reader.read_line(&mut line).await {
+                Ok(0) | Err(_) => break,
+                Ok(_) => {
+                    let mut guard = match target.lock() {
+                        Ok(g) => g,
+                        Err(p) => p.into_inner(),
+                    };
+                    guard.push_str(&line);
+                    if guard.len() > 4096 {
+                        let keep = guard.len() - 4096;
+                        guard.drain(..keep);
+                    }
+                }
+            }
+        }
+    });
+    buf
+}
+
+/// Mutable per-run streaming state shared by the reader loop's dispatch.
+struct TurnState {
+    seq: u64,
+    native_session_id: Option<String>,
+    saw_done: bool,
+    saw_error: bool,
+    saw_any_output: bool,
+}
+
+impl TurnState {
+    fn new(preassigned: Option<String>) -> Self {
+        Self {
+            seq: 0,
+            native_session_id: preassigned,
+            saw_done: false,
+            saw_error: false,
+            saw_any_output: false,
+        }
     }
 
-    #[test]
-    fn engine_type_display_names() {
-        assert_eq!(EngineType::Claude.display_name(), "Claude Code");
-        assert_eq!(EngineType::Codex.display_name(), "Codex");
-        assert_eq!(EngineType::Pi.display_name(), "PI CLI");
-        assert_eq!(EngineType::Omp.display_name(), "OMP CLI");
+    fn push(&mut self, sink: &Arc<event_sink::EventSink>, run_id: &str, engine_id: &str, kind: &str, data: Value) {
+        self.seq += 1;
+        sink.push(serde_json::json!({
+            "runId": run_id,
+            "sessionId": self.native_session_id,
+            "engine": engine_id,
+            "seq": self.seq,
+            "kind": kind,
+            "data": data,
+        }));
+    }
+}
+
+/// Everything the stdout reader task needs (moved in at spawn).
+struct RunContext {
+    sink: Arc<event_sink::EventSink>,
+    registry: Arc<ProcessRegistry>,
+    engine_impl: Box<dyn Engine>,
+    engine_id: String,
+    run_id: String,
+    pid: u32,
+    /// Session id fixed before spawn (grok `-s`); seeds TurnState.
+    preassigned_session_id: Option<String>,
+    child: Arc<TokioMutex<Child>>,
+    killed: Arc<std::sync::atomic::AtomicBool>,
+    cleanup_files: Vec<PathBuf>,
+    stderr_buf: Arc<Mutex<String>>,
+}
+
+impl RunContext {
+    /// Adopt a native session id: rekey the registry entry (no overwrite) and
+    /// remember it for subsequent event payloads.
+    fn adopt_session_id(&self, state: &mut TurnState, id: &str, announce: bool) {
+        if state.native_session_id.as_deref() == Some(id) {
+            return;
+        }
+        state.native_session_id = Some(id.to_string());
+        self.registry.rekey(&self.run_id, id.to_string());
+        if announce {
+            state.push(&self.sink, &self.run_id, &self.engine_id, "session", Value::String(id.to_string()));
+        }
     }
 
-    #[test]
-    fn omp_serializes_as_lowercase_id() {
-        // DB/JSONL 序列化兼容闸门：omp 以字符串 "omp" 落盘。
-        assert_eq!(serde_json::to_string(&EngineType::Omp).unwrap(), "\"omp\"");
-        let parsed: EngineType = serde_json::from_str("\"omp\"").unwrap();
-        assert_eq!(parsed, EngineType::Omp);
+    fn dispatch_event(&self, state: &mut TurnState, event: EngineEvent) {
+        match event {
+            EngineEvent::Delta(text) => {
+                state.push(&self.sink, &self.run_id, &self.engine_id, "delta", Value::String(text))
+            }
+            EngineEvent::Thinking(text) => {
+                state.push(&self.sink, &self.run_id, &self.engine_id, "thinking", Value::String(text))
+            }
+            EngineEvent::Message { role, text } => state.push(
+                &self.sink,
+                &self.run_id,
+                &self.engine_id,
+                "message",
+                serde_json::json!({ "role": role, "text": text }),
+            ),
+            EngineEvent::SessionId(id) => self.adopt_session_id(state, &id, true),
+            EngineEvent::Usage(usage) => {
+                state.push(&self.sink, &self.run_id, &self.engine_id, "usage", usage)
+            }
+            EngineEvent::Error(error) => {
+                state.saw_error = true;
+                state.push(&self.sink, &self.run_id, &self.engine_id, "error", Value::String(error));
+            }
+            EngineEvent::Done { session_id, usage } => {
+                state.saw_done = true;
+                if let Some(id) = session_id {
+                    self.adopt_session_id(state, &id, false);
+                }
+                state.push(&self.sink, &self.run_id, &self.engine_id, "done", serde_json::json!({ "usage": usage }));
+            }
+        }
+    }
+}
+
+/// Read NDJSON stdout until EOF, dispatch events, then settle the turn:
+/// registry cleanup, temp-file cleanup, and the terminal done/error event.
+async fn run_reader(stdout: ChildStdout, ctx: RunContext) {
+    let mut state = TurnState::new(ctx.preassigned_session_id.clone());
+    let mut reader = BufReader::new(stdout);
+    let mut line = String::new();
+    loop {
+        line.clear();
+        match reader.read_line(&mut line).await {
+            Ok(0) => break,
+            Ok(_) => {}
+            Err(_) => break,
+        }
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        state.saw_any_output = true;
+        let mut events = Vec::new();
+        ctx.engine_impl.parse_line(trimmed, &mut events);
+        for event in events {
+            ctx.dispatch_event(&mut state, event);
+        }
     }
 
-    #[test]
-    fn pi_family_spec_splits_identity_only() {
-        let pi = EngineType::Pi.pi_family_spec().expect("pi spec");
-        assert_eq!(pi.bin_name, "pi");
-        assert_eq!(pi.home_dir_name, ".pi");
-        assert_eq!(pi.local_profile_id, "__local_pi__");
-        let omp = EngineType::Omp.pi_family_spec().expect("omp spec");
-        assert_eq!(omp.bin_name, "omp");
-        assert_eq!(omp.home_dir_name, ".omp");
-        assert_eq!(omp.cli_label, "OMP");
-        assert_eq!(omp.local_profile_id, "__local_omp__");
-        assert!(EngineType::Claude.pi_family_spec().is_none());
-        assert!(EngineType::Omp.is_pi_family());
-        assert!(!EngineType::Qoder.is_pi_family());
+    // Wait for exit
+    let status = {
+        let mut guard = ctx.child.lock().await;
+        guard.wait().await.ok()
+    };
+    for path in &ctx.cleanup_files {
+        let _ = std::fs::remove_file(path);
     }
-
-    #[test]
-    fn engine_type_serialization() {
-        let claude = EngineType::Claude;
-        let json = serde_json::to_string(&claude).unwrap();
-        assert_eq!(json, "\"claude\"");
-
-        let parsed: EngineType = serde_json::from_str("\"codex\"").unwrap();
-        assert_eq!(parsed, EngineType::Codex);
+    if let Some(key) = state.native_session_id.clone() {
+        ctx.registry.remove_if_pid(&key, ctx.pid);
     }
+    ctx.registry.remove_if_pid(&ctx.run_id, ctx.pid);
 
-    #[test]
-    fn model_info_builder() {
-        let model = ModelInfo::new("test-model", "Test Model")
-            .as_default()
-            .with_provider("test-provider");
-
-        assert_eq!(model.id, "test-model");
-        assert!(model.default);
-        assert_eq!(model.provider, Some("test-provider".to_string()));
+    if !state.saw_done && !state.saw_error {
+        let stderr_tail = ctx
+            .stderr_buf
+            .lock()
+            .map(|g| g.trim().to_string())
+            .unwrap_or_default();
+        let failed = status.map(|s| !s.success()).unwrap_or(true);
+        let killed = ctx.killed.load(std::sync::atomic::Ordering::SeqCst);
+        if killed {
+            // User-initiated stop: commit whatever streamed so far as a
+            // normal turn end — a SIGKILL'd child is not a failure.
+            state.push(&ctx.sink, &ctx.run_id, &ctx.engine_id, "done", serde_json::json!({ "usage": null }));
+        } else if failed || !state.saw_any_output {
+            let mut message = format!(
+                "{} exited with status {}",
+                ctx.engine_id,
+                status
+                    .map(|s| s.to_string())
+                    .unwrap_or_else(|| "unknown".to_string())
+            );
+            if !stderr_tail.is_empty() {
+                message.push_str(&format!(": {}", redact_secrets(&stderr_tail)));
+            }
+            state.push(&ctx.sink, &ctx.run_id, &ctx.engine_id, "error", Value::String(message));
+        } else {
+            // Clean EOF without an explicit done line (kimi).
+            state.push(&ctx.sink, &ctx.run_id, &ctx.engine_id, "done", serde_json::json!({ "usage": null }));
+        }
     }
+    ctx.sink.flush();
+}
 
-    #[test]
-    fn engine_features_defaults() {
-        let claude = EngineFeatures::claude();
-        assert!(claude.reasoning_effort);
-        assert!(claude.image_input);
-        assert!(claude.session_resume);
-
-        let codex = EngineFeatures::codex();
-        assert!(codex.reasoning_effort);
-        assert!(codex.collaboration_mode);
-
-        let grok = EngineFeatures::grok();
-        assert!(grok.reasoning_effort);
-        assert!(grok.image_input);
-        assert!(!grok.mcp);
-
-        let pi = EngineFeatures::pi();
-        assert!(pi.reasoning_effort);
-        assert!(pi.image_input);
-        assert!(pi.session_resume);
-        assert!(!pi.mcp);
+#[tauri::command]
+pub async fn send_message(
+    state: tauri::State<'_, crate::AppState>,
+    engine: String,
+    workspace_path: String,
+    session_id: Option<String>,
+    prompt: String,
+    image_paths: Option<Vec<String>>,
+    model: Option<String>,
+    effort: Option<String>,
+) -> Result<SendResult, String> {
+    if state.processes.len() >= MAX_CONCURRENT_RUNS {
+        return Err(format!(
+            "too many concurrent runs ({MAX_CONCURRENT_RUNS}); wait for one to finish"
+        ));
     }
+    let launch = prepare_launch(
+        &engine,
+        &workspace_path,
+        session_id,
+        prompt,
+        image_paths,
+        model,
+        effort,
+    )?;
 
-    #[test]
-    fn gemini_runtime_policy_ignores_legacy_enabled_setting() {
-        let mut settings = crate::types::AppSettings::default();
-        settings.gemini_enabled = true;
-
-        assert!(!engine_enabled_in_settings(&settings, EngineType::Gemini));
-        assert_eq!(
-            engine_disabled_diagnostic(EngineType::Gemini),
-            Some(crate::engine_policy::GEMINI_DISABLED_DIAGNOSTIC)
-        );
+    let mut command = launch.built.command;
+    command
+        .stdin(if launch.built.stdin_payload.is_some() {
+            std::process::Stdio::piped()
+        } else {
+            std::process::Stdio::null()
+        })
+        .stdout(std::process::Stdio::piped())
+        .stderr(std::process::Stdio::piped())
+        .current_dir(&launch.req.workspace);
+    for (key, value) in &launch.env {
+        command.env(key, value);
     }
+    // Own process group so interrupt can kill the whole tree (grandchildren
+    // inherit the stdout pipe and would otherwise block EOF forever).
+    #[cfg(unix)]
+    command.process_group(0);
 
-    #[test]
-    fn opencode_is_always_enabled_regardless_of_legacy_setting() {
-        let mut settings = crate::types::AppSettings::default();
-        settings.opencode_enabled = false;
+    let mut child = match command.spawn() {
+        Ok(child) => child,
+        Err(error) => {
+            // Never strand the staging files build_command wrote (grok).
+            for path in &launch.built.cleanup_files {
+                let _ = std::fs::remove_file(path);
+            }
+            return Err(format!("failed to spawn {}: {error}", launch.bin));
+        }
+    };
 
-        assert!(engine_enabled_in_settings(&settings, EngineType::OpenCode));
-        assert_eq!(engine_disabled_diagnostic(EngineType::OpenCode), None);
-    }
+    spawn_stdin_writer(&mut child, launch.built.stdin_payload);
+
+    let run_id = uuid::Uuid::new_v4().to_string();
+    let pid = child.id().unwrap_or(0);
+    // Detach both pipes while we still own the child outright. A missing pipe
+    // after spawn is fatal: kill the child so it cannot run unobserved and
+    // unregistered.
+    let (stdout, stderr) = {
+        let pipes = child.stdout.take().zip(child.stderr.take());
+        match pipes {
+            Some(pair) => pair,
+            None => {
+                let _ = child.start_kill();
+                for path in &launch.built.cleanup_files {
+                    let _ = std::fs::remove_file(path);
+                }
+                return Err("missing stdout/stderr pipe after spawn".to_string());
+            }
+        }
+    };
+    let child = Arc::new(TokioMutex::new(child));
+    let killed = Arc::new(std::sync::atomic::AtomicBool::new(false));
+    state.processes.insert(
+        run_id.clone(),
+        ChildEntry {
+            child: Arc::clone(&child),
+            pid,
+            run_id: run_id.clone(),
+            killed: Arc::clone(&killed),
+        },
+    );
+
+    let stderr_buf = spawn_stderr_capture(stderr);
+    let ctx = RunContext {
+        sink: Arc::clone(&state.sink),
+        registry: Arc::clone(&state.processes),
+        engine_impl: launch.engine_impl,
+        engine_id: engine.clone(),
+        run_id: run_id.clone(),
+        pid,
+        preassigned_session_id: launch.built.preassigned_session_id.clone(),
+        child,
+        killed,
+        cleanup_files: launch.built.cleanup_files,
+        stderr_buf,
+    };
+    tokio::spawn(run_reader(stdout, ctx));
+
+    Ok(SendResult {
+        run_id,
+        session_id: launch.built.preassigned_session_id,
+    })
+}
+
+#[tauri::command]
+pub fn interrupt_session(
+    state: tauri::State<'_, crate::AppState>,
+    session_id: String,
+) -> bool {
+    state.processes.kill(&session_id)
 }
