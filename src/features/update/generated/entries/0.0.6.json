@@ -1,9 +1,0 @@
-{
-  "id": "0.0.6",
-  "tagName": "v0.0.6",
-  "version": "0.0.6",
-  "title": "v0.0.6",
-  "dateLabel": "2026/02/07",
-  "englishBody": "✨ Features\n\n- Make agent activity easier to scan in chat messages\n- Enable archive for Claude Code CLI threads with local data deletion\n\n🐛 Fixes\n\n- Reduce homepage whitespace to improve first-screen clarity\n- Keep recent conversations visible for Claude threads\n- Extract tool action description for inline summary display\n\n🔧 Improvements\n\n- Remove tool-group headers and improve tool summary labels\n- Switch tool rendering from block cards to inline style",
-  "chineseBody": "✨ Features\n\n- 使聊天消息中的 Agent 活动更易浏览\n- 支持 Claude Code CLI 线程归档与本地数据删除\n\n🐛 Fixes\n\n- 减少首页空白以改善首屏清晰度\n- 保持 Claude 线程的最近对话可见\n- 提取工具操作描述用于内联摘要显示\n\n🔧 Improvements\n\n- 移除工具组头部并改进工具摘要标签\n- 将工具渲染从卡片块切换为内联样式"
-}

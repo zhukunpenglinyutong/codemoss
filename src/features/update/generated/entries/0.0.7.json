@@ -1,9 +1,0 @@
-{
-  "id": "0.0.7",
-  "tagName": "v0.0.7",
-  "version": "0.0.7",
-  "title": "v0.0.7",
-  "dateLabel": "2026/02/07",
-  "englishBody": "✨ Features\n\n- Reduce context switching with in-app editing and panelized kanban\n- Reduce context-switch errors and improve task triage in kanban\n- Stabilize UX with file-backed state and richer kanban flows\n- Add kanban mode to manage AI tasks without chat clutter",
-  "chineseBody": "✨ Features\n\n- 通过应用内编辑和面板化看板减少上下文切换\n- 减少看板上下文切换错误并改进任务分类\n- 通过文件持久化状态和更丰富的看板流程稳定 UX\n- 新增看板模式，无需聊天即可管理 AI 任务"
-}

@@ -1,9 +1,0 @@
-{
-  "id": "0.2.7",
-  "tagName": "v0.2.7",
-  "version": "0.2.7",
-  "title": "v0.2.7",
-  "dateLabel": "2026/03/12",
-  "englishBody": "✨ Features\n\n- Add global network proxy settings and proxy status exposure\n- Optimize compact summary display in Git Diff and history workspaces\n- Improve file viewer Markdown defaults, theme readability, and wide-content no-wrap rendering consistency\n\n🐛 Fixes\n\n- Fix Codex startup compensation, timeout recovery, and plan presentation regressions\n- Align summary indicator styles across Diff and Git History views\n- Refine diff viewer theme backgrounds for better visual consistency",
-  "chineseBody": "✨ Features\n\n- 新增全局网络代理设置与代理状态透出\n- 优化 Git Diff 与历史工作区紧凑摘要展示\n- 改进文件查看器 Markdown 默认模式、主题可读性与宽内容 no-wrap 渲染一致性\n\n🐛 Fixes\n\n- 修复 Codex 启动补偿、超时恢复与计划展示回归问题\n- 统一 Diff 与 Git 历史摘要指示器样式对齐\n- 优化 Diff Viewer 主题背景以提升视觉一致性"
-}

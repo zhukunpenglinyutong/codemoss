@@ -1,9 +1,0 @@
-{
-  "id": "0.4.1",
-  "tagName": "v0.4.1",
-  "version": "0.4.1",
-  "title": "v0.4.1",
-  "dateLabel": "2026/04/16",
-  "englishBody": "✨ Features\n\n- Land shared-session capability scoped to Claude/Codex engines with cross-engine session sharing and message normalization\n- Implement sidebar caching and refactor app-shell to improve workspace switching and sidebar loading performance\n- Support deleted-file detection in rewind scenarios with optional workspace file restoration for stronger rollback completeness\n\n🔧 Improvements\n\n- Make the workspace home entry flow safer and easier to reach, lowering the first-visit barrier\n- Remove hardcoded sidebar colors and unify with theme variables for better multi-theme consistency\n\n🐛 Fixes\n\n- Fix LaTeX mixed-content rendering issues in message bodies to improve technical content readability\n- Fix shared-session compatibility and message normalization edge cases\n- Integrate shared-session flow without regressing workspace-home refresh behavior",
-  "chineseBody": "✨ Features\n\n- 落地共享会话能力并收口至 Claude/Codex 引擎，支持跨引擎会话共享与消息归一化\n- 实现侧栏缓存机制并重构 app-shell，提升工作区切换与侧栏加载性能\n- 支持回溯场景下删除文件的识别与可选工作区文件恢复，增强回溯操作完整性\n\n🔧 Improvements\n\n- 优化工作区首页进入流程，降低首次进入门槛并提升安全性\n- 移除侧栏硬编码颜色，统一使用主题变量，提升多主题一致性\n\n🐛 Fixes\n\n- 修复正文中 LaTeX 与普通文本混排时的渲染异常，提升技术内容阅读体验\n- 修复共享会话在兼容性与消息归一化链路中的边界问题\n- 修复共享会话流程与工作区首页刷新之间的回归冲突"
-}

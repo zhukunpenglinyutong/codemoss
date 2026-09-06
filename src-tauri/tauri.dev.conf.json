@@ -1,8 +1,0 @@
-{
-  "$schema": "https://schema.tauri.app/config/2",
-  "productName": "ccgui-dev",
-  "identifier": "com.zhukunpenglinyutong.ccgui.dev",
-  "build": {
-    "devUrl": "http://localhost:1430"
-  }
-}

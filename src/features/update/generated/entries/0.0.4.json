@@ -1,9 +1,0 @@
-{
-  "id": "0.0.4",
-  "tagName": "v0.0.4",
-  "version": "0.0.4",
-  "title": "v0.0.4",
-  "dateLabel": "2026/02/06",
-  "englishBody": "✨ Features\n\n- Optimize UI spacing and thread display threshold\n- Change workspace delete dialog wording to \"remove\" for i18n",
-  "chineseBody": "✨ Features\n\n- 优化 UI 间距和线程显示阈值\n- 国际化：将工作区删除对话框措辞改为\"移除\""
-}

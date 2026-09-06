@@ -1,9 +1,0 @@
-{
-  "id": "0.0.9",
-  "tagName": "v0.0.9",
-  "version": "0.0.9",
-  "title": "v0.0.9",
-  "dateLabel": "2026/02/08",
-  "englishBody": "✨ Features\n\n- Reduce file-management friction and i18n drift in workspaces\n- Redesign workspace landing with guided starts and conversation entry\n- Polish worktree/session sections and collapse interactions in sidebar\n- Improve kanban linking UX and routed send behavior\n\n🐛 Fixes\n\n- Reduce confusing UI states when tooling context is missing\n- Reduce install friction and UI jank across core workflows",
-  "chineseBody": "✨ Features\n\n- 减少工作区文件管理摩擦和国际化偏差\n- 重新设计工作区着陆页，引导启动和对话入口\n- 优化侧栏工作树/会话区域和折叠交互\n- 改进看板链接 UX 和路由发送行为\n\n🐛 Fixes\n\n- 减少工具上下文缺失时的困惑 UI 状态\n- 减少核心流程中的安装摩擦和 UI 卡顿"
-}

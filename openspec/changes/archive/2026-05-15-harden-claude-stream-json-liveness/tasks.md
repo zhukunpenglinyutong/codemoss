@@ -1,7 +1,0 @@
-- [x] 1.1 [P0][depends:none][I: issue #557 analysis + current Claude engine code][O: OpenSpec proposal/design/spec deltas][V: `openspec validate harden-claude-stream-json-liveness --strict --no-interactive`] Define Claude stream-json liveness contract.
-- [x] 2.1 [P0][depends:1.1][I: `src-tauri/src/engine/claude.rs`][O: first-valid-event timeout guard][V: focused Rust tests] Add bounded wait for the first valid Claude stream-json event.
-- [x] 2.2 [P0][depends:2.1][I: active Claude child handle lifecycle][O: timeout path terminates child and emits `TurnError`][V: fake silent child test] Ensure silent stream timeout settles lifecycle and stops the child.
-- [x] 2.3 [P1][depends:2.1][I: invalid stdout/stderr buffers][O: truncated diagnostic message][V: malformed stream test] Preserve diagnosable output without dumping large or sensitive payloads.
-- [x] 3.1 [P0][depends:2.2][I: fake Claude scripts/tests][O: regression tests for silent, malformed, and valid-first-event paths][V: `cargo test --manifest-path src-tauri/Cargo.toml send_message_ -- --nocapture`] Add focused backend regression coverage.
-- [x] 4.1 [P0][depends:3.1][I: implementation + specs][O: validated change][V: `openspec validate harden-claude-stream-json-liveness --strict --no-interactive`] Run OpenSpec validation.
-- [x] 4.2 [P1][depends:3.1][I: frontend lifecycle tests if event shape changes][O: confirmation that existing `turn/error` settlement still clears processing][V: `npx vitest run src/features/threads/hooks/useThreadEventHandlers.test.ts`] Run or update focused frontend validation.

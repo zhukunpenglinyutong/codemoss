@@ -1,9 +1,0 @@
-{
-  "id": "0.4.4",
-  "tagName": "v0.4.4",
-  "version": "0.4.4",
-  "title": "v0.4.4",
-  "dateLabel": "2026/04/20",
-  "englishBody": "✨ Features\n\n- Add project-scoped session management with project-level aggregation and attribution routing, making in-project session history easier to manage\n\n🔧 Improvements\n\n- Tighten the startup icon lazy-loading path to reduce unnecessary startup overhead and improve first-screen stability\n- Archive the project-session-management scope correction proposal so behavior docs stay aligned with the delivered implementation\n\n🐛 Fixes\n\n- Fix repeated loading for projects with no sessions, preventing empty projects from triggering redundant refresh loops\n- Fix an icon lazy-loading regression so startup resource-path changes no longer break icon rendering",
-  "chineseBody": "✨ Features\n\n- 新增项目范围会话管理能力，支持按项目聚合会话并进行归属路由，让项目内历史会话更容易集中管理\n\n🔧 Improvements\n\n- 收口启动期图标懒加载链路，减少启动阶段不必要的资源开销，提升首屏进入稳定性\n- 归档项目会话管理范围修正提案，使行为说明与已落地实现保持一致\n\n🐛 Fixes\n\n- 修复空项目会话重复加载问题，避免无会话项目反复触发无效刷新\n- 修复图标懒加载回归，避免启动阶段因资源加载路径变化导致图标展示异常"
-}

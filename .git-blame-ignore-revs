@@ -1,5 +1,0 @@
-# 纯格式提交收录于此，避免 git blame 指向格式化噪音。
-# 详见 AGENTS.md「Rust Format Gate」。
-
-ddf590b706e8fe8575d9199670cbfbdae021feeb # style(src-tauri): 全仓应用 rustfmt 与 clippy 自动修复
-fb853623ce4b8c096e8b8fc6403cc2b6c32f4a9f # style(src-tauri): 修复全仓 rustfmt sweep 残留的 11 个文件违规

@@ -1,9 +1,0 @@
-{
-  "id": "0.4.2",
-  "tagName": "v0.4.2",
-  "version": "0.4.2",
-  "title": "v0.4.2",
-  "dateLabel": "2026/04/16",
-  "englishBody": "✨ Features\n\n- Gradually open Claude Code planning mode and default mode, completing the rollout path from preview to default availability\n- Complete the Claude default-mode approval bridge and conversation continuity refactor to improve context continuity during plan-to-execution transitions\n\n🐛 Fixes\n\n- Fix duplicate assistant outputs and fallback misclassification in shared-session curtain rendering\n- Improve Codex/Claude math rendering compatibility and conversation de-duplication behavior\n- Fix legacy engine regex compatibility and harden cross-platform command stability\n- Fix repeated OpenCode session probing during focus refresh\n- Fix duplicated user messages after selecting an agent in Codex\n- Align physical rewind truncation and fix offset drift across multi-round rollback\n- Add fallback diagnostics for Claude permission-denied scenarios to reduce troubleshooting cost when approvals fail\n- Tighten Claude progressive-rollout approval flow, plan-card rendering, and mode-boundary handling",
-  "chineseBody": "✨ Features\n\n- 渐进开放 Claude Code planning mode 与默认模式，补齐从预览到默认可用的发布链路\n- 完成 Claude 默认模式审批桥与对话连续性改造，提升计划执行切换时的上下文连贯性\n\n🐛 Fixes\n\n- 修复共享会话幕布中 assistant 重复输出与 fallback 误判\n- 提升 Codex/Claude 数学公式渲染与会话去重兼容性\n- 修复旧引擎正则兼容并增强跨平台命令稳定性\n- 修复焦点刷新反复触发 opencode 会话探测问题\n- 修复 Codex 选择智能体后用户消息双份回归\n- 对齐物理回溯截断并修复多轮回退错位\n- 补充 Claude 权限拒绝场景的兜底诊断，降低审批失败时的定位成本\n- 完善 Claude 渐进式 rollout 的审批链路、计划卡片渲染与模式边界处理"
-}

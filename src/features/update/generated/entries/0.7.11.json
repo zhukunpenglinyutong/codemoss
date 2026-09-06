@@ -1,9 +1,0 @@
-{
-  "id": "0.7.11",
-  "tagName": "v0.7.11",
-  "version": "0.7.11",
-  "title": "v0.7.11",
-  "dateLabel": "2026/07/28",
-  "englishBody": "✨ Features\n\n- A new engine joins: you can now chat with Grok directly in the app\n- The OpenCode engine is back, adding one more runtime to choose from\n\n🔧 Improvements\n\n- Buttons in danger-confirmation dialogs now wrap on narrow windows instead of cramming together\n- Diagnostic labels in Settings are no longer bold, making the page cleaner\n\n🐛 Fixes\n\n- Manually renamed session titles now display correctly (including Grok sessions)\n- Under light themes, native controls like dropdowns no longer show up as dark patches\n- Closed terminals are cleaned up safely — no more zombie sessions\n- Font rendering is more consistent across desktop platforms",
-  "chineseBody": "✨ Features\n\n- 新引擎上岗：Grok 现在可以直接在 App 里开聊了\n- OpenCode 引擎回归，可用的运行时又多一个\n\n🔧 Improvements\n\n- 危险操作确认弹窗的按钮在窄窗口下会自动换行，不再挤成一团\n- 设置页诊断标签不再加粗，页面更清爽\n\n🐛 Fixes\n\n- 手动重命名过的会话标题能正常显示了（含 Grok 会话）\n- 浅色主题下，下拉框等系统原生控件不再冒出深色「补丁」\n- 关闭的终端会被安全清理，不再留下「僵尸终端」\n- 字体渲染在各桌面平台上表现更一致"
-}

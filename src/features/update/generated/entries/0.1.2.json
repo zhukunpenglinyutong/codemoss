@@ -1,9 +1,0 @@
-{
-  "id": "0.1.2",
-  "tagName": "v0.1.2",
-  "version": "0.1.2",
-  "title": "v0.1.2",
-  "dateLabel": "2026/02/09",
-  "englishBody": "✨ Features\n\n- Prefer local discovery for faster offline skill listing\n- Keep CLI settings and model names in sync for Claude\n- Support Claude inherit and composer click-outside close\n- Let users switch AI providers and reliably stop sessions\n\n🐛 Fixes\n\n- Update Haiku model and add Opus 1M variant\n\n🔧 Improvements\n\n- Upgrade release runner to ubuntu-24.04 for newer tooling",
-  "chineseBody": "✨ Features\n\n- 优先本地发现以加速离线 Skill 列表\n- 保持 Claude CLI 设置与模型名称同步\n- 支持 Claude 继承与 Composer 点击外部关闭\n- 支持用户切换 AI 供应商并可靠停止会话\n\n🐛 Fixes\n\n- 更新 Haiku 模型并添加 Opus 1M 变体\n\n🔧 Improvements\n\n- 升级发布 Runner 到 ubuntu-24.04 以使用更新的工具链"
-}

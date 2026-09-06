@@ -1,8 +1,0 @@
-{
-  "name": "xmlchars",
-  "version": "2.2.0",
-  "description": "Utilities for determining if characters belong to character classes defined by the XML specs.",
-  "main": "xmlchars.js",
-  "types": "xmlchars.d.ts",
-  "license": "MIT"
-}
