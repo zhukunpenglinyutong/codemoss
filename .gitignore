@@ -1,0 +1,28 @@
+# Dependencies
+node_modules
+
+# Build output
+dist
+src-tauri/target
+src-tauri/gen
+
+# Secrets — never commit
+.env
+.env.*
+*.pem
+*.key
+*.p12
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Local agent / editor tooling
+.claude/
+.agents/
+.omp/
+.playwright-mcp/
+.vscode/
+skills-lock.json
+boardui.dev.env
+CLAUDE.md

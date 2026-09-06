@@ -1,0 +1,728 @@
+/* ---------------------------------------------------------------------------
+ * BoardUI theme tokens
+ *
+ * Layered as Tailwind v4 expects:
+ *   @theme { ... }     primitives + ramp overrides → Tailwind utilities
+ *   :root { ... }      semantic tokens (light mode) — reference primitives
+ *   .dark { ... }      semantic overrides (dark mode) — landed when designed
+ *   @theme inline {..} re-export of semantic tokens so they become utilities
+ *
+ * See docs/FIGMA_WORKFLOW.md for how tokens get added (Figma is source of truth).
+ * --------------------------------------------------------------------------- */
+
+@theme {
+  /* ----- Color primitives ----------------------------------------------------
+   * Almost the entire palette matches Tailwind v4's OKLCH defaults. The four
+   * overrides below are the only intentional deviations (see Figma → variables
+   * → color/...).
+   * --------------------------------------------------------------------------*/
+  --color-slate-200:   #ebeff5;
+  --color-neutral-100: #f7f7f7;
+  --color-neutral-200: #ebebeb;
+  --color-neutral-925: #121212;
+  --color-blue-400:    #3392ff;
+
+  /* ----- Accent ramp ---------------------------------------------------------
+   * The CTA hue. Interactive/selection surfaces (primary button gradient,
+   * ghost + link buttons, checkbox, tabs, sidebar selected, focus ring)
+   * reference accent-* instead of a raw hue, so the whole system re-tints by
+   * overriding these eleven variables (edit them here, or at runtime after
+   * importing this file). Defaults to the blue primitives above. Content/data
+   * blues (charts, status chips, info notifications) deliberately keep
+   * referencing blue-*.
+   * --------------------------------------------------------------------------*/
+  --color-accent-50:  var(--color-blue-50);
+  --color-accent-100: var(--color-blue-100);
+  --color-accent-200: var(--color-blue-200);
+  --color-accent-300: var(--color-blue-300);
+  --color-accent-400: var(--color-blue-400);
+  --color-accent-500: var(--color-blue-500);
+  --color-accent-600: var(--color-blue-600);
+  --color-accent-700: var(--color-blue-700);
+  --color-accent-800: var(--color-blue-800);
+  --color-accent-900: var(--color-blue-900);
+  --color-accent-950: var(--color-blue-950);
+
+  /* ----- Typography ----------------------------------------------------------
+   * Font sizes, weights, line-heights, and tracking all match Tailwind v4
+   * defaults. The only override is the family: Inter Variable, loaded locally
+   * via @fontsource-variable/inter (imported in src/index.css) and exposed to
+   * the document as --font-inter (see :root below).
+   * --------------------------------------------------------------------------*/
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif,
+               "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol",
+               "Noto Color Emoji";
+
+  /* Monospace ramp for code blocks: JetBrains Mono Variable, loaded locally
+   * via @fontsource-variable/jetbrains-mono and exposed as --font-mono-source.
+   * Figma's spec uses IBM Plex Mono; JetBrains Mono is the closest bundled
+   * face. */
+  --font-mono: var(--font-mono-source), ui-monospace, "SFMono-Regular", Menlo,
+               Consolas, "Liberation Mono", monospace;
+
+  /* ----- Radii ---------------------------------------------------------------
+   * Extra step between lg (8) and xl (12). Used by medium-size buttons.
+   * Figma name: radius/2lg.
+   * --------------------------------------------------------------------------*/
+  --radius-2lg: 10px;
+  --radius-notification-card: 10px;
+
+  /* ----- Shadows -------------------------------------------------------------
+   * 2xs, xs, 2xl and the inner shadows already match Tailwind v4. Sizes sm, md,
+   * lg, xl follow the Figma 6%/10% recipe (slightly softer than Tailwind v4's
+   * 10%/10% default).
+   * --------------------------------------------------------------------------*/
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.06), 0 1px 3px 0 rgb(0 0 0 / 0.10);
+  --shadow-md: 0 2px 4px -1px rgb(0 0 0 / 0.06), 0 4px 6px -1px rgb(0 0 0 / 0.10);
+  --shadow-lg: 0 4px 6px -2px rgb(0 0 0 / 0.05), 0 10px 15px -3px rgb(0 0 0 / 0.10);
+  --shadow-xl: 0 10px 10px -5px rgb(0 0 0 / 0.04), 0 20px 25px -5px rgb(0 0 0 / 0.10);
+
+  /* Figma effect style "Background/Sidebar Elevation" — copied 1:1:
+   *   DROP_SHADOW #00000005 offset(0,1) radius 0  spread 0  → 0 1px 0px  0 / 0.0196
+   *   DROP_SHADOW #0000000F offset(0,1) radius 12 spread 0  → 0 1px 12px 0 / 0.0588
+   *   DROP_SHADOW #00000052 offset(0,0) radius 1  spread 0  → 0 0   1px  0 / 0.3216
+   * (alpha = hex byte / 255: 05→0.0196, 0F→0.0588, 52→0.3216). */
+  --shadow-sidebar:
+    0 1px 0 0 rgb(0 0 0 / 0.0196),
+    0 1px 12px 0 rgb(0 0 0 / 0.0588),
+    0 0 1px 0 rgb(0 0 0 / 0.3216);
+
+  /* Figma effect style "Sidebar selected" — copied 1:1:
+   *   DROP_SHADOW  color/blue/500 offset(0,0) radius 0 spread 1 → 0 0 0 1px blue-500
+   *   INNER_SHADOW #FFFFFF40       offset(0,1) radius 0 spread 0 → inset 0 1px 0 0 / 0.251
+   * (#FFFFFF40 alpha = 0x40/255 = 0.251). */
+  --shadow-nav-selected:
+    0 0 0 1px var(--color-accent-500),
+    inset 0 1px 0 0 rgb(255 255 255 / 0.251);
+
+  /* Checkbox checked/indeterminate surface (from the Figma Checkbox component):
+   * inner top highlight + 1px inner blue edge over the primary gradient. */
+  --shadow-checkbox-selected:
+    inset 0 2px 0 0 rgb(255 255 255 / 0.25),
+    inset 0 0 0 1px var(--color-accent-500);
+
+  /* 1px contact shadow used on white cards/dropdown triggers sitting on the
+   * secondary background (Figma drop shadow 0 1 1 5%). */
+  --shadow-card: 0 1px 1px 0 rgb(0 0 0 / 0.05);
+
+  /* Floating menu/dropdown panel (Figma → sidebar profile menu node 3823:3699):
+   *   DROP_SHADOW #0000000A offset(0,1) radius 1 → 0 1px 1px 0 / 0.04
+   *   DROP_SHADOW #00000005 offset(0,4) radius 4 → 0 4px 4px 0 / 0.02 */
+  --shadow-dropdown:
+    0 1px 1px 0 rgb(0 0 0 / 0.04),
+    0 4px 4px 0 rgb(0 0 0 / 0.02);
+
+  /* Inner shadows (Figma names inner-shadow/*; Tailwind utility prefix is
+   * inset-shadow-*).
+   */
+  --inset-shadow-2xs: inset 0 1px 0 0 rgb(0 0 0 / 0.05);
+  --inset-shadow-xs:  inset 0 1px 1px 0 rgb(0 0 0 / 0.05);
+  --inset-shadow-sm:  inset 0 2px 4px 0 rgb(0 0 0 / 0.05);
+}
+
+/* ---------------------------------------------------------------------------
+ * Semantic tokens — light mode.
+ *
+ * All values reference primitives via var(--color-{family}-{shade}). Edit the
+ * primitives in @theme above and these update automatically.
+ *
+ * Figma name on the left, var name on the right:
+ *   foreground/full                  → --color-foreground-full
+ *   foreground/icon/primary          → --color-foreground-icon-primary
+ *   foreground/disabled              → --color-foreground-disabled
+ *   foreground/disabled-danger       → --color-foreground-disabled-danger
+ *   text/primary                     → --color-text-primary
+ *   text/tertiary                    → --color-text-tertiary
+ *   text/disabled-danger             → --color-text-disabled-danger
+ *   background/primary/default       → --color-background-primary-default
+ *   background/primary/hover         → --color-background-primary-hover
+ *   background/primary/active        → --color-background-primary-active
+ *   background/primary/disabled      → --color-background-primary-disabled
+ *   background/secondary/default     → --color-background-secondary-default
+ *   border/button/default            → --color-border-button-default
+ *   border/button/hover              → --color-border-button-hover
+ *   border/button/active             → --color-border-button-active
+ *
+ * Button gradients (linear, 180°, light stop → dark stop) sourced from the
+ * blue/red primitives that each Button/{type}/{state} style references in
+ * Figma. Direction inferred — confirm visually against Figma.
+ * --------------------------------------------------------------------------- */
+:root {
+  /* Font families — variable fonts loaded locally via @fontsource-variable
+   * (imported at the top of src/index.css). Referenced by --font-sans and
+   * --font-mono in @theme above. */
+  --font-inter: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-mono-source: "JetBrains Mono Variable", ui-monospace, monospace;
+
+  /* Foreground (icons + on-fill content) */
+  --color-foreground-full:               var(--color-white);
+  --color-foreground-icon-primary:       var(--color-neutral-950);
+  --color-foreground-icon-hover:         var(--color-black);
+  --color-foreground-icon-secondary:     var(--color-neutral-500);
+  --color-foreground-icon-tertiary:      var(--color-neutral-400);
+  --color-foreground-icon-quaternary:    var(--color-neutral-300);
+  --color-foreground-icon-error:         var(--color-red-600);
+  --color-foreground-icon-disabled:      var(--color-neutral-300);
+  --color-foreground-disabled:           var(--color-neutral-400);
+  --color-foreground-disabled-danger:    var(--color-red-300);
+  --color-input-disabled-foreground:     var(--color-neutral-300);
+  --color-icon-button-disabled-foreground: var(--color-neutral-300);
+  --color-button-primary-disabled-foreground: var(--color-neutral-400);
+
+  /* Text */
+  --color-text-primary:         var(--color-neutral-950);
+  --color-text-secondary:       var(--color-neutral-500);
+  --color-text-tertiary:        var(--color-neutral-400);
+  --color-text-disabled:        var(--color-neutral-300);
+  --color-text-disabled-danger: var(--color-red-300);
+  --color-text-placeholder:     var(--color-neutral-400);
+  --color-text-error-primary:   var(--color-red-500);
+  --color-input-disabled-text:  var(--color-neutral-300);
+  --color-text-white:           var(--color-white);
+
+  /* Background */
+  --color-background-full:              var(--color-white);
+  --color-background-primary-default:   var(--color-white);
+  --color-background-inner-default:     var(--color-white);
+  --color-background-primary-hover:     var(--color-neutral-100);
+  --color-background-primary-active:    var(--color-neutral-200);
+  --color-background-primary-disabled:  var(--color-neutral-100);
+  --color-input-disabled-background:    var(--color-neutral-100);
+  --color-background-secondary-default: var(--color-neutral-100);
+  --color-background-secondary-hover:   var(--color-neutral-200);
+  --color-background-tertiary-default:  var(--color-neutral-200);
+  --color-background-tertiary-hover:    var(--color-neutral-300);
+  --color-background-tertiary-error:    var(--color-red-100);
+  /* Figma background/quaternary/default — first used by the Storage
+   * dropzone's upload-icon disc (node 4106:26587). */
+  --color-background-quaternary-default: var(--color-neutral-300);
+  --color-background-quaternary-hover:   var(--color-neutral-400);
+  --color-background-quaternary-error:   var(--color-red-200);
+
+  /* Chat bubbles + overlay scrims */
+  /* User message bubble: accent-500 in light, stepping down to accent-600 in
+   * dark so the filled bubble keeps the same weight against the dark canvas. */
+  --color-bubble-user:      var(--color-accent-500);
+  /* Modal/dialog scrim. Dark mode deepens it rather than flipping it. */
+  --color-overlay-backdrop: rgb(0 0 0 / 0.4);
+  /* Max-effort flame overlay (effort-flame): deep-space wash behind the
+   * white starfield. Deliberately identical in both themes — the WebGL flame
+   * shader's palette is fixed, so the scene it sits in is fixed too. */
+  --color-effort-flame-wash: rgb(16 24 40 / 0.62);
+
+  /* Sidebar session status dots (globals.css .sidebar-thread-status-*):
+   * breathing blue while a turn streams, solid green for unseen activity. */
+  --color-status-streaming: #2f80ed;
+  --color-status-unseen:    var(--color-green-500);
+
+  /* Border */
+  --color-border-button-default:   var(--color-neutral-200);
+  --color-border-button-hover:     var(--color-neutral-300);
+  --color-border-button-active:    var(--color-neutral-400);
+  --color-border-button-white:     var(--color-white);
+  /* The system had no red border. Matches text/error/primary so an invalid
+     field's edge and its message are the same red. */
+  --color-border-error-default:    var(--color-red-500);
+  --color-border-checkbox-default: var(--color-neutral-300);
+  --color-border-checkbox-hover:   var(--color-neutral-400);
+  --color-border-checkbox-active:  var(--color-neutral-400);
+  --color-border-component-detail-container: var(--color-neutral-200);
+  --color-border-ai-profile-card:             var(--color-neutral-200);
+  --color-border-table:            var(--color-neutral-200);
+  --color-border-button-group:     var(--color-neutral-200);
+  --color-border-sidebar-profile-hover: var(--color-neutral-300);
+  --color-separator-border:        var(--color-neutral-200);
+  --color-separator-border-strong: var(--color-neutral-200);
+  --color-border-focus-ring:       var(--color-accent-500);
+
+  /* State */
+  --color-state-success-text: var(--color-lime-800);
+  --color-state-success-base: var(--color-lime-200);
+
+  /* Selected control interiors remain light on colored tracks in both themes. */
+  --color-control-indicator-background:        var(--color-white);
+  --color-control-indicator-background-subtle: var(--color-neutral-100);
+  /* Stepped against the composer: the pill is white and the add button is the
+   * subtle grey sitting on it, so the control separates from the surface it
+   * shares an edge with. Dark mode keeps its own pair, where the pill is the
+   * lighter of the two and the button steps the other way. */
+  --color-ai-chat-composer-add-background:       var(--color-neutral-100);
+  --color-ai-chat-composer-add-hover-background: var(--color-neutral-200);
+  --color-agent-progress-ring:                     var(--color-neutral-700);
+  --color-button-ghost-background:                var(--color-accent-100);
+  --color-button-ghost-hover:                     var(--color-accent-200);
+  --color-button-ghost-active:                    var(--color-accent-300);
+  --color-button-ghost-disabled:                  var(--color-accent-50);
+  --color-button-ghost-foreground:                var(--color-accent-700);
+  --color-button-ghost-disabled-foreground:       var(--color-accent-300);
+  --color-dropdown-item-hover-background:        var(--color-neutral-100);
+
+  /* Recently shipped component badge. Kept semantic so its compact blue
+   * surface can retain the same hierarchy in both themes. */
+  --color-badge-neutral-background: var(--color-neutral-200);
+  --color-pill-tab-blue-selected-background: var(--color-accent-50);
+  --color-pill-tab-blue-hover-background: var(--color-neutral-100);
+
+  /* Notification status-icon surfaces. */
+  --color-notification-success-foreground:     var(--color-lime-600);
+
+  /* Table status chips. Dark mappings come from the medical dashboard table
+   * in Figma (4139:7202, 4139:7240, 4139:7278, 4139:7315). */
+  --color-status-lime-background:   var(--color-lime-200);
+  --color-status-lime-text:         var(--color-lime-800);
+  --color-status-yellow-background: var(--color-yellow-200);
+  --color-status-yellow-text:       var(--color-yellow-800);
+  --color-status-rose-background:   var(--color-rose-200);
+  --color-status-rose-text:         var(--color-rose-800);
+  --color-status-cyan-background:   var(--color-cyan-200);
+  --color-status-cyan-text:         var(--color-cyan-800);
+  --color-status-blue-background:   var(--color-blue-200);
+  --color-status-blue-text:         var(--color-blue-800);
+  --color-status-purple-background: var(--color-purple-100);
+  --color-status-purple-text:       var(--color-purple-600);
+
+  /* Placeholder colors that don't map cleanly to existing text tokens */
+  --color-text-error-placeholder: var(--color-red-400);
+
+  /* Markdown syntax highlighting (hljs) — GitHub light palette. Fixed hex
+   * palettes are inherent to syntax themes; centralised here so components
+   * never carry raw hex. Consumed via var() in index.css. */
+  --color-md-token-comment:     rgba(87, 96, 110, 0.86);
+  --color-md-token-punctuation: rgba(36, 41, 47, 0.88);
+  --color-md-token-constant:    #cf222e;
+  --color-md-token-number:      #9a6700;
+  --color-md-token-string:      #116329;
+  --color-md-token-operator:    rgba(36, 41, 47, 0.86);
+  --color-md-token-keyword:     #8250df;
+  --color-md-token-function:    #0550ae;
+
+  /* Charts (graphs) — shared neutrals + a categorical accent ramp.
+   * `track` is the background bar/ring behind a series; `cursor` the hover
+   * outline / dashed reference line; `neutral` a data color for "other"-style
+   * slices. Each numbered accent pairs a base fill with a one-tone-darker
+   * `-active` used for hover emphasis (the 400 → 500 recipe every chart
+   * follows). Numbered (not hue-named) so the palette can be retuned without
+   * renaming, mirroring the chart-1…n convention common to chart systems. */
+  --color-chart-track:    var(--color-neutral-200);
+  --color-chart-cursor:   var(--color-neutral-300);
+  --color-chart-neutral:  var(--color-neutral-300);
+  --color-chart-1:        var(--color-teal-400);
+  --color-chart-1-active: var(--color-teal-500);
+  --color-chart-2:        var(--color-lime-400);
+  --color-chart-2-active: var(--color-lime-500);
+  --color-chart-3:        var(--color-pink-400);
+  --color-chart-3-active: var(--color-pink-500);
+  --color-chart-4:        var(--color-sky-400);
+  --color-chart-4-active: var(--color-sky-500);
+  --color-chart-5:        var(--color-purple-400);
+  --color-chart-5-active: var(--color-purple-500);
+  --color-chart-6:        var(--color-blue-400);
+  --color-chart-6-active: var(--color-blue-500);
+  --color-chart-7:        var(--color-emerald-400);
+  --color-chart-7-active: var(--color-emerald-500);
+  --color-chart-8:        var(--color-yellow-400);
+  --color-chart-8-active: var(--color-yellow-500);
+  --color-chart-agents-bar:        var(--color-purple-300);
+  --color-chart-agents-bar-active: var(--color-purple-400);
+
+  /* Button gradients */
+  --gradient-button-primary-default:  linear-gradient(180deg, var(--color-accent-500)    0%, var(--color-accent-600)    100%);
+  --gradient-button-primary-hover:    linear-gradient(180deg, var(--color-accent-400)    0%, var(--color-accent-500)    100%);
+  --gradient-button-primary-active:   linear-gradient(180deg, var(--color-accent-600)    0%, var(--color-accent-700)    100%);
+  --gradient-button-primary-disabled: linear-gradient(180deg, var(--color-neutral-200) 0%, var(--color-neutral-300) 100%);
+
+  --gradient-button-danger-default:   linear-gradient(180deg, var(--color-red-500) 0%, var(--color-red-600) 100%);
+  --gradient-button-danger-hover:     linear-gradient(180deg, var(--color-red-400) 0%, var(--color-red-500) 100%);
+  --gradient-button-danger-active:    linear-gradient(180deg, var(--color-red-600) 0%, var(--color-red-700) 100%);
+  --gradient-button-danger-disabled:  linear-gradient(180deg, var(--color-red-100) 0%, var(--color-red-200) 100%);
+}
+
+.dark {
+  /* Chat bubble + scrim dark variants (see :root for the contract). */
+  --color-bubble-user:      var(--color-accent-600);
+  --color-overlay-backdrop: rgb(0 0 0 / 0.6);
+  /* Fixed-palette effect backdrop: same value as light, on purpose. */
+  --color-effort-flame-wash: rgb(16 24 40 / 0.62);
+
+  /* Sidebar status dots read brighter against the dark canvas. */
+  --color-status-streaming: var(--color-blue-400);
+  --color-status-unseen:    var(--color-green-400);
+
+  /* Foreground */
+  --color-foreground-full:            var(--color-neutral-700);
+  --color-foreground-icon-primary:    var(--color-neutral-50);
+  --color-foreground-icon-hover:      var(--color-white);
+  --color-foreground-icon-error:      var(--color-red-400);
+  --color-foreground-icon-tertiary:   var(--color-neutral-600);
+  --color-foreground-icon-quaternary: var(--color-neutral-700);
+  --color-foreground-icon-disabled:   var(--color-neutral-800);
+  --color-foreground-disabled:        var(--color-neutral-700);
+  --color-foreground-disabled-danger: var(--color-red-400);
+  --color-input-disabled-foreground:  var(--color-neutral-600);
+  --color-icon-button-disabled-foreground: var(--color-neutral-500);
+  --color-button-primary-disabled-foreground: var(--color-neutral-500);
+
+  /* Text */
+  --color-text-primary:  var(--color-neutral-50);
+  --color-text-tertiary: var(--color-neutral-600);
+  --color-text-disabled: var(--color-neutral-800);
+  --color-text-error-primary: var(--color-red-400);
+  --color-input-disabled-text: color-mix(in srgb, var(--color-neutral-500) 40%, transparent);
+
+  /* Background */
+  --color-background-full:              var(--color-neutral-925);
+  --color-background-primary-default:   var(--color-neutral-800);
+  --color-background-inner-default:     color-mix(in srgb, var(--color-neutral-800) 60%, transparent);
+  --color-background-primary-hover:     color-mix(in srgb, var(--color-neutral-700) 60%, transparent);
+  --color-background-primary-active:    var(--color-neutral-800);
+  --color-background-primary-disabled:  var(--color-neutral-800);
+  --color-input-disabled-background:    color-mix(in srgb, var(--color-neutral-800) 30%, transparent);
+  --color-background-secondary-default: var(--color-neutral-900);
+  --color-background-secondary-hover:   var(--color-neutral-800);
+  --color-background-tertiary-default:  var(--color-neutral-800);
+  --color-background-tertiary-hover:    var(--color-neutral-700);
+  --color-background-tertiary-error:    color-mix(in srgb, var(--color-red-950) 60%, transparent);
+  --color-background-quaternary-default: var(--color-neutral-700);
+  --color-background-quaternary-hover:   var(--color-neutral-600);
+  --color-ai-chat-composer-add-background:       var(--color-neutral-700);
+  --color-ai-chat-composer-add-hover-background: var(--color-neutral-600);
+  --color-agent-progress-ring:                     color-mix(in srgb, var(--color-white) 50%, transparent);
+  --color-button-ghost-background:                var(--color-accent-900);
+  --color-button-ghost-hover:                     var(--color-accent-800);
+  --color-button-ghost-active:                    var(--color-accent-700);
+  --color-button-ghost-disabled:                  var(--color-neutral-800);
+  --color-button-ghost-foreground:                var(--color-accent-300);
+  --color-button-ghost-disabled-foreground:       var(--color-neutral-600);
+  --color-dropdown-item-hover-background:        color-mix(in srgb, var(--color-neutral-700) 60%, transparent);
+
+  /* Markdown syntax highlighting (hljs) — GitHub dark palette. */
+  --color-md-token-comment:     rgba(150, 170, 200, 0.75);
+  --color-md-token-punctuation: rgba(200, 210, 220, 0.85);
+  --color-md-token-constant:    #ff7b72;
+  --color-md-token-number:      #f2cc60;
+  --color-md-token-string:      #7ee787;
+  --color-md-token-operator:    rgba(200, 210, 220, 0.9);
+  --color-md-token-keyword:     #8bd5ff;
+  --color-md-token-function:    #d2a8ff;
+
+  /* Dark surfaces absorb low-alpha shadows more readily than white ones.
+   * Preserve the light-mode geometry and raise only the black alpha: tighter
+   * contact shadows stay crisp, while higher elevations receive a restrained
+   * ambient layer without introducing a grey glow. */
+  --shadow-2xs: 0 1px rgb(0 0 0 / 0.16);
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.18);
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.12), 0 1px 3px 0 rgb(0 0 0 / 0.16);
+  --shadow-md: 0 2px 4px -1px rgb(0 0 0 / 0.12), 0 4px 6px -1px rgb(0 0 0 / 0.18);
+  --shadow-lg: 0 4px 6px -2px rgb(0 0 0 / 0.10), 0 10px 15px -3px rgb(0 0 0 / 0.18);
+  --shadow-xl: 0 10px 10px -5px rgb(0 0 0 / 0.08), 0 20px 25px -5px rgb(0 0 0 / 0.20);
+  --shadow-card: 0 1px 1px 0 rgb(0 0 0 / 0.14);
+  --shadow-dropdown:
+    0 1px 1px 0 rgb(0 0 0 / 0.14),
+    0 4px 4px 0 rgb(0 0 0 / 0.10);
+  --shadow-sidebar:
+    0 1px 0 0 rgb(0 0 0 / 0.10),
+    0 1px 12px 0 rgb(0 0 0 / 0.16),
+    0 0 1px 0 rgb(0 0 0 / 0.42);
+
+  /* Badges */
+  --color-badge-neutral-background: var(--color-neutral-800);
+
+  --color-notification-success-foreground:     var(--color-lime-300);
+
+  /* Borders and separators */
+  --color-border-button-default:   var(--color-neutral-700);
+  --color-border-button-hover:     var(--color-neutral-500);
+  --color-border-button-active:    var(--color-neutral-600);
+  --color-border-button-white:     var(--color-zinc-800);
+  --color-border-error-default:    var(--color-red-400);
+  --color-border-checkbox-default: var(--color-neutral-700);
+  --color-border-checkbox-hover:   var(--color-neutral-500);
+  --color-border-checkbox-active:  var(--color-neutral-500);
+  --color-border-component-detail-container: var(--color-neutral-800);
+  --color-border-ai-profile-card:             var(--color-neutral-800);
+  --color-border-table:            var(--color-neutral-800);
+  --color-border-button-group:     color-mix(in srgb, var(--color-neutral-600) 60%, transparent);
+  --color-border-sidebar-profile-hover: var(--color-neutral-600);
+  --color-separator-border:        var(--color-neutral-800);
+  --color-separator-border-strong: color-mix(in srgb, var(--color-neutral-700) 60%, transparent);
+
+  /* Figma's dark table status pairs. */
+  --color-status-lime-background:   color-mix(in srgb, var(--color-lime-950) 60%, transparent);
+  --color-status-lime-text:         var(--color-lime-500);
+  --color-status-yellow-background: color-mix(in srgb, var(--color-yellow-950) 60%, transparent);
+  --color-status-yellow-text:       var(--color-yellow-500);
+  --color-status-rose-background:   color-mix(in srgb, var(--color-rose-950) 60%, transparent);
+  --color-status-rose-text:         var(--color-rose-500);
+  --color-status-cyan-background:   color-mix(in srgb, var(--color-cyan-950) 60%, transparent);
+  --color-status-cyan-text:         var(--color-cyan-400);
+  --color-status-blue-background:   color-mix(in srgb, var(--color-blue-950) 60%, transparent);
+  --color-status-blue-text:         var(--color-blue-300);
+  --color-status-purple-background: color-mix(in srgb, var(--color-purple-900) 50%, transparent);
+  --color-status-purple-text:       var(--color-purple-300);
+
+  --color-pill-tab-blue-selected-background: color-mix(in srgb, var(--color-accent-950) 60%, transparent);
+  --color-pill-tab-blue-hover-background: var(--color-neutral-800);
+
+  /* Disabled primary CTA: dark, low-emphasis fill with readable muted text. */
+  --gradient-button-primary-disabled: linear-gradient(
+    180deg,
+    var(--color-neutral-700) 0%,
+    var(--color-neutral-800) 100%
+  );
+  --gradient-button-danger-disabled: linear-gradient(
+    180deg,
+    var(--color-red-900) 0%,
+    var(--color-red-950) 100%
+  );
+
+  /* Neutral graph structure; categorical and status colors stay unchanged. */
+  --color-chart-track:   var(--color-neutral-800);
+  --color-chart-cursor:  var(--color-neutral-700);
+  --color-chart-neutral: var(--color-neutral-800);
+  --color-chart-agents-bar:        var(--color-purple-500);
+  --color-chart-agents-bar-active: var(--color-purple-600);
+}
+
+/* Re-export semantic tokens as Tailwind utilities. The `inline` form means
+ * Tailwind reads the *current* computed value of the variable, so light↔dark
+ * flips work without rebuild. */
+@theme inline {
+  --color-foreground-full:            var(--color-foreground-full);
+  --color-foreground-icon-primary:    var(--color-foreground-icon-primary);
+  --color-foreground-icon-hover:      var(--color-foreground-icon-hover);
+  --color-foreground-icon-secondary:  var(--color-foreground-icon-secondary);
+  --color-foreground-icon-tertiary:   var(--color-foreground-icon-tertiary);
+  --color-foreground-icon-quaternary: var(--color-foreground-icon-quaternary);
+  --color-foreground-icon-error:      var(--color-foreground-icon-error);
+  --color-foreground-icon-disabled:   var(--color-foreground-icon-disabled);
+  --color-foreground-disabled:        var(--color-foreground-disabled);
+  --color-foreground-disabled-danger: var(--color-foreground-disabled-danger);
+  --color-input-disabled-foreground:  var(--color-input-disabled-foreground);
+  --color-icon-button-disabled-foreground: var(--color-icon-button-disabled-foreground);
+  --color-button-primary-disabled-foreground: var(--color-button-primary-disabled-foreground);
+
+  --color-text-primary:         var(--color-text-primary);
+  --color-text-secondary:       var(--color-text-secondary);
+  --color-text-tertiary:        var(--color-text-tertiary);
+  --color-text-disabled:        var(--color-text-disabled);
+  --color-text-disabled-danger: var(--color-text-disabled-danger);
+  --color-text-placeholder:     var(--color-text-placeholder);
+  --color-text-error-primary:   var(--color-text-error-primary);
+  --color-input-disabled-text:  var(--color-input-disabled-text);
+  --color-text-white:           var(--color-text-white);
+
+  --color-background-full:              var(--color-background-full);
+  --color-background-primary-default:   var(--color-background-primary-default);
+  --color-background-inner-default:     var(--color-background-inner-default);
+  --color-background-primary-hover:     var(--color-background-primary-hover);
+  --color-background-primary-active:    var(--color-background-primary-active);
+  --color-background-primary-disabled:  var(--color-background-primary-disabled);
+  --color-input-disabled-background:    var(--color-input-disabled-background);
+  --color-background-secondary-default: var(--color-background-secondary-default);
+  --color-background-secondary-hover:   var(--color-background-secondary-hover);
+  --color-background-tertiary-default:  var(--color-background-tertiary-default);
+  --color-background-tertiary-hover:    var(--color-background-tertiary-hover);
+  --color-background-tertiary-error:    var(--color-background-tertiary-error);
+  --color-background-quaternary-default: var(--color-background-quaternary-default);
+  --color-background-quaternary-hover:   var(--color-background-quaternary-hover);
+  --color-background-quaternary-error:   var(--color-background-quaternary-error);
+
+  --color-bubble-user:      var(--color-bubble-user);
+  --color-overlay-backdrop: var(--color-overlay-backdrop);
+  --color-effort-flame-wash: var(--color-effort-flame-wash);
+
+  --color-border-button-default:   var(--color-border-button-default);
+  --color-border-button-hover:     var(--color-border-button-hover);
+  --color-border-button-active:    var(--color-border-button-active);
+  --color-border-button-white:     var(--color-border-button-white);
+  --color-border-error-default:    var(--color-border-error-default);
+  --color-border-checkbox-default: var(--color-border-checkbox-default);
+  --color-border-checkbox-hover:   var(--color-border-checkbox-hover);
+  --color-border-checkbox-active:  var(--color-border-checkbox-active);
+  --color-border-component-detail-container: var(--color-border-component-detail-container);
+  --color-border-ai-profile-card:             var(--color-border-ai-profile-card);
+  --color-border-table:            var(--color-border-table);
+  --color-border-button-group:     var(--color-border-button-group);
+  --color-border-sidebar-profile-hover: var(--color-border-sidebar-profile-hover);
+  --color-separator-border:        var(--color-separator-border);
+  --color-separator-border-strong: var(--color-separator-border-strong);
+  --color-border-focus-ring:       var(--color-border-focus-ring);
+
+  --color-state-success-text: var(--color-state-success-text);
+  --color-state-success-base: var(--color-state-success-base);
+  --color-control-indicator-background:        var(--color-control-indicator-background);
+  --color-control-indicator-background-subtle: var(--color-control-indicator-background-subtle);
+  --color-ai-chat-composer-add-background:       var(--color-ai-chat-composer-add-background);
+  --color-ai-chat-composer-add-hover-background: var(--color-ai-chat-composer-add-hover-background);
+  --color-agent-progress-ring:                     var(--color-agent-progress-ring);
+  --color-button-ghost-background:                var(--color-button-ghost-background);
+  --color-button-ghost-hover:                     var(--color-button-ghost-hover);
+  --color-button-ghost-active:                    var(--color-button-ghost-active);
+  --color-button-ghost-disabled:                  var(--color-button-ghost-disabled);
+  --color-button-ghost-foreground:                var(--color-button-ghost-foreground);
+  --color-button-ghost-disabled-foreground:       var(--color-button-ghost-disabled-foreground);
+  --color-dropdown-item-hover-background:        var(--color-dropdown-item-hover-background);
+  --color-badge-neutral-background: var(--color-badge-neutral-background);
+  --color-pill-tab-blue-selected-background: var(--color-pill-tab-blue-selected-background);
+  --color-pill-tab-blue-hover-background: var(--color-pill-tab-blue-hover-background);
+  --color-notification-success-foreground:     var(--color-notification-success-foreground);
+  --color-status-lime-background:   var(--color-status-lime-background);
+  --color-status-lime-text:         var(--color-status-lime-text);
+  --color-status-yellow-background: var(--color-status-yellow-background);
+  --color-status-yellow-text:       var(--color-status-yellow-text);
+  --color-status-rose-background:   var(--color-status-rose-background);
+  --color-status-rose-text:         var(--color-status-rose-text);
+  --color-status-cyan-background:   var(--color-status-cyan-background);
+  --color-status-cyan-text:         var(--color-status-cyan-text);
+  --color-status-blue-background:   var(--color-status-blue-background);
+  --color-status-blue-text:         var(--color-status-blue-text);
+  --color-status-purple-background: var(--color-status-purple-background);
+  --color-status-purple-text:       var(--color-status-purple-text);
+
+  --color-text-error-placeholder: var(--color-text-error-placeholder);
+
+  --color-chart-track:    var(--color-chart-track);
+  --color-chart-cursor:   var(--color-chart-cursor);
+  --color-chart-neutral:  var(--color-chart-neutral);
+  --color-chart-1:        var(--color-chart-1);
+  --color-chart-1-active: var(--color-chart-1-active);
+  --color-chart-2:        var(--color-chart-2);
+  --color-chart-2-active: var(--color-chart-2-active);
+  --color-chart-3:        var(--color-chart-3);
+  --color-chart-3-active: var(--color-chart-3-active);
+  --color-chart-4:        var(--color-chart-4);
+  --color-chart-4-active: var(--color-chart-4-active);
+  --color-chart-5:        var(--color-chart-5);
+  --color-chart-5-active: var(--color-chart-5-active);
+  --color-chart-6:        var(--color-chart-6);
+  --color-chart-6-active: var(--color-chart-6-active);
+  --color-chart-7:        var(--color-chart-7);
+  --color-chart-7-active: var(--color-chart-7-active);
+  --color-chart-8:        var(--color-chart-8);
+  --color-chart-8-active: var(--color-chart-8-active);
+  --color-chart-agents-bar:        var(--color-chart-agents-bar);
+  --color-chart-agents-bar-active: var(--color-chart-agents-bar-active);
+}
+
+/* ---------------------------------------------------------------------------
+ * Component utilities — Buttons
+ *
+ * Each variant collapses the four interactive states (default / hover / active
+ * / disabled) into a single class. Use them on the component:
+ *
+ *   <button class="bg-button-primary">…</button>
+ *   <button class="bg-button-danger">…</button>
+ *
+ * Smooth default→hover transition trick:
+ *   CSS can't interpolate `background-image`, so swapping gradients on :hover
+ *   would snap. Instead we keep the *default* gradient on the element and
+ *   layer the *hover* gradient on a `::before` pseudo-element whose opacity
+ *   fades 0→1 over `--button-transition-ms`. Active/disabled gradients still
+ *   swap instantly (we hide the pseudo to reveal them).
+ *
+ * Stacking: `isolation: isolate` keeps the pseudo behind the button's text
+ * and icons (z-index -1) while staying above the element's own background.
+ * `border-radius: inherit` + `overflow: hidden` keeps it within the rounded
+ * corners.
+ * --------------------------------------------------------------------------- */
+@theme {
+  --button-transition-ms: 150ms;
+  --input-transition-ms:  150ms;
+}
+
+/* Keep color feedback quick while the physical press motion remains soft.
+ * The transform uses a shorter duration on press and the slower duration only
+ * when returning to rest, so hover styles never inherit the 700ms timing. */
+@utility button-press-motion {
+  transition:
+    background-color var(--button-transition-ms) ease,
+    border-color var(--button-transition-ms) ease,
+    box-shadow var(--button-transition-ms) ease,
+    color var(--button-transition-ms) ease,
+    transform 420ms cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: scale(0.98);
+    transition-duration: 150ms, 150ms, 150ms, 150ms, 220ms;
+  }
+
+  &:disabled,
+  &[aria-disabled="true"] {
+    transform: none;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+    transform: none;
+  }
+}
+
+@utility bg-button-primary {
+  position: relative;
+  isolation: isolate;
+  background-image: var(--gradient-button-primary-default);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: inherit;
+    background-image: var(--gradient-button-primary-hover);
+    opacity: 0;
+    transition: opacity var(--button-transition-ms) ease;
+  }
+  &:hover:not(:disabled):not([aria-disabled="true"])::before {
+    opacity: 1;
+  }
+  &:active:not(:disabled):not([aria-disabled="true"]) {
+    background-image: var(--gradient-button-primary-active);
+  }
+  &:active:not(:disabled):not([aria-disabled="true"])::before {
+    opacity: 0;
+  }
+  &:disabled,
+  &[aria-disabled="true"] {
+    background-image: var(--gradient-button-primary-disabled);
+  }
+  &:disabled::before,
+  &[aria-disabled="true"]::before {
+    display: none;
+  }
+}
+
+@utility bg-button-danger {
+  position: relative;
+  isolation: isolate;
+  background-image: var(--gradient-button-danger-default);
+
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: inherit;
+    background-image: var(--gradient-button-danger-hover);
+    opacity: 0;
+    transition: opacity var(--button-transition-ms) ease;
+  }
+  &:hover:not(:disabled):not([aria-disabled="true"])::before {
+    opacity: 1;
+  }
+  &:active:not(:disabled):not([aria-disabled="true"]) {
+    background-image: var(--gradient-button-danger-active);
+  }
+  &:active:not(:disabled):not([aria-disabled="true"])::before {
+    opacity: 0;
+  }
+  &:disabled,
+  &[aria-disabled="true"] {
+    background-image: var(--gradient-button-danger-disabled);
+  }
+  &:disabled::before,
+  &[aria-disabled="true"]::before {
+    display: none;
+  }
+}

@@ -1,0 +1,52 @@
+[package]
+name = "ccgui-next"
+version = "1.0.0"
+description = "CC GUI - multi-CLI AI chat desktop"
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+name = "ccgui_next_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["protocol-asset"] }
+tauri-plugin-opener = "2"
+tauri-plugin-dialog = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = { version = "1", features = ["preserve_order", "raw_value"] }
+regex = "1"
+toml = "0.8"
+rusqlite = { version = "0.32", features = ["bundled"] }
+tokio = { version = "1", features = ["rt", "macros", "process", "time", "sync", "io-util"] }
+sha2 = "0.10"
+dirs = "6"
+dunce = "1"
+git2 = "0.20"
+# Feature-unify openssl-sys to "vendored": git2 → libgit2-sys/libssh2-sys otherwise
+# dynamically links Homebrew's libssl/libcrypto (e.g. libssl.4.dylib), which crashes
+# the shipped .app at launch on any machine without that exact Homebrew install.
+openssl-sys = { version = "0.9", features = ["vendored"] }
+trash = "5"
+uuid = { version = "1", features = ["v4"] }
+base64 = "0.22"
+zstd = "0.13"
+which = "7"
+# PTY for the integrated terminal panel.
+portable-pty = "0.8"
+sysinfo = "0.36.1"
+libc = "0.2"
+
+[dev-dependencies]
+tauri = { version = "2", features = ["test"] }
+
+[profile.release]
+# Unwind (not abort): a panicking thread must still run destructors so engine
+# child processes get reaped instead of leaked.
+codegen-units = 1
+lto = "thin"
+opt-level = 3
+strip = true

@@ -1,0 +1,376 @@
+/* Locally bundled variable fonts (no network fetch): Inter for the UI ramp,
+ * JetBrains Mono for code. Exposed as --font-inter / --font-mono-source in
+ * styles/theme.css. */
+@import "@fontsource-variable/inter";
+@import "@fontsource-variable/jetbrains-mono";
+@import "./styles/globals.css";
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  overscroll-behavior: none;
+}
+/* Horizontal scroll strips (tab bar) without a visible scrollbar. */
+.scrollbar-none {
+  scrollbar-width: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+/* ---------------------------------------------------------------------------
+ * Markdown rendering inside chat bubbles (`.prose-chat`)
+ * Visual parity with desktop-cc-gui's `.markdown`: shadcn-style document
+ * typography — roomy block spacing, heading hairlines, zebra tables, muted
+ * inline-code chips, green dotted file links, and a carded code block with a
+ * language header + copy button. Colors ride BoardUI semantic tokens so dark
+ * mode flips for free; only the md-* accents below are markdown-specific.
+ * ------------------------------------------------------------------------- */
+:root {
+  --md-inline-code-bg: var(--color-background-tertiary-default);
+  --md-codeblock-bg: var(--color-background-tertiary-default);
+  --md-border: var(--color-separator-border);
+  --md-table-border: var(--color-border-button-hover);
+  /* File-link green ported from desktop-cc-gui (itself from
+     idea-claude-code-gui): light #107c10 / dark #a5d6a7. */
+  --md-link-color: #107c10;
+  /* hljs token palettes live in styles/theme.css (--color-md-token-*). */
+}
+.dark {
+  --md-link-color: #a5d6a7;
+}
+
+.prose-chat {
+  line-height: 1.7;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  min-width: 0;
+}
+
+/* Document-style block rhythm: siblings breathe, first/last stay flush. */
+.prose-chat > * {
+  margin: 0;
+}
+.prose-chat > * + * {
+  margin-top: 1.5em;
+}
+
+.prose-chat :where(strong) {
+  font-weight: 600;
+}
+.prose-chat :where(em) {
+  font-style: italic;
+}
+/* thematic break (---): spacing alone separates blocks, no visible rule. */
+.prose-chat :where(hr) {
+  display: none;
+}
+
+/* ---- Headings: chat-scaled doc hierarchy, h1/h2 get a hairline ---- */
+.prose-chat :where(h1, h2, h3, h4, h5, h6) {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  color: var(--color-text-primary);
+}
+.prose-chat :where(h1) {
+  font-size: 1.85em;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+  text-wrap: balance;
+}
+.prose-chat :where(h2) {
+  font-size: 1.4em;
+}
+.prose-chat :where(h3) {
+  font-size: 1.2em;
+  letter-spacing: -0.015em;
+}
+.prose-chat :where(h4) {
+  font-size: 1.05em;
+  letter-spacing: -0.01em;
+}
+.prose-chat :where(h6) {
+  font-size: 0.9em;
+  color: var(--color-text-secondary);
+}
+.prose-chat :where(h1, h2) {
+  padding-bottom: 0.3em;
+  border-bottom: 1px solid var(--md-border);
+}
+.prose-chat > :where(p, ul, ol, pre, blockquote, table, .md-codeblock, .md-codeblock-single-wrap) + :where(h1, h2) {
+  margin-top: 2em;
+}
+.prose-chat > :where(p, ul, ol, pre, blockquote, table, .md-codeblock, .md-codeblock-single-wrap) + :where(h3, h4, h5, h6) {
+  margin-top: 1.6em;
+}
+
+/* ---- Lists ---- */
+.prose-chat ul,
+.prose-chat ol {
+  margin: 1.5em 0;
+  padding-left: 1.5em;
+  max-width: 100%;
+  list-style-position: outside;
+}
+.prose-chat ul {
+  list-style-type: disc;
+}
+.prose-chat ol {
+  list-style-type: decimal;
+}
+.prose-chat li {
+  overflow-wrap: break-word;
+}
+.prose-chat :where(li) + :where(li) {
+  margin-top: 0.5em;
+}
+.prose-chat li > ul,
+.prose-chat li > ol {
+  margin: 0.5em 0;
+}
+.prose-chat li::marker {
+  color: var(--color-text-secondary);
+}
+.prose-chat li p {
+  margin: 0;
+}
+
+/* ---- Quotes stay in the text flow (Codex style, no rail) ---- */
+.prose-chat :where(blockquote) {
+  padding-left: 0;
+  border-left: 0;
+  background: transparent;
+  color: inherit;
+  font-style: normal;
+}
+
+/* ---- Links: file-link green + dotted underline everywhere ---- */
+.prose-chat a,
+.prose-chat a:visited,
+.prose-chat a code {
+  color: var(--md-link-color);
+}
+.prose-chat a {
+  text-decoration-line: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+  text-decoration-color: currentColor;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.prose-chat a:hover {
+  text-decoration-thickness: 2px;
+  opacity: 0.95;
+}
+
+/* ---- Code ---- */
+.prose-chat code {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 0.875em;
+}
+/* Inline code chip: muted rounded surface, body weight. Inside a file link
+   the green comes from the anchor rule above. */
+.prose-chat :not(pre) > code {
+  background: var(--md-inline-code-bg);
+  border-radius: 0.25rem;
+  padding: 0.2rem 0.3rem;
+  font-weight: 400;
+}
+.prose-chat a code {
+  /* File links read as plain green text — no chip behind them. */
+  background: none;
+  padding: 0;
+}
+/* Code block card: flat bordered card on a muted surface. */
+.md-codeblock {
+  margin: 1.25em 0;
+  border: 1px solid var(--md-border);
+  border-radius: 10px;
+  background: var(--md-codeblock-bg);
+  overflow: hidden;
+}
+.md-codeblock-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 5px 14px;
+  border-bottom: 1px solid var(--md-border);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+.md-codeblock-language {
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+}
+.md-codeblock-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.md-codeblock-copy:hover,
+.md-codeblock-copy:focus-visible {
+  background: var(--color-background-secondary-hover);
+  color: var(--color-text-primary);
+}
+.md-codeblock pre {
+  margin: 0;
+  padding: 12px 16px 14px;
+  overflow-x: auto;
+  white-space: pre;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--color-text-primary);
+}
+.md-codeblock pre code {
+  display: block;
+  min-width: max-content;
+  font-size: inherit;
+}
+
+/* Single-line fence: compact card, copy floats top-right. */
+.md-codeblock-single-wrap {
+  position: relative;
+  margin: 1.25em 0;
+}
+.md-codeblock-single-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+}
+.md-codeblock-single {
+  margin: 0;
+  padding: 12px 44px 12px 16px;
+  border: 1px solid var(--md-border);
+  border-radius: 10px;
+  background: var(--md-codeblock-bg);
+  overflow-x: auto;
+  white-space: pre;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--color-text-primary);
+}
+.md-codeblock-single code {
+  display: block;
+  font-size: inherit;
+}
+
+/* Theme-aware hljs tokens (replaces the always-dark github-dark.css). */
+.prose-chat .hljs-comment,
+.prose-chat .hljs-quote,
+.prose-chat .hljs-meta {
+  color: var(--color-md-token-comment);
+}
+.prose-chat .hljs-punctuation {
+  color: var(--color-md-token-punctuation);
+}
+.prose-chat .hljs-tag,
+.prose-chat .hljs-name,
+.prose-chat .hljs-literal,
+.prose-chat .hljs-symbol,
+.prose-chat .hljs-deletion {
+  color: var(--color-md-token-constant);
+}
+.prose-chat .hljs-number {
+  color: var(--color-md-token-number);
+}
+.prose-chat .hljs-string,
+.prose-chat .hljs-regexp,
+.prose-chat .hljs-addition,
+.prose-chat .hljs-attr,
+.prose-chat .hljs-attribute,
+.prose-chat .hljs-selector-attr,
+.prose-chat .hljs-selector-class,
+.prose-chat .hljs-selector-pseudo,
+.prose-chat .hljs-built_in,
+.prose-chat .hljs-doctag {
+  color: var(--color-md-token-string);
+}
+.prose-chat .hljs-operator,
+.prose-chat .hljs-variable,
+.prose-chat .hljs-template-variable,
+.prose-chat .hljs-link {
+  color: var(--color-md-token-operator);
+}
+.prose-chat .hljs-keyword,
+.prose-chat .hljs-selector-tag,
+.prose-chat .hljs-type,
+.prose-chat .hljs-selector-id {
+  color: var(--color-md-token-keyword);
+}
+.prose-chat .hljs-title,
+.prose-chat .hljs-title.function_,
+.prose-chat .hljs-section {
+  color: var(--color-md-token-function);
+}
+.prose-chat .hljs-title.class_ {
+  color: var(--color-md-token-constant);
+}
+.prose-chat .hljs-emphasis {
+  font-style: italic;
+}
+.prose-chat .hljs-strong {
+  font-weight: 600;
+}
+
+/* ---- Tables: full grid via single-side borders + muted zebra rows ----
+   display:block (for horizontal scroll) breaks border-collapse, so each cell
+   draws only right+bottom and the table adds the top+left frame — adjacent
+   borders never double up. */
+.prose-chat table {
+  width: 100%;
+  margin: 1.5em 0;
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+  border-top: 1px solid var(--md-table-border);
+  border-left: 1px solid var(--md-table-border);
+}
+.prose-chat thead,
+.prose-chat tbody,
+.prose-chat tr {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+.prose-chat tbody tr:nth-child(even) {
+  background: var(--md-inline-code-bg);
+}
+.prose-chat th,
+.prose-chat td {
+  border-right: 1px solid var(--md-table-border);
+  border-bottom: 1px solid var(--md-table-border);
+  padding: 0.5rem 1rem;
+  text-align: left;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+.prose-chat th {
+  font-weight: 700;
+}
+
+.prose-chat img {
+  display: block;
+  max-width: min(100%, 720px);
+  height: auto;
+  border-radius: 8px;
+}
